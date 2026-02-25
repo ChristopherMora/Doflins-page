@@ -1,0 +1,14 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="52" fill="#12152D"/>
+  <ellipse cx="256" cy="398" rx="162" ry="58" fill="rgba(112,90,255,0.2)"/>
+  <path d="M170 185C170 126 209 90 256 90C303 90 342 126 342 185V224H170V185Z" fill="#252856"/>
+  <rect x="160" y="214" width="192" height="178" rx="68" fill="#2D3577"/>
+  <rect x="129" y="243" width="54" height="132" rx="27" fill="#232D63"/>
+  <rect x="329" y="243" width="54" height="132" rx="27" fill="#232D63"/>
+  <ellipse cx="256" cy="169" rx="74" ry="64" fill="#3C447F"/>
+  <ellipse cx="231" cy="164" rx="8.8" ry="11" fill="#5964A8"/>
+  <ellipse cx="281" cy="164" rx="8.8" ry="11" fill="#5964A8"/>
+  <path d="M228 197C240 208 272 208 284 197" stroke="#5964A8" stroke-width="8" stroke-linecap="round"/>
+  <rect x="235" y="236" width="42" height="53" rx="21" fill="#404A88"/>
+  <text x="256" y="474" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#6B74B6">SILUETA DEMO</text>
+</svg>

@@ -1,0 +1,47 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="64" y1="44" x2="448" y2="472" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F4EEFF"/>
+      <stop offset="1" stop-color="#DDEBFF"/>
+    </linearGradient>
+    <linearGradient id="head" x1="206" y1="102" x2="310" y2="212" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFE8C8"/>
+      <stop offset="1" stop-color="#FFC49A"/>
+    </linearGradient>
+    <linearGradient id="coat" x1="170" y1="208" x2="347" y2="390" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#6C4BFF"/>
+      <stop offset="1" stop-color="#2E238A"/>
+    </linearGradient>
+    <linearGradient id="hood" x1="162" y1="125" x2="352" y2="314" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#4C34C4"/>
+      <stop offset="1" stop-color="#201B5D"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(256 360) rotate(90) scale(112 174)">
+      <stop stop-color="#7656FF" stop-opacity="0.43"/>
+      <stop offset="1" stop-color="#7656FF" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="shadow" x="95" y="66" width="330" height="380" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#2A1F6E" flood-opacity="0.28"/>
+    </filter>
+  </defs>
+
+  <rect width="512" height="512" rx="52" fill="url(#bg)"/>
+  <ellipse cx="256" cy="395" rx="162" ry="58" fill="url(#glow)"/>
+
+  <g filter="url(#shadow)">
+    <path d="M170 185C170 126 209 90 256 90C303 90 342 126 342 185V224H170V185Z" fill="url(#hood)"/>
+    <rect x="160" y="214" width="192" height="178" rx="68" fill="url(#coat)"/>
+    <rect x="129" y="243" width="54" height="132" rx="27" fill="#4C33C8"/>
+    <rect x="329" y="243" width="54" height="132" rx="27" fill="#4C33C8"/>
+
+    <ellipse cx="256" cy="169" rx="74" ry="64" fill="url(#head)"/>
+    <ellipse cx="231" cy="164" rx="8.8" ry="11" fill="#1C1C2E"/>
+    <ellipse cx="281" cy="164" rx="8.8" ry="11" fill="#1C1C2E"/>
+    <path d="M228 197C240 208 272 208 284 197" stroke="#2D2B3C" stroke-width="8" stroke-linecap="round"/>
+
+    <rect x="235" y="236" width="42" height="53" rx="21" fill="#E8E4FF"/>
+    <circle cx="256" cy="260" r="9.5" fill="#7A55FF"/>
+  </g>
+
+  <text x="256" y="474" text-anchor="middle" font-family="Arial, sans-serif" font-size="24" font-weight="700" fill="#2B245A">DOFLIN DEMO 3D</text>
+</svg>
