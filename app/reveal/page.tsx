@@ -4,8 +4,8 @@ import type { Metadata } from "next";
 import { RevealExperience } from "@/components/reveal/reveal-experience";
 
 export const metadata: Metadata = {
-  title: "DOFLINS | Colección y rarezas",
-  description: "Página oficial de colección DOFLINS con niveles de rareza, packs y catálogo completo.",
+  title: "DOFLINS | Animals + Multiverse",
+  description: "Página oficial de DOFLINS con secciones Animals y Multiverse, rareza, filtros y catálogo completo.",
 };
 
 export default function RevealPage(): React.JSX.Element {

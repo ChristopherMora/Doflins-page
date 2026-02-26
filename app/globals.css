@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f4ff;
-  --foreground: #121527;
-  --surface-100: #ffffff;
-  --surface-200: #eeebff;
-  --ink-900: #111827;
-  --ink-800: #1f2937;
-  --ink-700: #334155;
-  --ink-600: #64748b;
-  --brand-primary: #6537ff;
-  --brand-accent: #7a4bff;
-  --brand-sky: #4f8eff;
+  --background: #f6f2df;
+  --foreground: #222d1a;
+  --surface-100: #fff8e7;
+  --surface-200: #e8eed7;
+  --ink-900: #1f2a1a;
+  --ink-800: #2d3c24;
+  --ink-700: #445538;
+  --ink-600: #64785a;
+  --brand-primary: #4e6f2a;
+  --brand-accent: #6c8a35;
+  --brand-sky: #cc8b33;
 }
 
 @theme inline {
@@ -24,9 +24,9 @@
 body {
   min-height: 100dvh;
   background:
-    radial-gradient(circle at top right, rgba(96, 75, 255, 0.2), transparent 34%),
-    radial-gradient(circle at 18% 12%, rgba(83, 174, 255, 0.12), transparent 28%),
-    radial-gradient(circle at 70% 88%, rgba(245, 108, 228, 0.1), transparent 28%),
+    radial-gradient(circle at top right, rgba(104, 137, 55, 0.22), transparent 36%),
+    radial-gradient(circle at 16% 11%, rgba(206, 140, 44, 0.16), transparent 30%),
+    radial-gradient(circle at 70% 88%, rgba(129, 153, 71, 0.13), transparent 30%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-body), "Segoe UI", sans-serif;

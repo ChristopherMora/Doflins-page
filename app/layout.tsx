@@ -19,8 +19,8 @@ const bodyFont = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "DOFLINS Reveal",
-  description: "Página de verificación de calidad y rareza para personajes DOFLINS.",
+  title: "DOFLINS | Animals + Multiverse",
+  description: "Página oficial de colección y rareza para personajes DOFLINS en Animals y Multiverse.",
 };
 
 export default function RootLayout({

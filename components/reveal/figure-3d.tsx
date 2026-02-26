@@ -20,6 +20,10 @@ interface Figure3DProps {
   modelOrientation?: string;
 }
 
+interface ModelViewerElement extends HTMLElement {
+  cameraOrbit: string;
+}
+
 let modelViewerLoader: Promise<void> | null = null;
 
 async function ensureModelViewer(): Promise<void> {
@@ -101,8 +105,24 @@ function ModelViewer({
 
     const timeoutId = window.setTimeout(() => onTimeout(), 4500);
 
+    // Animación de rotación vertical
+    let animationId: number;
+    let theta = 0;
+    
+    const animate = () => {
+      theta += 0.5; // Velocidad de rotación
+      if (theta >= 360) theta = 0;
+      
+      // Rotar en el eje vertical (theta cambia)
+      (node as ModelViewerElement).cameraOrbit = `${theta}deg 75deg auto`;
+      animationId = requestAnimationFrame(animate);
+    };
+    
+    animate();
+
     return () => {
       window.clearTimeout(timeoutId);
+      if (animationId) cancelAnimationFrame(animationId);
       node.removeEventListener("load", handleLoad as EventListener);
       node.removeEventListener("error", handleError as EventListener);
     };
@@ -115,8 +135,8 @@ function ModelViewer({
       alt={alt}
       poster={poster}
       loading="lazy"
-      orientation={orientation}
-      camera-orbit="0deg 60deg auto"
+      orientation={orientation || "0deg 90deg 0deg"}
+      camera-orbit="0deg 75deg auto"
       field-of-view="30deg"
       shadow-intensity="0.65"
       exposure="1.28"
@@ -192,7 +212,7 @@ export function Figure3D({
       }
       transition={{ type: "spring", stiffness: 180, damping: 18, mass: 0.6 }}
       className={cn(
-        "group relative overflow-hidden rounded-3xl bg-[linear-gradient(145deg,rgba(255,255,255,0.96),rgba(245,243,255,0.9))] p-4 shadow-[0_28px_42px_rgba(59,31,124,0.2)] [transform-style:preserve-3d]",
+        "group relative overflow-hidden rounded-3xl bg-[linear-gradient(145deg,rgba(255,252,242,0.98),rgba(245,244,226,0.92))] p-4 shadow-[0_28px_42px_rgba(65,74,33,0.2)] [transform-style:preserve-3d]",
         className,
       )}
     >
@@ -201,7 +221,7 @@ export function Figure3D({
         style={{ background: rarityColor }}
       />
 
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.88),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(255,255,255,0.55),transparent_45%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.88),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(241,244,219,0.72),transparent_45%)]" />
       <div className="pointer-events-none absolute inset-x-10 bottom-4 h-7 rounded-full bg-black/18 blur-md [transform:translateZ(-12px)]" />
 
       {hasModel && modelUrl ? (
@@ -233,7 +253,7 @@ export function Figure3D({
               fallbackSrc={fallbackSrc}
               alt={alt}
               className={cn(
-                "pointer-events-none absolute inset-0 z-10 mx-auto h-full max-h-[260px] w-full object-contain drop-shadow-[0_22px_30px_rgba(26,21,80,0.26)] [transform:translateZ(36px)]",
+                "pointer-events-none absolute inset-0 z-10 mx-auto h-full max-h-[260px] w-full object-contain drop-shadow-[0_22px_30px_rgba(44,50,23,0.26)] [transform:translateZ(36px)]",
                 imageClassName,
               )}
             />
@@ -245,7 +265,7 @@ export function Figure3D({
           fallbackSrc={fallbackSrc}
           alt={alt}
           className={cn(
-            "relative z-10 mx-auto h-full max-h-[260px] w-full object-contain drop-shadow-[0_22px_30px_rgba(26,21,80,0.26)] [transform:translateZ(36px)]",
+            "relative z-10 mx-auto h-full max-h-[260px] w-full object-contain drop-shadow-[0_22px_30px_rgba(44,50,23,0.26)] [transform:translateZ(36px)]",
             imageClassName,
           )}
         />

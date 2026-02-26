@@ -8,7 +8,12 @@ import {
   CheckCircleIcon,
   CubeIcon,
   FireIcon,
+  FunnelIcon,
+  GlobeAltIcon,
   InformationCircleIcon,
+  MagnifyingGlassIcon,
+  MapIcon,
+  RocketLaunchIcon,
   ShieldCheckIcon,
   ShoppingCartIcon,
   SparklesIcon,
@@ -23,6 +28,7 @@ import { Figure3D } from "@/components/reveal/figure-3d";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetClose,
@@ -33,12 +39,12 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Toaster } from "@/components/ui/sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const FALLBACK_DOFLIN_IMAGE = "/images/placeholders/doflin-placeholder.svg";
 const ACTIVE_SERIES = ["Animals", "Multiverse"] as const;
 
-type SeriesFilter = "all" | "animals" | "multiverse";
+type Universe = "animals" | "multiverse";
+type RarityFilter = "all" | Rarity;
 
 interface CollectionPayload {
   status: "ok";
@@ -51,6 +57,73 @@ interface RemainingPayload {
   totalRemaining: number;
 }
 
+interface PackOption {
+  name: string;
+  pieces: number;
+  detail: string;
+  icon: React.ElementType;
+  cardClassName: string;
+}
+
+const ANIMALS_PACKS: PackOption[] = [
+  {
+    name: "Explorador",
+    pieces: 5,
+    detail: "Entrada rápida a la colección Animals",
+    icon: MapIcon,
+    cardClassName:
+      "bg-[linear-gradient(135deg,#eef4d9,#deecbe,#c9de9f)] shadow-[0_18px_34px_rgba(98,121,58,0.2)]",
+  },
+  {
+    name: "Safari",
+    pieces: 15,
+    detail: "Balance ideal entre variedad y costo",
+    icon: GlobeAltIcon,
+    cardClassName:
+      "bg-[linear-gradient(135deg,#ffeccf,#ffdcae,#f6c889)] shadow-[0_18px_34px_rgba(170,112,37,0.2)]",
+  },
+  {
+    name: "Salvaje",
+    pieces: 30,
+    detail: "La experiencia más completa de fauna",
+    icon: FireIcon,
+    cardClassName:
+      "bg-[linear-gradient(135deg,#ffe2cf,#ffc79e,#f49b6d)] shadow-[0_18px_34px_rgba(172,83,42,0.24)]",
+  },
+];
+
+const MULTIVERSE_PACKS: PackOption[] = [
+  {
+    name: "Portal",
+    pieces: 5,
+    detail: "Primer salto a variantes de Multiverse",
+    icon: RocketLaunchIcon,
+    cardClassName:
+      "bg-[linear-gradient(135deg,#e9f3ff,#d7e8ff,#c4dbff)] shadow-[0_18px_34px_rgba(58,92,156,0.2)]",
+  },
+  {
+    name: "Nexo",
+    pieces: 15,
+    detail: "Más posibilidades de rarezas altas",
+    icon: SparklesIcon,
+    cardClassName:
+      "bg-[linear-gradient(135deg,#e6ecff,#d7ddff,#c7ccff)] shadow-[0_18px_34px_rgba(77,82,164,0.22)]",
+  },
+  {
+    name: "Omniverse",
+    pieces: 30,
+    detail: "Pack premium para cazar épicos y más",
+    icon: BoltIcon,
+    cardClassName:
+      "bg-[linear-gradient(135deg,#f0e9ff,#e2d7ff,#d3c6ff)] shadow-[0_18px_34px_rgba(104,76,158,0.22)]",
+  },
+];
+
+const RARITY_FILTER_OPTIONS: { value: RarityFilter; label: string }[] = [
+  { value: "all", label: "Todas" },
+  ...RARITY_ORDER.map((rarity) => ({ value: rarity, label: rarityLabel(rarity) })),
+];
+
 function RarityPill({ rarity }: { rarity: Rarity }): React.JSX.Element {
   const config = RARITY_CONFIG[rarity];
 
@@ -59,7 +132,7 @@ function RarityPill({ rarity }: { rarity: Rarity }): React.JSX.Element {
       className="font-bold"
       style={{
         backgroundColor: config.softColor,
-        color: rarity === "MYTHIC" ? "#7C5A10" : config.color,
+        color: rarity === "MYTHIC" ? "#4A3A18" : config.color,
       }}
     >
       {rarityLabel(rarity)}
@@ -72,7 +145,9 @@ function normalizeSeries(series: string): string {
 }
 
 export function RevealExperience(): React.JSX.Element {
-  const [seriesFilter, setSeriesFilter] = useState<SeriesFilter>("all");
+  const [activeUniverse, setActiveUniverse] = useState<Universe>("animals");
+  const [rarityFilter, setRarityFilter] = useState<RarityFilter>("all");
+  const [searchQuery, setSearchQuery] = useState("");
   const [collection, setCollection] = useState<CollectionItemDTO[]>([]);
   const [remaining, setRemaining] = useState<Record<Rarity, number> | null>(null);
 
@@ -84,31 +159,101 @@ export function RevealExperience(): React.JSX.Element {
     return subset.length ? subset : collection;
   }, [collection]);
 
-  const collectionCounts = useMemo(
-    () => ({
-      animals: featuredCollection.filter((item) => normalizeSeries(item.series) === "animals").length,
-      multiverse: featuredCollection.filter((item) => normalizeSeries(item.series) === "multiverse").length,
-    }),
+  const animalsCollection = useMemo(
+    () => featuredCollection.filter((item) => normalizeSeries(item.series) === "animals"),
     [featuredCollection],
   );
 
+  const multiverseCollection = useMemo(
+    () => featuredCollection.filter((item) => normalizeSeries(item.series) === "multiverse"),
+    [featuredCollection],
+  );
+
+  const collectionCounts = useMemo(
+    () => ({
+      animals: animalsCollection.length,
+      multiverse: multiverseCollection.length,
+    }),
+    [animalsCollection.length, multiverseCollection.length],
+  );
+
   const filteredCollection = useMemo(() => {
-    if (seriesFilter === "all") {
-      return featuredCollection;
-    }
+    const normalizedSearch = searchQuery.trim().toLowerCase();
 
-    const target = seriesFilter === "animals" ? "animals" : "multiverse";
-    return featuredCollection.filter((item) => normalizeSeries(item.series) === target);
-  }, [featuredCollection, seriesFilter]);
+    return featuredCollection
+      .filter((item) => {
+        if (rarityFilter !== "all" && item.rarity !== rarityFilter) {
+          return false;
+        }
 
-  const scrollToSection = useCallback((sectionId: "rareza" | "colecciones" | "coleccion" | "como-funciona") => {
-    const target = document.getElementById(sectionId);
-    if (!target) {
-      return;
-    }
+        if (!normalizedSearch) {
+          return true;
+        }
 
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-  }, []);
+        const byName = item.name.toLowerCase().includes(normalizedSearch);
+        const bySeries = item.series.toLowerCase().includes(normalizedSearch);
+        const byNumber = String(item.collectionNumber).includes(normalizedSearch);
+
+        return byName || bySeries || byNumber;
+      })
+      .sort((a, b) => a.collectionNumber - b.collectionNumber);
+  }, [featuredCollection, rarityFilter, searchQuery]);
+
+  const animalsFiltered = useMemo(
+    () => filteredCollection.filter((item) => normalizeSeries(item.series) === "animals"),
+    [filteredCollection],
+  );
+
+  const multiverseFiltered = useMemo(
+    () => filteredCollection.filter((item) => normalizeSeries(item.series) === "multiverse"),
+    [filteredCollection],
+  );
+
+  const activeConfig = useMemo(
+    () =>
+      activeUniverse === "animals"
+        ? {
+            label: "Animals",
+            sectionTitle: "Sección Doflins Animals",
+            packs: ANIMALS_PACKS,
+            cards: animalsFiltered,
+            count: collectionCounts.animals,
+            badgeClass: "bg-[#edf4d8] text-[var(--ink-800)] ring-1 ring-[#c9da9a]",
+            cardClass: "border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)]",
+            buttonClass: "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]",
+          }
+        : {
+            label: "Multiverse",
+            sectionTitle: "Sección Doflins Multiverse",
+            packs: MULTIVERSE_PACKS,
+            cards: multiverseFiltered,
+            count: collectionCounts.multiverse,
+            badgeClass: "bg-[#e9efff] text-[var(--ink-800)] ring-1 ring-[#c8d3f4]",
+            cardClass: "border-[#ccd2e8] bg-[linear-gradient(180deg,#eff3ff,#e4e9fb)]",
+            buttonClass: "bg-[linear-gradient(135deg,#4a62b5,#5d74cf)]",
+          },
+    [activeUniverse, animalsFiltered, collectionCounts.animals, collectionCounts.multiverse, multiverseFiltered],
+  );
+
+  const scrollToSection = useCallback(
+    (sectionId: "universos" | "universo-activo" | "rareza" | "catalogo" | "plataforma") => {
+      const target = document.getElementById(sectionId);
+      if (!target) {
+        return;
+      }
+
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    },
+    [],
+  );
+
+  const openUniverse = useCallback(
+    (target: Universe, sectionId: "universo-activo" | "catalogo") => {
+      setActiveUniverse(target);
+      scrollToSection(sectionId);
+    },
+    [scrollToSection],
+  );
 
   useEffect(() => {
     async function loadCatalogData(): Promise<void> {
@@ -140,7 +285,7 @@ export function RevealExperience(): React.JSX.Element {
 
   const handlePurchaseIntent = useCallback(() => {
     toast("Abriendo compra...", {
-      description: "Elige tu pack x1, x3 o x5 para seguir coleccionando.",
+      description: "Elige tu universo y continúa con tu colección.",
       icon: <ShoppingCartIcon className="h-4 w-4" />,
     });
 
@@ -163,33 +308,36 @@ export function RevealExperience(): React.JSX.Element {
 
   return (
     <main className="relative overflow-hidden pb-24">
-      <div className="pointer-events-none absolute inset-0 -z-20 bg-[radial-gradient(circle_at_18%_8%,rgba(123,97,255,0.35),transparent_36%),radial-gradient(circle_at_86%_12%,rgba(76,145,255,0.26),transparent_36%),radial-gradient(circle_at_50%_88%,rgba(255,125,212,0.2),transparent_30%)]" />
-      <div className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(180deg,#f6f3ff,#f2f6ff_45%,#f8f4ff)]" />
+      <div className="pointer-events-none absolute inset-0 -z-30 bg-[radial-gradient(circle_at_10%_8%,rgba(246,192,93,0.32),transparent_34%),radial-gradient(circle_at_85%_10%,rgba(70,130,180,0.3),transparent_34%),radial-gradient(circle_at_50%_88%,rgba(87,116,56,0.2),transparent_30%)]" />
+      <div className="pointer-events-none absolute inset-0 -z-20 bg-[linear-gradient(180deg,#f9f5e7,#e8f0df_42%,#d8e4da)]" />
 
-      <header className="mx-auto w-full max-w-6xl px-5 pt-6 sm:px-8 lg:px-10">
-        <div className="flex items-center justify-between rounded-full border border-white/70 bg-white/75 px-3 py-2 shadow-[0_12px_36px_rgba(63,41,128,0.12)] backdrop-blur">
+      <header className="sticky top-0 z-40 mx-auto w-full max-w-6xl px-5 pt-4 sm:px-8 lg:px-10">
+        <div className="flex items-center justify-between rounded-full border border-[#efe2bf]/85 bg-[#fff8e7]/90 px-3 py-2 shadow-[0_10px_26px_rgba(86,89,39,0.18)] backdrop-blur">
           <div className="flex items-center gap-3">
-            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[linear-gradient(135deg,#2d1a62,#5133be)] text-sm font-black text-white">
+            <div className="grid h-10 w-10 place-items-center rounded-xl bg-[linear-gradient(135deg,#425f2d,#6f8740)] text-sm font-black text-white">
               DF
             </div>
             <p className="font-title text-2xl font-extrabold tracking-tight text-[var(--ink-900)]">DOFLINS</p>
           </div>
 
-          <nav className="hidden items-center gap-7 text-sm font-semibold text-[var(--ink-700)] lg:flex">
-            <button type="button" onClick={() => scrollToSection("colecciones")} className="transition hover:text-[var(--brand-primary)]">
-              Ediciones
+          <nav className="hidden items-center gap-6 text-sm font-semibold text-[var(--ink-700)] lg:flex">
+            <button type="button" onClick={() => scrollToSection("universos")} className="transition hover:text-[var(--brand-primary)]">
+              Universos
             </button>
-            <button type="button" onClick={() => scrollToSection("como-funciona")} className="transition hover:text-[var(--brand-primary)]">
-              Cómo funciona
+            <button type="button" onClick={() => scrollToSection("rareza")} className="transition hover:text-[var(--brand-primary)]">
+              Rareza
             </button>
-            <button type="button" onClick={() => scrollToSection("coleccion")} className="transition hover:text-[var(--brand-primary)]">
+            <button type="button" onClick={() => scrollToSection("catalogo")} className="transition hover:text-[var(--brand-primary)]">
               Catálogo
+            </button>
+            <button type="button" onClick={() => scrollToSection("plataforma")} className="transition hover:text-[var(--brand-primary)]">
+              Plataforma
             </button>
           </nav>
 
           <div className="flex items-center gap-2">
             <a href={purchaseUrl} target="_blank" rel="noreferrer" className="hidden sm:block" onClick={handlePurchaseIntent}>
-              <Button className="h-11 bg-[linear-gradient(135deg,#6636ff,#7a4bff)] px-6 text-white hover:brightness-105">Comprar mystery bag</Button>
+              <Button className="h-11 bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] px-6 text-white hover:brightness-105">Comprar</Button>
             </a>
 
             <Sheet>
@@ -206,17 +354,22 @@ export function RevealExperience(): React.JSX.Element {
                 </SheetHeader>
                 <div className="space-y-2">
                   <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("como-funciona")}>
-                      Cómo funciona
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("universos")}>
+                      Universos
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("rareza")}>
-                      Rareza
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => openUniverse("animals", "universo-activo")}>
+                      Animals
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("coleccion")}>
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => openUniverse("multiverse", "universo-activo")}>
+                      Multiverse
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("catalogo")}>
                       Catálogo
                     </Button>
                   </SheetClose>
@@ -227,140 +380,160 @@ export function RevealExperience(): React.JSX.Element {
         </div>
       </header>
 
-      <section className="mx-auto w-full max-w-6xl px-5 pb-12 pt-9 sm:px-8 lg:px-10">
-        <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:items-end">
+      <section className="mx-auto w-full max-w-6xl px-5 pb-10 pt-10 sm:px-8 lg:px-10">
+        <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-end">
           <div className="space-y-6">
-            <Badge className="border-white/80 bg-white/75 text-[var(--ink-700)] ring-1 ring-black/10">QR fijo oficial de catálogo</Badge>
+            <Badge className="border-[#e4d6af] bg-[#fff9ea] text-[var(--ink-700)] ring-1 ring-[#d6c79b]">Ediciones oficiales 2026</Badge>
             <h1 className="font-title text-5xl leading-[0.95] tracking-tight text-[var(--ink-900)] sm:text-6xl">
-              Colecciona los
+              Animals y Multiverse
               <br />
-              DOFLINS
+              2 personalidades distintas
             </h1>
-            <p className="max-w-2xl text-[1.30rem] leading-relaxed text-[var(--ink-700)]">
-              Este QR lleva a la página oficial de rarezas y colección completa. No necesitas ingresar código: solo
-              revisa rarezas, modelos y elige tu siguiente pack.
+            <p className="max-w-2xl text-[1.15rem] leading-relaxed text-[var(--ink-700)]">
+              Selecciona el universo activo para ver solo esa temática. Cada colección mantiene su propia personalidad
+              visual sin mezclarse en la misma vista.
             </p>
 
             <div className="flex flex-wrap gap-3">
+              <Button size="lg" className="h-12 bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]" onClick={() => scrollToSection("universos")}>
+                <SparklesIcon className="h-5 w-5" /> Explorar universos
+              </Button>
               <a href={purchaseUrl} target="_blank" rel="noreferrer" onClick={handlePurchaseIntent}>
-                <Button size="lg" className="h-12 bg-[linear-gradient(135deg,#6636ff,#7a4bff)]">
-                  <SparklesIcon className="h-5 w-5" /> Comprar mystery bag
+                <Button variant="secondary" size="lg" className="h-12">
+                  <ShoppingCartIcon className="h-5 w-5" /> Comprar mystery bag
                 </Button>
               </a>
-
-              <Button variant="secondary" size="lg" className="h-12" onClick={() => scrollToSection("coleccion")}>
-                <TicketIcon className="h-5 w-5" /> Ver colección completa
-              </Button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-2.5 text-sm text-[var(--ink-700)]">
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/90 bg-white/75 px-3 py-1.5">
-                <ShieldCheckIcon className="h-4 w-4 text-emerald-600" /> Página oficial verificada
+            <div className="flex flex-wrap gap-2 text-sm text-[var(--ink-700)]">
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#e6d9b4] bg-[#fff8e8] px-3 py-1.5">
+                <ShieldCheckIcon className="h-4 w-4 text-emerald-700" /> QR oficial verificado
               </span>
-              <span className="inline-flex items-center gap-1 rounded-full border border-white/90 bg-white/75 px-3 py-1.5">
-                <CubeIcon className="h-4 w-4 text-violet-600" /> Figuras con efecto 3D visual
+              <span className="inline-flex items-center gap-1 rounded-full border border-[#e6d9b4] bg-[#fff8e8] px-3 py-1.5">
+                <CubeIcon className="h-4 w-4 text-lime-700" /> Catálogo 3D por figura
               </span>
             </div>
           </div>
 
-          <Card className="overflow-hidden border-white/80 bg-white/78 shadow-[0_18px_50px_rgba(65,46,132,0.18)]">
+          <Card className="overflow-hidden border-[#e8dcb8]/80 bg-[#fff9ea]/90 shadow-[0_18px_45px_rgba(89,79,30,0.18)]">
             <CardContent className="space-y-4 p-6">
-              <Tabs defaultValue="rareza">
-                <TabsList className="grid h-11 w-full grid-cols-3">
-                  <TabsTrigger value="rareza">Rareza</TabsTrigger>
-                  <TabsTrigger value="valor">Valor</TabsTrigger>
-                  <TabsTrigger value="tips">Tips</TabsTrigger>
-                </TabsList>
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--ink-600)]">Estado de colección</p>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="rounded-2xl bg-[linear-gradient(135deg,#edf4d9,#d8eaaf)] p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">Animals</p>
+                  <p className="mt-1 text-3xl font-black text-[var(--ink-900)]">{collectionCounts.animals}</p>
+                  <p className="text-xs text-[var(--ink-700)]">modelos activos</p>
+                </div>
+                <div className="rounded-2xl bg-[linear-gradient(135deg,#e8efff,#d3e0ff)] p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">Multiverse</p>
+                  <p className="mt-1 text-3xl font-black text-[var(--ink-900)]">{collectionCounts.multiverse}</p>
+                  <p className="text-xs text-[var(--ink-700)]">modelos activos</p>
+                </div>
+              </div>
 
-                <TabsContent value="rareza" className="space-y-3">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--ink-600)]">Probabilidades oficiales</p>
-                  <ul className="space-y-2">
-                    {RARITY_ORDER.map((rarity) => (
-                      <li key={rarity} className="flex items-center justify-between rounded-2xl bg-white/90 px-4 py-2">
-                        <span className="font-semibold text-[var(--ink-800)]">{rarityLabel(rarity)}</span>
-                        <span className="text-sm font-bold" style={{ color: RARITY_CONFIG[rarity].color }}>
-                          {RARITY_CONFIG[rarity].probability}%
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </TabsContent>
-
-                <TabsContent value="valor" className="space-y-3 text-sm text-[var(--ink-700)]">
-                  <div className="rounded-2xl bg-white/90 p-4">
-                    <p className="flex items-center gap-2 font-semibold text-[var(--ink-800)]">
-                      <CheckCircleIcon className="h-4 w-4 text-emerald-600" /> Más confianza para el cliente
-                    </p>
-                    <p className="mt-1">QR único para todos: simple de operar y sin errores manuales en empaque.</p>
-                  </div>
-                  <div className="rounded-2xl bg-white/90 p-4">
-                    <p className="flex items-center gap-2 font-semibold text-[var(--ink-800)]">
-                      <InformationCircleIcon className="h-4 w-4 text-sky-600" /> Colecciones activas
-                    </p>
-                    <p className="mt-1">Muestra clara de Animals y Multiverse con rareza visible por personaje.</p>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="tips" className="space-y-3 text-sm text-[var(--ink-700)]">
-                  <p className="rounded-2xl bg-white/90 px-4 py-3">Manda directo a compra con botón visible arriba y abajo.</p>
-                  <p className="rounded-2xl bg-white/90 px-4 py-3">Destaca cuántos legendarios/míticos siguen sin descubrirse.</p>
-                  <p className="rounded-2xl bg-white/90 px-4 py-3">Invita a compartir resultados en TikTok para aumentar alcance.</p>
-                </TabsContent>
-              </Tabs>
+              <div className="rounded-2xl bg-white/90 p-4 text-sm text-[var(--ink-700)]">
+                <p className="flex items-center gap-2 font-semibold text-[var(--ink-900)]">
+                  <CheckCircleIcon className="h-4 w-4 text-emerald-700" /> Plataforma conectada
+                </p>
+                <p className="mt-1">Datos cargados desde `/api/collection` y `/api/stats/remaining`.</p>
+              </div>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-4 sm:px-8 lg:px-10" id="como-funciona">
-        <Card className="overflow-hidden border-white/90 bg-white/82 shadow-[0_22px_45px_rgba(69,48,138,0.14)]">
-          <CardContent className="space-y-6 p-6 sm:p-8">
-            <h2 className="font-title text-3xl text-[var(--ink-900)]">Cómo funciona ahora</h2>
-            <div className="grid gap-4 sm:grid-cols-3">
-              <div className="rounded-2xl bg-[linear-gradient(135deg,#efe9ff,#e2d7ff)] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-600)]">Paso 1</p>
-                <p className="mt-2 font-semibold text-[var(--ink-900)]">Compra tu bolsa</p>
-                <p className="mt-1 text-sm text-[var(--ink-700)]">Pack x1, x3 o x5 según tu producto.</p>
+      <section className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-8 lg:px-10" id="universos">
+        <h2 className="mb-5 font-title text-3xl text-[var(--ink-900)]">Universos DOFLINS</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,#f0f5dd,#dceab8,#c9de9f)] shadow-[0_18px_34px_rgba(85,117,54,0.2)]">
+            <CardContent className="space-y-4 p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-700)]">Sección</p>
+              <h3 className="font-title text-3xl text-[var(--ink-900)]">Doflins Animals</h3>
+              <p className="text-[var(--ink-700)]">Fauna con personalidad, colores naturales y look safari/selva.</p>
+              <div className="flex flex-wrap gap-2">
+                <Badge className="bg-white text-[var(--ink-900)]">{collectionCounts.animals} modelos</Badge>
+                <Badge className="bg-white text-[var(--ink-900)]">Explorador / Safari / Salvaje</Badge>
               </div>
-              <div className="rounded-2xl bg-[linear-gradient(135deg,#e4ecff,#d4e3ff)] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-600)]">Paso 2</p>
-                <p className="mt-2 font-semibold text-[var(--ink-900)]">Escanea el QR fijo</p>
-                <p className="mt-1 text-sm text-[var(--ink-700)]">Te lleva a esta página oficial de rareza y catálogo.</p>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={() => openUniverse("animals", "universo-activo")}>Activar Animals</Button>
+                <Button variant="secondary" size="sm" onClick={() => openUniverse("animals", "catalogo")}>Ver catálogo Animals</Button>
               </div>
-              <div className="rounded-2xl bg-[linear-gradient(135deg,#ffe8ef,#ffd9e9)] p-4">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--ink-600)]">Paso 3</p>
-                <p className="mt-2 font-semibold text-[var(--ink-900)]">Compara y comparte</p>
-                <p className="mt-1 text-sm text-[var(--ink-700)]">Revisa rarezas y comparte en TikTok.</p>
-              </div>
-            </div>
+            </CardContent>
+          </Card>
 
-            <div className="rounded-2xl border border-dashed border-violet-200 bg-violet-50/70 p-4">
-              <p className="text-sm font-semibold text-[var(--ink-900)]">Texto recomendado para imprimir en cada bolsita:</p>
-              <p className="mt-2 rounded-xl bg-white p-3 text-sm text-[var(--ink-800)]">
-                &ldquo;Escanea este QR para ver la colección oficial DOFLINS, conocer niveles de rareza (Común, Raro,
-                Épico, Legendario, Ultra, Mítico) y descubrir nuevas ediciones.&rdquo;
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+          <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,#e9efff,#d8e3ff,#c8d4ff)] shadow-[0_18px_34px_rgba(62,88,152,0.24)]">
+            <CardContent className="space-y-4 p-6">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-700)]">Sección</p>
+              <h3 className="font-title text-3xl text-[var(--ink-900)]">Doflins Multiverse</h3>
+              <p className="text-[var(--ink-700)]">Versiones alternas con estética futurista y rarezas de alto impacto.</p>
+              <div className="flex flex-wrap gap-2">
+                <Badge className="bg-white text-[var(--ink-900)]">{collectionCounts.multiverse} modelos</Badge>
+                <Badge className="bg-white text-[var(--ink-900)]">Portal / Nexo / Omniverse</Badge>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" className="bg-[linear-gradient(135deg,#4a62b5,#5d74cf)]" onClick={() => openUniverse("multiverse", "universo-activo")}>Activar Multiverse</Button>
+                <Button variant="secondary" size="sm" onClick={() => openUniverse("multiverse", "catalogo")}>Ver catálogo Multiverse</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10" id="universo-activo">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-title text-3xl text-[var(--ink-900)]">{activeConfig.sectionTitle}</h3>
+          <Badge className={activeConfig.badgeClass}>{activeConfig.count} figuras</Badge>
+        </div>
+
+        <div className="mb-5 flex flex-wrap gap-2">
+          <Button size="sm" className={activeUniverse === "animals" ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]" : undefined} variant={activeUniverse === "animals" ? "primary" : "secondary"} onClick={() => setActiveUniverse("animals")}>
+            Ver Animals
+          </Button>
+          <Button size="sm" className={activeUniverse === "multiverse" ? "bg-[linear-gradient(135deg,#4a62b5,#5d74cf)]" : undefined} variant={activeUniverse === "multiverse" ? "primary" : "secondary"} onClick={() => setActiveUniverse("multiverse")}>
+            Ver Multiverse
+          </Button>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {activeConfig.packs.map((pack) => {
+            const Icon = pack.icon;
+
+            return (
+              <Card key={pack.name} className={`overflow-hidden border-0 ${pack.cardClassName}`}>
+                <CardContent className="space-y-2 p-6">
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-title text-2xl text-[var(--ink-900)]">{pack.name}</h4>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-white/85 px-3 py-1 text-xs font-black text-[var(--ink-900)]">
+                      <Icon className="h-4 w-4" /> {pack.pieces}
+                    </span>
+                  </div>
+                  <p className="text-sm text-[var(--ink-700)]">{pack.detail}</p>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 lg:px-10" id="rareza">
         <div className="mb-5 flex items-center justify-between gap-3">
           <h3 className="font-title text-3xl text-[var(--ink-900)]">Sistema de rareza</h3>
-          <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-2 text-sm text-[var(--ink-700)] ring-1 ring-black/10">
-            <FireIcon className="h-4 w-4 text-orange-500" />
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#fff7df] px-4 py-2 text-sm text-[var(--ink-700)] ring-1 ring-[#d3c18f]">
+            <FireIcon className="h-4 w-4 text-orange-600" />
             Quedan {remaining?.LEGENDARY ?? "--"} legendarios sin descubrir
           </div>
         </div>
 
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {RARITY_ORDER.map((rarity) => (
-            <Card key={rarity} className="border-white bg-white/80">
+            <Card key={rarity} className="border-[#e8dab4] bg-[#fff9e8]/88">
               <CardContent className="space-y-3 p-5">
                 <div className="flex items-center justify-between">
                   <h4 className="font-title text-xl text-[var(--ink-900)]">{rarityLabel(rarity)}</h4>
-                  <span className="rounded-full px-2 py-1 text-xs font-bold" style={{ color: RARITY_CONFIG[rarity].color, backgroundColor: RARITY_CONFIG[rarity].softColor }}>
+                  <span
+                    className="rounded-full px-2 py-1 text-xs font-bold"
+                    style={{ color: RARITY_CONFIG[rarity].color, backgroundColor: RARITY_CONFIG[rarity].softColor }}
+                  >
                     {RARITY_CONFIG[rarity].probability}%
                   </span>
                 </div>
@@ -371,91 +544,153 @@ export function RevealExperience(): React.JSX.Element {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10" id="colecciones">
-        <h3 className="mb-5 font-title text-3xl text-[var(--ink-900)]">Colecciones activas</h3>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,#ffe5d0,#ffd4bd,#ffbe95)] shadow-[0_18px_34px_rgba(191,108,25,0.2)]">
-            <CardContent className="space-y-3 p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-700)]">Colección</p>
-              <h4 className="font-title text-3xl text-[var(--ink-900)]">Animals</h4>
-              <p className="text-[var(--ink-700)]">Personajes inspirados en fauna con acabados de colección.</p>
-              <Badge className="bg-white text-[var(--ink-900)]">{collectionCounts.animals} modelos</Badge>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,#d9dbff,#c7cbff,#b3bbff)] shadow-[0_18px_34px_rgba(64,76,188,0.24)]">
-            <CardContent className="space-y-3 p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-700)]">Colección</p>
-              <h4 className="font-title text-3xl text-[var(--ink-900)]">Multiverse</h4>
-              <p className="text-[var(--ink-700)]">Versiones alternas y temáticas especiales con rarezas altas.</p>
-              <Badge className="bg-white text-[var(--ink-900)]">{collectionCounts.multiverse} modelos</Badge>
-            </CardContent>
-          </Card>
+      <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10" id="catalogo">
+        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+          <h3 className="font-title text-3xl text-[var(--ink-900)]">Catálogo de {activeConfig.label}</h3>
+          <Badge className={activeConfig.badgeClass}>{activeConfig.cards.length} figuras visibles</Badge>
         </div>
+
+        <Card className="border-[#e7dab8] bg-[#fff9ea]/90">
+          <CardContent className="space-y-5 p-5">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                className={activeUniverse === "animals" ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]" : undefined}
+                variant={activeUniverse === "animals" ? "primary" : "secondary"}
+                onClick={() => setActiveUniverse("animals")}
+              >
+                Mostrar Animals
+              </Button>
+              <Button
+                size="sm"
+                className={activeUniverse === "multiverse" ? "bg-[linear-gradient(135deg,#4a62b5,#5d74cf)]" : undefined}
+                variant={activeUniverse === "multiverse" ? "primary" : "secondary"}
+                onClick={() => setActiveUniverse("multiverse")}
+              >
+                Mostrar Multiverse
+              </Button>
+            </div>
+
+            <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
+              <div className="relative">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-600)]" />
+                <Input
+                  value={searchQuery}
+                  onChange={(event) => setSearchQuery(event.target.value)}
+                  placeholder="Buscar por nombre, serie o número"
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ink-600)]">
+                <FunnelIcon className="h-4 w-4" /> Rareza
+              </div>
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {RARITY_FILTER_OPTIONS.map((option) => {
+                const isActive = rarityFilter === option.value;
+
+                return (
+                  <Button
+                    key={option.value}
+                    size="sm"
+                    variant={isActive ? "primary" : "secondary"}
+                    className={isActive ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]" : undefined}
+                    onClick={() => setRarityFilter(option.value)}
+                  >
+                    {option.label}
+                  </Button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
+        <div className="mt-5 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {activeConfig.cards.map((item) => (
+            <Card key={item.id} className={`overflow-hidden border ${activeConfig.cardClass}`}>
+              <CardContent className="space-y-3 p-3">
+                <Figure3D
+                  src={item.imageUrl}
+                  fallbackSrc={FALLBACK_DOFLIN_IMAGE}
+                  alt={item.name}
+                  rarity={item.rarity}
+                  imageClassName="h-[145px]"
+                  className="p-2"
+                  modelUrl={item.collectionNumber === 1 ? "/models/doflins/michael-myers-multicolor.glb?v=5" : undefined}
+                  modelOrientation={item.collectionNumber === 1 ? "90deg 0deg 0deg" : undefined}
+                />
+
+                <div className="space-y-1">
+                  <p className="truncate font-semibold text-[var(--ink-900)]">{item.name}</p>
+                  <p className="text-xs text-[var(--ink-600)]">{item.series}</p>
+                  <p className="text-xs text-[var(--ink-600)]">#{String(item.collectionNumber).padStart(2, "0")}</p>
+                  <RarityPill rarity={item.rarity} />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {activeConfig.cards.length === 0 ? (
+          <Card className="mt-5 border-[#e7dab8] bg-[#fff9ea]/90">
+            <CardContent className="p-6 text-center">
+              <p className="font-semibold text-[var(--ink-900)]">No encontramos figuras con ese filtro.</p>
+              <p className="mt-1 text-sm text-[var(--ink-700)]">Prueba otra búsqueda o quita filtros de rareza.</p>
+            </CardContent>
+          </Card>
+        ) : null}
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10" id="coleccion">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-title text-3xl text-[var(--ink-900)]">Colección completa</h3>
-          <Badge className="bg-white text-[var(--ink-700)] ring-1 ring-black/10">{filteredCollection.length} figuras visibles</Badge>
+      <section className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 lg:px-10" id="plataforma">
+        <h3 className="mb-5 font-title text-3xl text-[var(--ink-900)]">Plataforma y experiencia de usuario</h3>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <Card className="border-[#dccc99] bg-[#fff8e7]/90">
+            <CardContent className="space-y-2 p-5">
+              <CubeIcon className="h-6 w-6 text-[var(--brand-primary)]" />
+              <p className="font-semibold text-[var(--ink-900)]">API en vivo</p>
+              <p className="text-sm text-[var(--ink-700)]">Colección y stats cargan en tiempo real desde backend.</p>
+            </CardContent>
+          </Card>
+          <Card className="border-[#dccc99] bg-[#fff8e7]/90">
+            <CardContent className="space-y-2 p-5">
+              <InformationCircleIcon className="h-6 w-6 text-[var(--brand-primary)]" />
+              <p className="font-semibold text-[var(--ink-900)]">2 personalidades</p>
+              <p className="text-sm text-[var(--ink-700)]">Cada universo se visualiza por separado con selector activo.</p>
+            </CardContent>
+          </Card>
+          <Card className="border-[#dccc99] bg-[#fff8e7]/90">
+            <CardContent className="space-y-2 p-5">
+              <TicketIcon className="h-6 w-6 text-[var(--brand-primary)]" />
+              <p className="font-semibold text-[var(--ink-900)]">Tracking de compra</p>
+              <p className="text-sm text-[var(--ink-700)]">CTA registra `purchase_intent` para medir conversión.</p>
+            </CardContent>
+          </Card>
+          <Card className="border-[#dccc99] bg-[#fff8e7]/90">
+            <CardContent className="space-y-2 p-5">
+              <SparklesIcon className="h-6 w-6 text-[var(--brand-primary)]" />
+              <p className="font-semibold text-[var(--ink-900)]">Catálogo utilizable</p>
+              <p className="text-sm text-[var(--ink-700)]">Búsqueda + rareza sin mezclar universos en pantalla.</p>
+            </CardContent>
+          </Card>
         </div>
-
-        <Tabs value={seriesFilter} onValueChange={(value) => setSeriesFilter(value as SeriesFilter)}>
-          <TabsList className="mb-5 grid h-11 w-full max-w-md grid-cols-3">
-            <TabsTrigger value="all">Todas</TabsTrigger>
-            <TabsTrigger value="animals">Animals</TabsTrigger>
-            <TabsTrigger value="multiverse">Multiverse</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value={seriesFilter} className="mt-0">
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {filteredCollection.map((item) => (
-                <Card key={item.id} className="overflow-hidden border-white bg-white/82">
-                  <CardContent className="space-y-3 p-3">
-                    <Figure3D
-                      src={item.imageUrl}
-                      fallbackSrc={FALLBACK_DOFLIN_IMAGE}
-                      alt={item.name}
-                      rarity={item.rarity}
-                      imageClassName="h-[145px]"
-                      className="p-2"
-                      modelUrl={
-                        item.collectionNumber === 1
-                          ? "/models/doflins/michael-myers-multicolor.glb?v=5"
-                          : undefined
-                      }
-                      modelOrientation={item.collectionNumber === 1 ? "90deg 0deg 0deg" : undefined}
-                    />
-
-                    <div className="space-y-1">
-                      <p className="truncate font-semibold text-[var(--ink-900)]">{item.name}</p>
-                      <p className="text-xs text-[var(--ink-600)]">{item.series}</p>
-                      <p className="text-xs text-[var(--ink-600)]">#{String(item.collectionNumber).padStart(2, "0")}</p>
-                      <RarityPill rarity={item.rarity} />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
       </section>
 
       <section className="mx-auto mt-8 w-full max-w-5xl px-5 sm:px-8 lg:px-10">
-        <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,#2d1a62,#4a2da8,#6b3fff)] text-white shadow-[0_25px_50px_rgba(53,34,116,0.45)]">
+        <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,#3f5a27,#4f6a6f,#5f6cc1)] text-white shadow-[0_25px_50px_rgba(49,67,58,0.45)]">
           <CardContent className="space-y-5 p-8 text-center sm:p-10">
             <p className="text-sm uppercase tracking-[0.24em] text-white/80">Siguiente paso</p>
-            <h3 className="font-title text-3xl sm:text-4xl">¿Quieres completar la colección?</h3>
-            <p className="mx-auto max-w-2xl text-white/85">Compra otra bolsa y aumenta tus probabilidades. Elige pack x1, x3 o x5.</p>
+            <h3 className="font-title text-3xl sm:text-4xl">Colecciona Animals y Multiverse</h3>
+            <p className="mx-auto max-w-2xl text-white/85">Selecciona tu universo favorito o combínalos para completar todo el catálogo.</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
               <a href={purchaseUrl} target="_blank" rel="noreferrer" onClick={handlePurchaseIntent}>
-                <Button className="bg-white text-[#301b73] hover:bg-slate-100" size="lg">
+                <Button className="bg-white text-[#31481e] hover:bg-slate-100" size="lg">
                   <ShoppingCartIcon className="h-5 w-5" /> Comprar ahora
                 </Button>
               </a>
-              <Link href="#coleccion">
+              <Link href="#catalogo">
                 <Button variant="secondary" size="lg" className="bg-white/20 text-white ring-white/40 hover:bg-white/30">
-                  <TicketIcon className="h-5 w-5" /> Ver colección completa
+                  <TicketIcon className="h-5 w-5" /> Ver catálogo
                 </Button>
               </Link>
               <a href={tikTokUrl} target="_blank" rel="noreferrer">
