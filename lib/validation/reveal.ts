@@ -20,6 +20,8 @@ const packSizeSchema = z.union([z.literal(1), z.literal(3), z.literal(5)]);
 export const doflinSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(2),
+  baseModel: z.string().min(1),
+  variantName: z.string().min(1),
   series: z.string().min(2),
   collectionNumber: z.number().int().positive(),
   totalCollection: z.number().int().positive(),
@@ -43,6 +45,8 @@ export const revealResponseSchema = z.object({
 export const collectionItemSchema = z.object({
   id: z.number().int().positive(),
   name: z.string().min(2),
+  baseModel: z.string().min(1),
+  variantName: z.string().min(1),
   series: z.string().min(2),
   collectionNumber: z.number().int().positive(),
   rarity: raritySchema,
@@ -68,6 +72,19 @@ export const purchaseIntentPayloadSchema = z.object({
   doflinId: z.number().int().positive().optional(),
   doflinIds: z.array(z.number().int().positive()).optional(),
   source: z.string().trim().default("reveal_cta"),
+  packSize: packSizeSchema.optional(),
+});
+
+const uxEventTypeSchema = z.enum(["universe_switch", "filter_apply", "card_open", "view_3d"]);
+
+export const uxEventPayloadSchema = z.object({
+  eventType: uxEventTypeSchema,
+  source: z.string().trim().min(1).max(40).default("reveal_ui"),
+  codeInput: z.string().trim().max(32).optional(),
+  doflinId: z.number().int().positive().optional(),
+  universe: z.enum(["animals", "multiverse"]).optional(),
+  rarity: z.union([z.literal("all"), raritySchema]).optional(),
+  query: z.string().trim().max(80).optional(),
 });
 
 export function normalizeRevealCode(rawValue: string | null): string | null {

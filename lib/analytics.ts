@@ -7,7 +7,13 @@ declare global {
 }
 
 export function pushDataLayerEvent(
-  eventName: "ViewContent" | "PurchaseIntent",
+  eventName:
+    | "ViewContent"
+    | "PurchaseIntent"
+    | "universe_switch"
+    | "filter_apply"
+    | "card_open"
+    | "view_3d",
   payload: Record<string, unknown>,
 ): void {
   if (typeof window === "undefined") {

@@ -10,7 +10,16 @@ import {
   statsRemainingResponseSchema,
 } from "@/lib/validation/reveal";
 
-type ScanEventType = "scan" | "invalid" | "reveal_success" | "purchase_intent" | "rate_limited";
+export type ScanEventType =
+  | "scan"
+  | "invalid"
+  | "reveal_success"
+  | "purchase_intent"
+  | "rate_limited"
+  | "universe_switch"
+  | "filter_apply"
+  | "card_open"
+  | "view_3d";
 
 export class RevealServiceError extends Error {
   constructor(
@@ -160,6 +169,8 @@ export async function revealDoflin(input: RevealInput): Promise<RevealResponse> 
       .select({
         id: doflins.id,
         name: doflins.nombre,
+        baseModel: doflins.modeloBase,
+        variantName: doflins.variante,
         series: doflins.serie,
         collectionNumber: doflins.numeroColeccion,
         rarity: doflins.rareza,
@@ -178,6 +189,8 @@ export async function revealDoflin(input: RevealInput): Promise<RevealResponse> 
         .select({
           id: doflins.id,
           name: doflins.nombre,
+          baseModel: doflins.modeloBase,
+          variantName: doflins.variante,
           series: doflins.serie,
           collectionNumber: doflins.numeroColeccion,
           rarity: doflins.rareza,
@@ -236,6 +249,8 @@ export async function revealDoflin(input: RevealInput): Promise<RevealResponse> 
       doflins: doflinRows.map((item) => ({
         id: item.id,
         name: item.name,
+        baseModel: item.baseModel,
+        variantName: item.variantName,
         series: item.series,
         collectionNumber: item.collectionNumber,
         totalCollection: collectionMeta?.totalCollection ?? 30,
@@ -260,6 +275,8 @@ export async function getCollection(database?: Database): Promise<CollectionItem
     .select({
       id: doflins.id,
       name: doflins.nombre,
+      baseModel: doflins.modeloBase,
+      variantName: doflins.variante,
       series: doflins.serie,
       collectionNumber: doflins.numeroColeccion,
       rarity: doflins.rareza,
@@ -269,7 +286,7 @@ export async function getCollection(database?: Database): Promise<CollectionItem
       active: doflins.activo,
     })
     .from(doflins)
-    .orderBy(doflins.numeroColeccion);
+    .orderBy(doflins.serie, doflins.numeroColeccion, doflins.id);
 
   return collectionResponseSchema.parse({
     status: "ok",

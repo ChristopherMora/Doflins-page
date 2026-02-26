@@ -16,6 +16,8 @@
 # next.js
 /.next/
 /out/
+/public/uploads/doflins/*
+!/public/uploads/doflins/.gitkeep
 
 # production
 /build

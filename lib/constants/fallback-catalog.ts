@@ -47,6 +47,8 @@ export const FALLBACK_COLLECTION: CollectionItemDTO[] = CATALOG_SEED.map((item, 
   return {
     id: number,
     name: `Doflin ${item.nombre}`,
+    baseModel: `Doflin ${item.nombre}`,
+    variantName: "Original",
     series: item.serie,
     collectionNumber: number,
     rarity: item.rareza,

@@ -115,6 +115,8 @@ async function main(): Promise<void> {
     const number = index + 1;
     return {
       nombre: `Doflin ${item.nombre}`,
+      modeloBase: `Doflin ${item.nombre}`,
+      variante: "Original",
       slug: `${slugify(item.nombre)}-${String(number).padStart(2, "0")}`,
       serie: item.serie,
       numeroColeccion: number,

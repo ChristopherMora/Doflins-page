@@ -4,6 +4,8 @@ export type PackSize = 1 | 3 | 5;
 export interface DoflinDTO {
   id: number;
   name: string;
+  baseModel: string;
+  variantName: string;
   series: string;
   collectionNumber: number;
   totalCollection: number;
@@ -27,6 +29,8 @@ export interface RevealResponse {
 export interface CollectionItemDTO {
   id: number;
   name: string;
+  baseModel: string;
+  variantName: string;
   series: string;
   collectionNumber: number;
   rarity: Rarity;

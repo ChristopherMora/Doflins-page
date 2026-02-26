@@ -18,15 +18,16 @@ interface Figure3DProps {
   disableHover?: boolean;
   modelUrl?: string;
   modelOrientation?: string;
-}
-
-interface ModelViewerElement extends HTMLElement {
-  cameraOrbit: string;
+  modelCameraOrbit?: string;
+  modelFieldOfView?: string;
+  enableModelControls?: boolean;
+  autoRotateModel?: boolean;
+  lazyModel?: boolean;
 }
 
 let modelViewerLoader: Promise<void> | null = null;
 
-async function ensureModelViewer(): Promise<void> {
+export async function ensureModelViewer(): Promise<void> {
   if (typeof window === "undefined") {
     return;
   }
@@ -79,6 +80,10 @@ function ModelViewer({
   onLoad,
   onTimeout,
   orientation,
+  cameraOrbit,
+  fieldOfView,
+  enableControls,
+  autoRotate,
 }: {
   modelUrl: string;
   alt: string;
@@ -88,6 +93,10 @@ function ModelViewer({
   onLoad: () => void;
   onTimeout: () => void;
   orientation?: string;
+  cameraOrbit?: string;
+  fieldOfView?: string;
+  enableControls?: boolean;
+  autoRotate?: boolean;
 }): React.JSX.Element {
   const nodeRef = useRef<HTMLElement | null>(null);
 
@@ -105,24 +114,8 @@ function ModelViewer({
 
     const timeoutId = window.setTimeout(() => onTimeout(), 4500);
 
-    // Animación de rotación vertical
-    let animationId: number;
-    let theta = 0;
-    
-    const animate = () => {
-      theta += 0.5; // Velocidad de rotación
-      if (theta >= 360) theta = 0;
-      
-      // Rotar en el eje vertical (theta cambia)
-      (node as ModelViewerElement).cameraOrbit = `${theta}deg 75deg auto`;
-      animationId = requestAnimationFrame(animate);
-    };
-    
-    animate();
-
     return () => {
       window.clearTimeout(timeoutId);
-      if (animationId) cancelAnimationFrame(animationId);
       node.removeEventListener("load", handleLoad as EventListener);
       node.removeEventListener("error", handleError as EventListener);
     };
@@ -135,13 +128,16 @@ function ModelViewer({
       alt={alt}
       poster={poster}
       loading="lazy"
-      orientation={orientation || "0deg 90deg 0deg"}
-      camera-orbit="0deg 75deg auto"
-      field-of-view="30deg"
+      orientation={orientation}
+      camera-orbit={cameraOrbit ?? "0deg 60deg auto"}
+      field-of-view={fieldOfView ?? "30deg"}
       shadow-intensity="0.65"
       exposure="1.28"
       interaction-prompt="none"
-      disable-zoom
+      disable-zoom={!enableControls}
+      camera-controls={enableControls}
+      auto-rotate={autoRotate}
+      rotation-per-second="16deg"
       className={className}
       style={{
         background: "transparent",
@@ -161,13 +157,20 @@ export function Figure3D({
   disableHover = false,
   modelUrl,
   modelOrientation,
+  modelCameraOrbit,
+  modelFieldOfView,
+  enableModelControls = false,
+  autoRotateModel = false,
+  lazyModel = true,
 }: Figure3DProps): React.JSX.Element {
   const rarityColor = RARITY_CONFIG[rarity].color;
   const [viewerReady, setViewerReady] = useState(false);
   const [modelLoaded, setModelLoaded] = useState(false);
   const [modelFailed, setModelFailed] = useState(false);
+  const [isInView, setIsInView] = useState(!lazyModel);
+  const containerRef = useRef<HTMLDivElement | null>(null);
   const modelLoadedRef = useRef(false);
-  const hasModel = Boolean(modelUrl && viewerReady && !modelFailed);
+  const hasModel = Boolean(modelUrl && viewerReady && !modelFailed && isInView);
 
   useEffect(() => {
     let isMounted = true;
@@ -193,10 +196,40 @@ export function Figure3D({
     modelLoadedRef.current = modelLoaded;
   }, [modelLoaded]);
 
+  useEffect(() => {
+    if (!lazyModel) {
+      return undefined;
+    }
+
+    const node = containerRef.current;
+    if (!node || isInView) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry?.isIntersecting) {
+          setIsInView(true);
+          observer.disconnect();
+        }
+      },
+      {
+        rootMargin: "180px 0px",
+        threshold: 0.1,
+      },
+    );
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [isInView, lazyModel]);
+
   const baseTilt = { rotateX: 8, rotateY: -10, y: 0, scale: 1 };
 
   return (
     <motion.div
+      ref={containerRef}
       style={{ transformPerspective: 1100 }}
       initial={baseTilt}
       animate={baseTilt}
@@ -231,6 +264,10 @@ export function Figure3D({
             alt={alt}
             poster={src || fallbackSrc}
             orientation={modelOrientation}
+            cameraOrbit={modelCameraOrbit}
+            fieldOfView={modelFieldOfView}
+            enableControls={enableModelControls}
+            autoRotate={autoRotateModel}
             className={cn(
               "relative z-20 mx-auto h-[230px] min-h-[130px] w-full [transform:translateZ(38px)]",
               imageClassName,

@@ -26,6 +26,10 @@ export const scanEventTypeEnum = mysqlEnum("event_type", [
   "reveal_success",
   "purchase_intent",
   "rate_limited",
+  "universe_switch",
+  "filter_apply",
+  "card_open",
+  "view_3d",
 ]);
 
 export const doflins = mysqlTable(
@@ -33,6 +37,8 @@ export const doflins = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     nombre: varchar("nombre", { length: 120 }).notNull(),
+    modeloBase: varchar("modelo_base", { length: 120 }).notNull().default(""),
+    variante: varchar("variante", { length: 120 }).notNull().default("Original"),
     slug: varchar("slug", { length: 140 }).notNull(),
     serie: varchar("serie", { length: 64 }).notNull(),
     numeroColeccion: int("numero_coleccion").notNull(),
@@ -50,6 +56,7 @@ export const doflins = mysqlTable(
   (table) => [
     uniqueIndex("doflins_slug_unique").on(table.slug),
     index("doflins_rareza_idx").on(table.rareza),
+    index("doflins_modelo_base_idx").on(table.modeloBase),
   ],
 );
 
@@ -114,5 +121,28 @@ export const scanEvents = mysqlTable(
   (table) => [
     index("scan_events_created_at_idx").on(table.createdAt),
     index("scan_events_event_type_idx").on(table.eventType),
+  ],
+);
+
+export const userCollectionProgress = mysqlTable(
+  "user_collection_progress",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
+    userEmail: varchar("user_email", { length: 190 }).notNull(),
+    doflinId: int("doflin_id")
+      .notNull()
+      .references(() => doflins.id),
+    owned: boolean("owned").notNull().default(true),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  },
+  (table) => [
+    uniqueIndex("user_collection_progress_user_doflin_unique").on(table.supabaseUserId, table.doflinId),
+    index("user_collection_progress_user_idx").on(table.supabaseUserId),
+    index("user_collection_progress_doflin_idx").on(table.doflinId),
   ],
 );

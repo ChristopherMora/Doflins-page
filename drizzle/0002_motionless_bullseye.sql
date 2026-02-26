@@ -1,0 +1,1 @@
+ALTER TABLE `scan_events` MODIFY COLUMN `event_type` enum('scan','invalid','reveal_success','purchase_intent','rate_limited','universe_switch','filter_apply','card_open','view_3d') NOT NULL;
