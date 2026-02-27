@@ -937,7 +937,7 @@ export function RevealExperience(): React.JSX.Element {
 
           <div className="flex items-center gap-2">
             {isAuthenticatedViewer ? (
-              <Badge className="hidden max-w-[220px] truncate bg-white/85 text-[var(--ink-700)] ring-1 ring-black/10 md:inline-flex">
+              <Badge className="hidden max-w-[150px] truncate bg-white/85 text-[var(--ink-700)] ring-1 ring-black/10 xl:inline-flex">
                 {viewerEmail ?? "Cuenta activa"}
               </Badge>
             ) : (
@@ -953,8 +953,8 @@ export function RevealExperience(): React.JSX.Element {
               </Link>
             ) : null}
             {isAuthenticatedViewer ? (
-              <Button variant="ghost" className="hidden h-11 px-4 md:inline-flex" onClick={() => void handleUserLogout()}>
-                Cerrar sesión
+              <Button variant="ghost" className="hidden h-11 px-3 text-sm md:inline-flex" onClick={() => void handleUserLogout()}>
+                Salir
               </Button>
             ) : null}
             <a
