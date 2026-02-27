@@ -56,6 +56,9 @@ services:
       - "3306"
     volumes:
       - doflins_mysql_data:/var/lib/mysql
+    networks:
+      - default
+      - dokploy-network
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-p${MYSQL_ROOT_PASSWORD:-root}"]
       interval: 10s
@@ -66,3 +69,8 @@ services:
 volumes:
   doflins_mysql_data:
   doflins_uploads:
+
+networks:
+  default:
+  dokploy-network:
+    external: true
