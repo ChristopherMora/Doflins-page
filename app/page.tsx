@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { GlobeAltIcon, ShieldCheckIcon, SparklesIcon, WrenchScrewdriverIcon } from "@heroicons/react/24/solid";
+import {
+  ArrowRightIcon,
+  CheckCircleIcon,
+  GlobeAltIcon,
+  ShieldCheckIcon,
+  SparklesIcon,
+  WrenchScrewdriverIcon,
+} from "@heroicons/react/24/solid";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,26 +35,45 @@ export default function Home(): React.JSX.Element {
         </Card>
 
         <div className="grid gap-4 md:grid-cols-2">
-          <Card className="border border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)] shadow-[0_14px_30px_rgba(85,108,50,0.15)]">
-            <CardContent className="space-y-4 p-6">
-              <Badge className="w-fit bg-[#e6f2d0] text-[var(--ink-900)]">
-                <SparklesIcon className="h-4 w-4" /> Modo Usuario
-              </Badge>
-              <h2 className="font-title text-3xl text-[var(--ink-900)]">Explorar colección</h2>
-              <p className="text-sm text-[var(--ink-700)]">
-                Vista pública para clientes: universos, rareza, catálogo y progreso de colección.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Link href="/reveal">
-                  <Button size="lg" className="bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
-                    <SparklesIcon className="h-5 w-5" /> Entrar como usuario
-                  </Button>
-                </Link>
-                <a href={purchaseUrl} target="_blank" rel="noreferrer">
-                  <Button variant="secondary" size="lg">
+          <Card className="relative border border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)] shadow-[0_14px_30px_rgba(85,108,50,0.15)]">
+            <CardContent className="space-y-5 p-6">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Badge className="w-fit bg-[#e6f2d0] text-[var(--ink-900)]">
+                  <SparklesIcon className="h-4 w-4" /> Modo Usuario
+                </Badge>
+                <span className="inline-flex items-center rounded-full bg-[#f4e8be] px-3 py-1 text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-800)]">
+                  Recomendado
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="font-title text-3xl text-[var(--ink-900)]">Explorar colección</h2>
+                <p className="text-sm leading-relaxed text-[var(--ink-700)]">
+                  Descubre universos, rarezas y progreso de forma pública con entrada rápida al catálogo.
+                </p>
+              </div>
+
+              <div className="flex flex-wrap gap-2 text-xs text-[var(--ink-700)]">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 ring-1 ring-[#dfd5ad]">
+                  <CheckCircleIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Catálogo completo
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 ring-1 ring-[#dfd5ad]">
+                  <CheckCircleIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Rarezas y progreso
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                <Button asChild size="lg" className="w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] sm:w-auto">
+                  <Link href="/reveal">
+                    <SparklesIcon className="h-5 w-5" /> Entrar como usuario <ArrowRightIcon className="h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" size="lg">
+                  <a href={purchaseUrl} target="_blank" rel="noreferrer">
                     <GlobeAltIcon className="h-5 w-5" /> Comprar packs
-                  </Button>
-                </a>
+                  </a>
+                </Button>
+                <p className="text-xs text-[var(--ink-600)]">Acceso directo al catálogo oficial de DOFLINS.</p>
               </div>
             </CardContent>
           </Card>
