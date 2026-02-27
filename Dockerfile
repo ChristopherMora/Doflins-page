@@ -8,6 +8,10 @@ FROM base AS deps
 COPY package.json package-lock.json ./
 RUN npm ci
 
+FROM base AS prod-deps
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
+
 FROM base AS builder
 ARG NEXT_PUBLIC_WOO_PRODUCT_URL
 ARG NEXT_PUBLIC_TIKTOK_URL
@@ -37,6 +41,7 @@ ENV HOSTNAME=0.0.0.0
 RUN addgroup -S nextjs && adduser -S nextjs -G nextjs
 
 COPY --from=builder /app/.next/standalone ./
+COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/drizzle ./drizzle
