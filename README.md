@@ -88,6 +88,7 @@ npm run dev
 - `npm run local:up`
 - `npm run local:down`
 - `npm run smoke` (requiere app corriendo en `localhost:3000`)
+- `docker compose up -d --build` (stack producción local)
 
 ## Conversión 3MF a GLB
 
@@ -114,22 +115,76 @@ Nota:
 - Re-escaneos devuelven los mismos Doflins de esa bolsa e incrementan `scan_count`.
 - Límite de API: 10 intentos/minuto por IP en `/api/reveal`.
 
-## Deploy en servidor propio
+## Deploy Docker (producción)
 
-1. Build standalone:
+Este repo ya incluye:
+
+- `Dockerfile` (Next.js standalone + healthcheck)
+- `docker-compose.yml` (app + mysql + volumen para uploads)
+- `docker-compose.prod.yml` (alternativa equivalente para entornos separados)
+- `scripts/docker-entrypoint.mjs` (espera DB + aplica migraciones de `drizzle/` al arrancar)
+
+### Levantar producción con Docker Compose
+
+1. Crea `.env` desde la plantilla:
 
 ```bash
-npm run build
+cp .env.example .env
 ```
 
-2. Levanta con Node:
+2. Ajusta secretos reales en `.env` (mínimo `DATABASE_URL`; recomendado también Supabase/admin).
+
+3. Levanta el stack:
 
 ```bash
-npm run start
+docker compose up -d --build
 ```
 
-3. Publica detrás de Nginx como reverse proxy hacia el puerto del proceso Node.
-   Plantilla disponible en `scripts/nginx.doflins.conf`.
+4. Verifica estado:
+
+```bash
+curl -sS http://localhost:3000/api/health
+```
+
+## Deploy en Dokploy (Git -> Deploy)
+
+Objetivo: publicar en `doflins.dofer.mx`.
+
+1. DNS:
+- crea/ajusta `A` record: `doflins.dofer.mx -> 31.220.55.210`
+
+2. En Dokploy, crea un proyecto desde tu repo Git.
+
+3. Usa una de estas opciones:
+- `Dockerfile` (app sola, usando MySQL externo)
+- `docker-compose.yml` (app + mysql en el mismo stack)
+
+4. Configura variables en Dokploy (Environment):
+- `DATABASE_URL`
+- `NEXT_PUBLIC_WOO_PRODUCT_URL=https://dofer.mx`
+- `NEXT_PUBLIC_TIKTOK_URL` (opcional)
+- `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` / `ADMIN_EMAILS` (si usarás login admin Google)
+- `ADMIN_FORM_TOKEN` (opcional como respaldo)
+- `RUN_DB_MIGRATIONS=true`
+
+Importante:
+- Las variables `NEXT_PUBLIC_*` se usan en cliente, por lo que deben estar disponibles en **build-time**.
+- Este repo ya lo soporta con `build.args` en `docker-compose.yml` y `ARG` en `Dockerfile`.
+
+5. En Domains/Ingress de Dokploy:
+- dominio: `doflins.dofer.mx`
+- puerto interno app: `3000`
+- habilita HTTPS (Let's Encrypt)
+
+6. Deploy y verificación:
+- `https://doflins.dofer.mx/`
+- `https://doflins.dofer.mx/reveal`
+- `https://doflins.dofer.mx/api/health`
+
+## Nginx manual (opcional)
+
+Si no usas ingress de Dokploy, puedes publicar por Nginx reverse proxy.
+Plantilla base: `scripts/nginx.doflins.conf`.
 
 ## Nota de assets
 
@@ -155,6 +210,8 @@ https://TU-DOMINIO/auth/v1/callback
 - Redirect URLs:
   - `http://localhost:3000/auth/callback`
   - `http://localhost:3000/auth/user/callback`
+  - `https://doflins.dofer.mx/auth/callback` (producción)
+  - `https://doflins.dofer.mx/auth/user/callback` (producción)
 
 5. En `.env.local`, define:
 

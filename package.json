@@ -16,7 +16,9 @@
     "local:up": "docker compose up -d mysql",
     "local:down": "docker compose down -v",
     "local:setup": "bash scripts/local-setup.sh",
-    "smoke": "bash scripts/smoke-reveal.sh"
+    "smoke": "bash scripts/smoke-reveal.sh",
+    "docker:prod:up": "docker compose up -d --build",
+    "docker:prod:down": "docker compose down"
   },
   "dependencies": {
     "@google/model-viewer": "^4.1.0",

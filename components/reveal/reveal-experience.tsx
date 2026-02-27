@@ -822,7 +822,7 @@ export function RevealExperience(): React.JSX.Element {
     void ensureModelViewer().catch(() => null);
   }, [selectedDoflinModelConfig?.modelUrl]);
 
-  const purchaseUrl = process.env.NEXT_PUBLIC_WOO_PRODUCT_URL ?? "https://dofer.com.mx";
+  const purchaseUrl = process.env.NEXT_PUBLIC_WOO_PRODUCT_URL ?? "https://dofer.mx";
   const tikTokUrl = process.env.NEXT_PUBLIC_TIKTOK_URL ?? "https://www.tiktok.com";
   const purchaseUrlByPack = useMemo(
     () =>
