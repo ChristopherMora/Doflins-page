@@ -462,6 +462,7 @@ export function RevealExperience(): React.JSX.Element {
   const selectedDoflinModelConfig = selectedDoflin
     ? MODEL_CONFIG_BY_COLLECTION[selectedDoflin.collectionNumber]
     : undefined;
+  const selectedDoflinHas3DModel = Boolean(selectedDoflinModelConfig?.modelUrl);
   const selectedDoflinIsOwned = selectedDoflin ? ownedSet.has(selectedDoflin.id) : false;
   const visibleCardCount = visiblePages * CATALOG_PAGE_SIZE;
   const visibleCards = useMemo(
@@ -1372,6 +1373,9 @@ export function RevealExperience(): React.JSX.Element {
                     </p>
                     <p className="text-xs text-[var(--ink-600)]">{item.series}</p>
                     <p className="text-xs text-[var(--ink-600)]">#{String(item.collectionNumber).padStart(2, "0")}</p>
+                    <Badge className="w-fit bg-white/80 text-[10px] uppercase tracking-[0.08em] text-[var(--ink-700)] ring-1 ring-black/10">
+                      {modelConfig?.modelUrl ? "3D interactivo" : "Imagen oficial"}
+                    </Badge>
                     <RarityPill rarity={item.rarity} />
                     <div className="mt-auto space-y-2 pt-2">
                       <Badge
@@ -1592,16 +1596,22 @@ export function RevealExperience(): React.JSX.Element {
       >
         <DialogContent className="w-[min(96vw,980px)] gap-0 overflow-hidden p-0">
           {selectedDoflin ? (
-            <div className="grid gap-0 md:grid-cols-[1.1fr_0.9fr]">
-              <div className="relative min-h-[320px] bg-[linear-gradient(145deg,rgba(255,255,255,0.96),rgba(239,241,255,0.92))] p-4">
-                {selectedDoflinModelConfig?.modelUrl ? (
+            <div className={`grid gap-0 ${selectedDoflinHas3DModel ? "md:grid-cols-[1.1fr_0.9fr]" : "md:grid-cols-[1fr_1fr]"}`}>
+              <div
+                className={`relative min-h-[320px] p-4 sm:p-5 ${
+                  selectedDoflinHas3DModel
+                    ? "bg-[linear-gradient(145deg,rgba(255,255,255,0.96),rgba(239,241,255,0.92))]"
+                    : "bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(243,246,230,0.95))]"
+                }`}
+              >
+                {selectedDoflinHas3DModel ? (
                   <model-viewer
-                    src={selectedDoflinModelConfig.modelUrl}
+                    src={selectedDoflinModelConfig?.modelUrl ?? ""}
                     alt={selectedDoflin.name}
                     poster={selectedDoflin.imageUrl}
-                    orientation={selectedDoflinModelConfig.orientation}
-                    camera-orbit={selectedDoflinModelConfig.cameraOrbit ?? "0deg 60deg auto"}
-                    field-of-view={selectedDoflinModelConfig.fieldOfView ?? "28deg"}
+                    orientation={selectedDoflinModelConfig?.orientation}
+                    camera-orbit={selectedDoflinModelConfig?.cameraOrbit ?? "0deg 60deg auto"}
+                    field-of-view={selectedDoflinModelConfig?.fieldOfView ?? "28deg"}
                     shadow-intensity="0.7"
                     exposure="1.2"
                     camera-controls
@@ -1611,14 +1621,26 @@ export function RevealExperience(): React.JSX.Element {
                     style={{ background: "transparent", display: "block" }}
                   />
                 ) : (
-                  <Image
-                    src={selectedDoflin.imageUrl}
-                    alt={selectedDoflin.name}
-                    width={780}
-                    height={780}
-                    className="h-[360px] w-full object-contain"
-                    unoptimized
-                  />
+                  <div className="space-y-3">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <Badge className="bg-[#ecf4da] text-[var(--ink-800)] ring-1 ring-[#cbdbab]">Vista optimizada</Badge>
+                      <Badge className="bg-white/90 text-[var(--ink-700)] ring-1 ring-[#d8dfc4]">Imagen oficial 2D</Badge>
+                    </div>
+                    <div className="relative flex h-[332px] w-full items-center justify-center overflow-hidden rounded-3xl border border-[#dcd2af] bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.98),rgba(247,242,221,0.92)_58%,rgba(236,228,197,0.92))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_14px_30px_rgba(89,90,52,0.2)]">
+                      <div className="pointer-events-none absolute inset-x-10 bottom-6 h-6 rounded-full bg-black/14 blur-md" />
+                      <Image
+                        src={selectedDoflin.imageUrl}
+                        alt={selectedDoflin.name}
+                        width={780}
+                        height={780}
+                        className="relative z-10 h-full max-h-[286px] w-full object-contain drop-shadow-[0_18px_30px_rgba(42,45,21,0.22)]"
+                        unoptimized
+                      />
+                    </div>
+                    <p className="text-xs text-[var(--ink-600)]">
+                      Vista de referencia enfocada en color y acabados. La pose puede variar segun la toma.
+                    </p>
+                  </div>
                 )}
               </div>
 
@@ -1630,9 +1652,18 @@ export function RevealExperience(): React.JSX.Element {
                     {String(selectedDoflin.collectionNumber).padStart(2, "0")}
                   </DialogDescription>
                 </DialogHeader>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <RarityPill rarity={selectedDoflin.rarity} />
                   <Badge className={activeConfig.badgeClass}>{selectedDoflin.probability}% probabilidad</Badge>
+                  <Badge
+                    className={
+                      selectedDoflinHas3DModel
+                        ? "bg-[#eaf0ff] text-[#334a9a] ring-1 ring-[#cfdbff]"
+                        : "bg-[#edf4da] text-[var(--ink-700)] ring-1 ring-[#cbdbab]"
+                    }
+                  >
+                    {selectedDoflinHas3DModel ? "Vista 3D" : "Vista imagen"}
+                  </Badge>
                 </div>
                 <div className={`rounded-2xl border p-3 ${activeTheme.panelCard}`}>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">Estado en tu colección</p>
@@ -1673,7 +1704,9 @@ export function RevealExperience(): React.JSX.Element {
                   </div>
                 </div>
                 <p className="text-sm leading-relaxed text-[var(--ink-700)]">
-                  Vista extendida de la figura para revisar acabados, volumen y estilo antes de comprar más bolsas.
+                  {selectedDoflinHas3DModel
+                    ? "Vista extendida de la figura para revisar acabados, volumen y estilo antes de comprar más bolsas."
+                    : "Vista optimizada para imagen: revisa pintura, color y silueta de esta edicion antes de comprar más bolsas."}
                 </p>
                 <div className="space-y-2">
                   <a

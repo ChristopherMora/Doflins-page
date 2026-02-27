@@ -170,9 +170,14 @@ export function Figure3D({
   const [isInView, setIsInView] = useState(!lazyModel);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const modelLoadedRef = useRef(false);
-  const hasModel = Boolean(modelUrl && viewerReady && !modelFailed && isInView);
+  const hasConfiguredModel = Boolean(modelUrl);
+  const hasModel = Boolean(hasConfiguredModel && viewerReady && !modelFailed && isInView);
 
   useEffect(() => {
+    if (!hasConfiguredModel) {
+      return undefined;
+    }
+
     let isMounted = true;
 
     void ensureModelViewer()
@@ -190,14 +195,14 @@ export function Figure3D({
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [hasConfiguredModel]);
 
   useEffect(() => {
     modelLoadedRef.current = modelLoaded;
   }, [modelLoaded]);
 
   useEffect(() => {
-    if (!lazyModel) {
+    if (!lazyModel || !hasConfiguredModel) {
       return undefined;
     }
 
@@ -223,9 +228,9 @@ export function Figure3D({
     observer.observe(node);
 
     return () => observer.disconnect();
-  }, [isInView, lazyModel]);
+  }, [hasConfiguredModel, isInView, lazyModel]);
 
-  const baseTilt = { rotateX: 8, rotateY: -10, y: 0, scale: 1 };
+  const baseTilt = hasConfiguredModel ? { rotateX: 8, rotateY: -10, y: 0, scale: 1 } : { rotateX: 0, rotateY: 0, y: 0, scale: 1 };
 
   return (
     <motion.div
@@ -236,16 +241,24 @@ export function Figure3D({
       whileHover={
         disableHover
           ? undefined
-          : {
-              rotateX: 2,
-              rotateY: -1,
-              y: -10,
-              scale: 1.035,
-            }
+          : hasConfiguredModel
+            ? {
+                rotateX: 2,
+                rotateY: -1,
+                y: -10,
+                scale: 1.035,
+              }
+            : {
+                y: -5,
+                scale: 1.02,
+              }
       }
       transition={{ type: "spring", stiffness: 180, damping: 18, mass: 0.6 }}
       className={cn(
-        "group relative overflow-hidden rounded-3xl bg-[linear-gradient(145deg,rgba(255,252,242,0.98),rgba(245,244,226,0.92))] p-4 shadow-[0_28px_42px_rgba(65,74,33,0.2)] [transform-style:preserve-3d]",
+        "group relative overflow-hidden rounded-3xl p-4 [transform-style:preserve-3d]",
+        hasConfiguredModel
+          ? "bg-[linear-gradient(145deg,rgba(255,252,242,0.98),rgba(245,244,226,0.92))] shadow-[0_28px_42px_rgba(65,74,33,0.2)]"
+          : "bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(245,247,230,0.94))] shadow-[0_18px_30px_rgba(65,74,33,0.17)]",
         className,
       )}
     >
@@ -254,7 +267,14 @@ export function Figure3D({
         style={{ background: rarityColor }}
       />
 
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.88),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(241,244,219,0.72),transparent_45%)]" />
+      <div
+        className={cn(
+          "absolute inset-0",
+          hasConfiguredModel
+            ? "bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.88),transparent_40%),radial-gradient(circle_at_80%_80%,rgba(241,244,219,0.72),transparent_45%)]"
+            : "bg-[radial-gradient(circle_at_18%_10%,rgba(255,255,255,0.95),transparent_45%),radial-gradient(circle_at_80%_80%,rgba(227,237,206,0.65),transparent_50%)]",
+        )}
+      />
       <div className="pointer-events-none absolute inset-x-10 bottom-4 h-7 rounded-full bg-black/18 blur-md [transform:translateZ(-12px)]" />
 
       {hasModel && modelUrl ? (
