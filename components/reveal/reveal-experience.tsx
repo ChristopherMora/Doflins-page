@@ -1495,8 +1495,8 @@ export function RevealExperience(): React.JSX.Element {
           <Card className={activeTheme.platformCard}>
             <CardContent className="space-y-2 p-5">
               <CubeIcon className="h-6 w-6 text-[var(--brand-primary)]" />
-              <p className="font-semibold text-[var(--ink-900)]">API en vivo</p>
-              <p className="text-sm text-[var(--ink-700)]">Colección y stats cargan en tiempo real desde backend.</p>
+              <p className="font-semibold text-[var(--ink-900)]">Disponibilidad confiable</p>
+              <p className="text-sm text-[var(--ink-700)]">Mostramos packs activos para que compres con información clara.</p>
             </CardContent>
           </Card>
           <Card className={activeTheme.platformCard}>
@@ -1509,8 +1509,8 @@ export function RevealExperience(): React.JSX.Element {
           <Card className={activeTheme.platformCard}>
             <CardContent className="space-y-2 p-5">
               <TicketIcon className="h-6 w-6 text-[var(--brand-primary)]" />
-              <p className="font-semibold text-[var(--ink-900)]">Tracking de compra</p>
-              <p className="text-sm text-[var(--ink-700)]">CTA registra `purchase_intent` para medir conversión.</p>
+              <p className="font-semibold text-[var(--ink-900)]">Compra sin fricción</p>
+              <p className="text-sm text-[var(--ink-700)]">Agrega al carrito y finaliza en checkout con un flujo simple y rápido.</p>
             </CardContent>
           </Card>
           <Card className={activeTheme.platformCard}>

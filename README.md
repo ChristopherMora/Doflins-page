@@ -20,6 +20,15 @@ Colecciones activas en esta versión: `Animals` y `Multiverse`.
 - `GET /api/collection`: catálogo de colección
 - `GET /api/stats/remaining`: remanente por rareza
 - `POST /api/events/purchase-intent`: logging de intención de compra
+- `GET /api/shop/products?universe=animals|multiverse&realtime=1`: catálogo de packs desde Shopify (forzar lectura en vivo)
+- `GET /api/shop/product/:handle`: detalle de producto Shopify por handle
+- `POST /api/cart/create`: crear carrito Shopify
+- `GET /api/cart`: obtener carrito actual desde cookie `HttpOnly`
+- `POST /api/cart/lines/add`: agregar items al carrito
+- `POST /api/cart/lines/update`: actualizar cantidades
+- `POST /api/cart/lines/remove`: eliminar items
+- `POST /api/cart/discount`: aplicar cupón
+- `POST /api/cart/checkout`: obtener `checkoutUrl` para redirigir a Shopify Checkout
 - `GET /admin/login`: login admin con Google (Supabase Auth)
 - `GET /auth/callback`: callback OAuth de Supabase
 - `GET /auth/user/callback`: callback OAuth de usuario para experiencia pública
@@ -52,6 +61,22 @@ Edita como mínimo:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `ADMIN_EMAILS` (lista blanca, separados por coma)
+- `SHOPIFY_STORE_DOMAIN` (ej: `tu-tienda.myshopify.com`)
+- `SHOPIFY_STOREFRONT_TOKEN`
+- `SHOPIFY_API_VERSION` (ej: `2025-01`)
+
+Opcional para filtro por universo:
+- `SHOPIFY_COLLECTION_ANIMALS_HANDLE` (default: `animals`)
+- `SHOPIFY_COLLECTION_MULTIVERSE_HANDLE` (default: `multiverse`)
+- `SHOPIFY_CATALOG_CACHE_TTL_MS` (default: `45000`, en milisegundos)
+- `NEXT_PUBLIC_SHOPIFY_LIVE_REFRESH_MS` (default: `15000`, polling de catálogo en cliente)
+- `SHOPIFY_FREE_GIFT_VARIANT_ID` (variantId del regalo gratis)
+- `SHOPIFY_FREE_GIFT_QUANTITY` (default: `1`)
+- `SHOPIFY_FREE_GIFT_MIN_PAID_ITEMS` (default: `1`)
+- `SHOPIFY_FREE_GIFT_MIN_PAID_SUBTOTAL` (default: `1200`, umbral en moneda de la tienda)
+- `NEXT_PUBLIC_FREE_GIFT_PROMO_LABEL` (texto promocional en UI, opcional)
+- `NEXT_PUBLIC_FREE_GIFT_MIN_SUBTOTAL` (default: `1200`, para barra de progreso en UI)
+- `NEXT_PUBLIC_SUPPORT_WHATSAPP_URL` (url completa de soporte WhatsApp para la UI de carrito)
 
 3. Opción rápida con Docker (recomendada):
 
@@ -252,3 +277,19 @@ Notas:
 
 - La UI incluye efecto 3D visual (tilt + profundidad) en tarjetas de figuras.
 - Para 3D real interactivo, la siguiente fase requiere modelos `.glb` por figura y visor WebGL.
+
+## Compras Shopify (headless)
+
+- Catálogo y carrito se manejan desde la web (`/`), con backend en rutas de Next.js.
+- El pago se completa en Shopify Checkout mediante `checkoutUrl`.
+- No se procesan tarjetas ni datos sensibles en este servidor.
+- El `cartId` se guarda en cookie `HttpOnly` (`doflins_cart_id`) para persistencia de carrito.
+- El catálogo usa cache configurable por universo en backend (`SHOPIFY_CATALOG_CACHE_TTL_MS`).
+- La UI refresca stock/productos nuevos en tiempo real por polling (`NEXT_PUBLIC_SHOPIFY_LIVE_REFRESH_MS`) y foco de ventana.
+- Promoción de regalo gratis condicional:
+  - Si configuras `SHOPIFY_FREE_GIFT_VARIANT_ID`, el backend agrega ese variant automáticamente cuando el carrito cumple:
+    - mínimo de productos pagados (`SHOPIFY_FREE_GIFT_MIN_PAID_ITEMS`) y
+    - mínimo de subtotal pagado (`SHOPIFY_FREE_GIFT_MIN_PAID_SUBTOTAL`).
+    - Acepta formato `gid://shopify/ProductVariant/...` o ID numérico (se convierte automáticamente).
+  - Si el carrito pierde productos base, el regalo se quita automáticamente.
+  - El checkout bloquea compras con solo regalo (sin bolsa pagada).
