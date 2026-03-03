@@ -2027,7 +2027,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       unoptimized
                     />
                   </div>
-                  </div>
                 ) : (
                   <div className="grid h-full w-full place-items-center text-sm text-[var(--ink-600)]">
                     <PhotoIcon className="h-7 w-7" /> Sin imagen disponible
