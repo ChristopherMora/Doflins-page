@@ -968,7 +968,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </div>
           ) : null}
 
-          {!isLoadingProducts && !products.length ? (
+          {!isLoadingProducts && !productsError && !products.length ? (
             <div className="rounded-2xl border border-[#d8d3b2] bg-white/82 p-5">
               <p className="font-semibold text-[var(--ink-900)]">No hay packs visibles para {UNIVERSE_LABELS[activeUniverse]}.</p>
               <p className="mt-1 text-sm text-[var(--ink-700)]">Estamos preparando nuevos packs para este universo. Vuelve en unos minutos.</p>
