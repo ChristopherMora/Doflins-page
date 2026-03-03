@@ -110,7 +110,7 @@ function ErrorState({ message }: { message: string }): React.JSX.Element {
     <>
       <SiteHeader />
       <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-5 py-12 pb-28 sm:px-8 sm:pb-12">
-        <Card className="w-full border border-[#e9c7c7] bg-[#fff5f5]">
+        <Card className="ink-light w-full border border-[#e9c7c7] bg-[#fff5f5]">
           <CardContent className="space-y-4 p-7">
             <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8a3f3f]">No disponible</p>
             <h1 className="font-title text-3xl text-[var(--ink-900)]">No se pudo cargar este pack</h1>
@@ -179,7 +179,7 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
           </p>
         </div>
 
-        <Card className="overflow-hidden border border-[#d9cfad] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)] shadow-[0_18px_36px_rgba(74,79,41,0.15)]">
+        <Card className="ink-light overflow-hidden border border-[#d9cfad] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)] shadow-[0_18px_36px_rgba(74,79,41,0.15)]">
           <CardContent className="grid gap-0 p-0 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="relative flex min-h-[360px] items-center justify-center overflow-hidden bg-[linear-gradient(155deg,#f7f8eb,#e8efde)] p-6">
               {product.imageUrl ? (
@@ -298,7 +298,7 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
           </CardContent>
         </Card>
 
-        <Card className="overflow-hidden border border-[#d9cfad] bg-[linear-gradient(145deg,#fffaf1,#f3f7e8)] shadow-[0_14px_30px_rgba(74,79,41,0.12)]">
+        <Card className="ink-light overflow-hidden border border-[#d9cfad] bg-[linear-gradient(145deg,#fffaf1,#f3f7e8)] shadow-[0_14px_30px_rgba(74,79,41,0.12)]">
           <CardContent className="space-y-5 p-6 sm:p-7">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div className="space-y-1">

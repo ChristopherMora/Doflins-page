@@ -68,7 +68,7 @@ export function UserAuthModal({ onClose, onAuthenticated, redirectTo = "/colecci
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm animate-in fade-in"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="w-full max-w-sm rounded-3xl border border-[#d9d2b3] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)] p-7 shadow-2xl">
+      <div className="ink-light w-full max-w-sm rounded-3xl border border-[#d9d2b3] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)] p-7 shadow-2xl">
         {/* Header */}
         <div className="mb-6 flex items-start justify-between">
           <div className="flex items-center gap-3">

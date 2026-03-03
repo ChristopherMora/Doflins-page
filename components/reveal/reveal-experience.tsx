@@ -1157,7 +1157,7 @@ export function RevealExperience(): React.JSX.Element {
   }, [handleModal3DView, selectedDoflin, selectedDoflinModelConfig?.modelUrl]);
 
   return (
-    <main className="relative overflow-hidden pb-36 transition-colors duration-500 md:pb-24" style={themeVars}>
+    <main className={`relative overflow-hidden pb-36 transition-colors duration-500 md:pb-24 ${activeUniverse === "animals" ? "ink-light" : "ink-light-blue"}`} style={themeVars}>
       {isOffline ? (
         <div className="sticky top-14 z-50 flex items-center justify-center gap-2 bg-amber-100 px-4 py-2 text-center text-xs font-semibold text-amber-900 ring-1 ring-amber-300">
           <WifiIcon className="h-4 w-4" />

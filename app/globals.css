@@ -95,6 +95,29 @@ html {
   transform: translateY(0);
 }
 
+/**
+ * Force light-mode ink variables on containers with hardcoded light backgrounds.
+ * Apply .ink-light to any card/container whose background is hardcoded to a
+ * light color so that all child text using var(--ink-*) stays dark regardless
+ * of the user's color scheme preference.
+ */
+.ink-light {
+  --ink-900: #1f2a1a !important;
+  --ink-800: #2d3c24 !important;
+  --ink-700: #445538 !important;
+  --ink-600: #64785a !important;
+  --brand-primary: #4e6f2a !important;
+  --brand-accent: #6c8a35 !important;
+}
+
+/* Variant for light blue/indigo containers (Multiverse cards) */
+.ink-light-blue {
+  --ink-900: #1c2960 !important;
+  --ink-800: #253278 !important;
+  --ink-700: #2d3f8a !important;
+  --ink-600: #3d50a0 !important;
+}
+
 :root {
   --background: #f6f2df;
   --foreground: #222d1a;

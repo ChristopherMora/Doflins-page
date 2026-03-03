@@ -1797,101 +1797,113 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
                         {stockBadge.detail ? <p className="text-xs font-medium text-[var(--ink-700)]">{stockBadge.detail}</p> : null}
 
-                        <Button
-                          asChild
-                          variant="ghost"
-                          size="sm"
-                          className="h-10 w-full rounded-full border border-[#d8d2b4] bg-white/85 text-[var(--ink-800)] hover:bg-white"
-                          onClick={(event) => event.stopPropagation()}
-                        >
-                          <Link href={`/shop/${product.handle}`}>
-                            <EyeIcon className="h-4 w-4" /> Ver detalle completo
-                          </Link>
-                        </Button>
-
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-10 w-full rounded-full border border-[#d8d2b4] bg-white/85 text-[var(--ink-800)] hover:bg-white"
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            const url = `${typeof window !== "undefined" ? window.location.origin : ""}/shop/${product.handle}`;
-                            if (
-                              typeof navigator !== "undefined" &&
-                              typeof (navigator as unknown as Record<string, unknown>)["share"] === "function"
-                            ) {
-                              void (navigator as unknown as { share: (d: { title: string; url: string }) => Promise<void> }).share({
-                                title: product.title,
-                                url,
-                              });
-                            } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-                              void navigator.clipboard.writeText(url).then(() => toast.success("Enlace copiado al portapapeles"));
-                            }
-                          }}
-                        >
-                          <ShareIcon className="h-4 w-4" /> Compartir
-
-                        </Button>
-
-                          {/* Qty stepper + add button */}
-                          <div className="relative space-y-2">
-                            {confettiByProduct.has(product.id) ?
-                              ([
-                                { tx: "-22px", rot: "-28deg", color: "#6d8a3a" },
-                                { tx: "-8px",  rot: "18deg",  color: "#ffe9b5" },
-                                { tx:  "8px",  rot: "54deg",  color: "#4e6f2a" },
-                                { tx:  "22px", rot: "-52deg", color: "#bfd89b" },
-                                { tx:  "0px",  rot: "88deg",  color: "#e6c676" },
-                              ] as const).map((dot, i) => (
-                                <span
-                                  key={i}
-                                  className="confetti-dot pointer-events-none absolute bottom-8 left-1/2 z-10 h-2.5 w-2.5 -translate-x-1/2 rounded-full"
-                                  aria-hidden
-                                  style={{
-                                    background: dot.color,
-                                    "--tx": dot.tx,
-                                    "--rot": dot.rot,
-                                    animationDelay: `${i * 35}ms`,
-                                  } as React.CSSProperties}
-                                />
-                              ))
-                            : null}
+                        {/* ── Acción principal: qty + agregar ── */}
+                        <div className="relative">
+                          {confettiByProduct.has(product.id) ?
+                            ([
+                              { tx: "-22px", rot: "-28deg", color: "#6d8a3a" },
+                              { tx: "-8px",  rot: "18deg",  color: "#ffe9b5" },
+                              { tx:  "8px",  rot: "54deg",  color: "#4e6f2a" },
+                              { tx:  "22px", rot: "-52deg", color: "#bfd89b" },
+                              { tx:  "0px",  rot: "88deg",  color: "#e6c676" },
+                            ] as const).map((dot, i) => (
+                              <span
+                                key={i}
+                                className="confetti-dot pointer-events-none absolute bottom-8 left-1/2 z-10 h-2.5 w-2.5 -translate-x-1/2 rounded-full"
+                                aria-hidden
+                                style={{
+                                  background: dot.color,
+                                  "--tx": dot.tx,
+                                  "--rot": dot.rot,
+                                  animationDelay: `${i * 35}ms`,
+                                } as React.CSSProperties}
+                              />
+                            ))
+                          : null}
+                          {isSoldOut ? (
+                            <Button
+                              className="h-12 w-full bg-[#c3cfb0] text-white"
+                              disabled
+                            >
+                              <ShoppingCartIcon className="h-5 w-5" /> Agotado
+                            </Button>
+                          ) : (
                             <div
-                              className="flex items-center justify-between gap-2 rounded-full border border-[#d8d2b4] bg-white/90 px-3 py-1"
+                              className="flex items-center gap-2"
                               onClick={(e) => e.stopPropagation()}
                               onKeyDown={(e) => e.stopPropagation()}
                             >
-                              <button
-                                type="button"
-                                aria-label="Reducir cantidad"
-                                disabled={getProductQty(product.id) <= 1}
-                                onClick={(e) => { e.stopPropagation(); setProductQty(product.id, getProductQty(product.id) - 1); }}
-                                className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--ink-700)] transition hover:bg-black/[0.07] disabled:opacity-30"
+                              {/* Stepper compacto */}
+                              <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#d8d2b4] bg-white/90 px-2 py-1.5">
+                                <button
+                                  type="button"
+                                  aria-label="Reducir cantidad"
+                                  disabled={getProductQty(product.id) <= 1}
+                                  onClick={(e) => { e.stopPropagation(); setProductQty(product.id, getProductQty(product.id) - 1); }}
+                                  className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--ink-700)] transition hover:bg-black/[0.07] disabled:opacity-30"
+                                >
+                                  <MinusIcon className="h-3.5 w-3.5" />
+                                </button>
+                                <span className="min-w-[1.25rem] text-center text-sm font-bold text-[var(--ink-900)]">{getProductQty(product.id)}</span>
+                                <button
+                                  type="button"
+                                  aria-label="Aumentar cantidad"
+                                  onClick={(e) => { e.stopPropagation(); setProductQty(product.id, getProductQty(product.id) + 1); }}
+                                  className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--ink-700)] transition hover:bg-black/[0.07]"
+                                >
+                                  <PlusIcon className="h-3.5 w-3.5" />
+                                </button>
+                              </div>
+                              {/* CTA principal */}
+                              <Button
+                                className={`h-12 flex-1 text-base font-bold bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] ${lastAddedProductId === product.id ? "animate-card-pop" : ""}`}
+                                disabled={isMutatingCart}
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  void addToCart(product, getProductQty(product.id));
+                                }}
                               >
-                                <MinusIcon className="h-4 w-4" />
-                              </button>
-                              <span className="min-w-6 text-center text-sm font-bold text-[var(--ink-900)]">{getProductQty(product.id)}</span>
-                              <button
-                                type="button"
-                                aria-label="Aumentar cantidad"
-                                onClick={(e) => { e.stopPropagation(); setProductQty(product.id, getProductQty(product.id) + 1); }}
-                                className="flex h-7 w-7 items-center justify-center rounded-full text-[var(--ink-700)] transition hover:bg-black/[0.07]"
-                              >
-                                <PlusIcon className="h-4 w-4" />
-                              </button>
+                                <ShoppingCartIcon className="h-5 w-5" />
+                                Agregar&nbsp;×{getProductQty(product.id)}
+                              </Button>
                             </div>
-                            <Button
-                              className={`w-full transition-transform ${isSoldOut ? "bg-[#c3cfb0] text-white" : "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]"} ${lastAddedProductId === product.id ? "animate-card-pop" : ""}`}
-                              disabled={isMutatingCart || isSoldOut}
-                              onClick={(event) => {
-                                event.stopPropagation();
-                                void addToCart(product, getProductQty(product.id));
-                              }}
-                            >
-                              <ShoppingCartIcon className="h-5 w-5" />
-                              {isSoldOut ? "Agotado" : `Agregar\u00a0\u00d7${getProductQty(product.id)}`}
-                            </Button>
-                          </div>
+                          )}
+                        </div>
+
+                        {/* ── Acciones secundarias (discretas) ── */}
+                        <div
+                          className="flex items-center gap-1"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
+                          <Link
+                            href={`/shop/${product.handle}`}
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-medium text-[var(--ink-600)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]"
+                          >
+                            <EyeIcon className="h-3.5 w-3.5" /> Ver detalle
+                          </Link>
+                          <span className="h-4 w-px bg-[#d8d2b4]" />
+                          <button
+                            type="button"
+                            className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-medium text-[var(--ink-600)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]"
+                            onClick={() => {
+                              const url = `${typeof window !== "undefined" ? window.location.origin : ""}/shop/${product.handle}`;
+                              if (
+                                typeof navigator !== "undefined" &&
+                                typeof (navigator as unknown as Record<string, unknown>)["share"] === "function"
+                              ) {
+                                void (navigator as unknown as { share: (d: { title: string; url: string }) => Promise<void> }).share({
+                                  title: product.title,
+                                  url,
+                                });
+                              } else if (typeof navigator !== "undefined" && navigator.clipboard) {
+                                void navigator.clipboard.writeText(url).then(() => toast.success("Enlace copiado"));
+                              }
+                            }}
+                          >
+                            <ShareIcon className="h-3.5 w-3.5" /> Compartir
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </article>
