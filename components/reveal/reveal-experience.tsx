@@ -24,7 +24,12 @@ import {
 import { toast } from "sonner";
 
 import { pushDataLayerEvent } from "@/lib/analytics";
-import { RARITY_CONFIG, RARITY_ORDER, rarityLabel } from "@/lib/constants/rarity";
+import {
+  CATALOG_RARITY_CONFIG,
+  CATALOG_RARITY_ORDER,
+  toCatalogRarity,
+  type CatalogRarity,
+} from "@/lib/constants/rarity";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { CollectionItemDTO, PackSize, Rarity } from "@/lib/types/doflin";
 import { ensureModelViewer, Figure3D } from "@/components/reveal/figure-3d";
@@ -55,7 +60,7 @@ const FALLBACK_DOFLIN_IMAGE = "/images/placeholders/doflin-placeholder.svg";
 const ACTIVE_SERIES = ["Animals", "Multiverse"] as const;
 
 type Universe = "animals" | "multiverse";
-type RarityFilter = "all" | Rarity;
+type RarityFilter = "all" | CatalogRarity;
 
 interface CollectionPayload {
   status: "ok";
@@ -183,7 +188,10 @@ const MULTIVERSE_PACKS: PackOption[] = [
 
 const RARITY_FILTER_OPTIONS: { value: RarityFilter; label: string }[] = [
   { value: "all", label: "Todas" },
-  ...RARITY_ORDER.map((rarity) => ({ value: rarity, label: rarityLabel(rarity) })),
+  ...CATALOG_RARITY_ORDER.map((rarity) => ({
+    value: rarity,
+    label: CATALOG_RARITY_CONFIG[rarity].label,
+  })),
 ];
 
 const UNIVERSE_THEME: Record<Universe, UniverseTheme> = {
@@ -259,27 +267,22 @@ const BUY_PACK_OPTIONS: BuyPackOption[] = [
 ];
 
 const MODEL_CONFIG_BY_COLLECTION: Partial<Record<number, DoflinModelConfig>> = {
-  1: {
-    modelUrl: "/models/doflins/michael-myers-multicolor.glb?v=5",
-    orientation: "90deg 0deg 0deg",
-    cameraOrbit: "0deg 58deg auto",
-    fieldOfView: "28deg",
-  },
 };
 
 const CATALOG_PAGE_SIZE = 10;
 function RarityPill({ rarity }: { rarity: Rarity }): React.JSX.Element {
-  const config = RARITY_CONFIG[rarity];
+  const catalogRarity = toCatalogRarity(rarity);
+  const config = CATALOG_RARITY_CONFIG[catalogRarity];
 
   return (
     <Badge
       className="font-bold"
       style={{
         backgroundColor: config.softColor,
-        color: rarity === "MYTHIC" ? "#4A3A18" : config.color,
+        color: config.color,
       }}
     >
-      {rarityLabel(rarity)}
+      {config.label}
     </Badge>
   );
 }
@@ -325,23 +328,41 @@ function toRarityFilter(value: string | null): RarityFilter | null {
     return null;
   }
 
-  if (value === "all") {
+  const normalized = value.trim().toUpperCase();
+  if (normalized === "ALL") {
     return "all";
   }
 
-  const upper = value.toUpperCase() as Rarity;
-  return RARITY_ORDER.includes(upper) ? upper : null;
+  if (normalized === "ULTRA" || normalized === "MYTHIC") {
+    return "LEGENDARY";
+  }
+
+  return CATALOG_RARITY_ORDER.includes(normalized as CatalogRarity) ? (normalized as CatalogRarity) : null;
 }
 
-function withPackQuery(baseUrl: string, packSize: PackSize): string {
+function universeFromSeries(series: string): Universe {
+  return normalizeSeries(series) === "multiverse" ? "multiverse" : "animals";
+}
+
+function withPurchaseQuery(baseUrl: string, options: { packSize: PackSize; universe: Universe }): string {
+  const { packSize, universe } = options;
   try {
     const parsed = new URL(baseUrl);
     parsed.searchParams.set("pack", String(packSize));
+    parsed.searchParams.set("universe", universe);
     return parsed.toString();
   } catch {
     const join = baseUrl.includes("?") ? "&" : "?";
-    return `${baseUrl}${join}pack=${packSize}`;
+    return `${baseUrl}${join}pack=${packSize}&universe=${universe}`;
   }
+}
+
+function buildPurchaseUrls(baseUrl: string, universe: Universe): Record<PackSize, string> {
+  return {
+    1: withPurchaseQuery(baseUrl, { packSize: 1, universe }),
+    3: withPurchaseQuery(baseUrl, { packSize: 3, universe }),
+    5: withPurchaseQuery(baseUrl, { packSize: 5, universe }),
+  };
 }
 
 function normalizeOwnedIds(raw: unknown): number[] {
@@ -374,6 +395,7 @@ export function RevealExperience(): React.JSX.Element {
   const [visiblePages, setVisiblePages] = useState(1);
   const [selectedDoflin, setSelectedDoflin] = useState<CollectionItemDTO | null>(null);
   const [ownedIds, setOwnedIds] = useState<number[]>([]);
+  const [brokenModalImageIds, setBrokenModalImageIds] = useState<number[]>([]);
   const [collection, setCollection] = useState<CollectionItemDTO[]>([]);
   const [remaining, setRemaining] = useState<Record<Rarity, number> | null>(null);
   const [isAdminViewer, setIsAdminViewer] = useState(false);
@@ -413,7 +435,7 @@ export function RevealExperience(): React.JSX.Element {
 
     return featuredCollection
       .filter((item) => {
-        if (rarityFilter !== "all" && item.rarity !== rarityFilter) {
+        if (rarityFilter !== "all" && toCatalogRarity(item.rarity) !== rarityFilter) {
           return false;
         }
 
@@ -515,9 +537,24 @@ export function RevealExperience(): React.JSX.Element {
     ? MODEL_CONFIG_BY_COLLECTION[selectedDoflin.collectionNumber]
     : undefined;
   const selectedDoflinHas3DModel = Boolean(selectedDoflinModelConfig?.modelUrl);
+  const selectedDoflinCatalogRarity = selectedDoflin ? toCatalogRarity(selectedDoflin.rarity) : null;
+  const selectedDoflinRarityConfig = selectedDoflinCatalogRarity ? CATALOG_RARITY_CONFIG[selectedDoflinCatalogRarity] : null;
   const selectedDoflinIsOwned = selectedDoflin ? ownedSet.has(selectedDoflin.id) : false;
   const selectedDoflinGroupStats = selectedDoflin ? activeBaseModelStats.map.get(baseModelKey(selectedDoflin)) : undefined;
   const selectedDoflinIsOriginal = selectedDoflin ? isOriginalVariant(selectedDoflin.variantName) : false;
+  const selectedPurchaseUniverse = selectedDoflin ? universeFromSeries(selectedDoflin.series) : activeUniverse;
+  const selectedPurchaseUniverseLabel = selectedPurchaseUniverse === "animals" ? "Animals" : "Multiverse";
+  const selectedDoflinImageSrc =
+    selectedDoflin && brokenModalImageIds.includes(selectedDoflin.id)
+      ? FALLBACK_DOFLIN_IMAGE
+      : selectedDoflin?.imageUrl ?? FALLBACK_DOFLIN_IMAGE;
+  const remainingLegendaryCount = useMemo(() => {
+    if (!remaining) {
+      return null;
+    }
+
+    return (remaining.LEGENDARY ?? 0) + (remaining.ULTRA ?? 0) + (remaining.MYTHIC ?? 0);
+  }, [remaining]);
   const selectedDoflinVariants = useMemo(() => {
     if (!selectedDoflin) {
       return [];
@@ -917,13 +954,12 @@ export function RevealExperience(): React.JSX.Element {
   const purchaseUrl = process.env.NEXT_PUBLIC_WOO_PRODUCT_URL ?? "https://dofer.mx";
   const tikTokUrl = process.env.NEXT_PUBLIC_TIKTOK_URL ?? "https://www.tiktok.com";
   const purchaseUrlByPack = useMemo(
-    () =>
-      ({
-        1: withPackQuery(purchaseUrl, 1),
-        3: withPackQuery(purchaseUrl, 3),
-        5: withPackQuery(purchaseUrl, 5),
-      }) as Record<PackSize, string>,
-    [purchaseUrl],
+    () => buildPurchaseUrls(purchaseUrl, activeUniverse),
+    [activeUniverse, purchaseUrl],
+  );
+  const selectedPurchaseUrlByPack = useMemo(
+    () => buildPurchaseUrls(purchaseUrl, selectedPurchaseUniverse),
+    [purchaseUrl, selectedPurchaseUniverse],
   );
 
   const handlePurchaseIntent = useCallback((options?: {
@@ -1061,7 +1097,9 @@ export function RevealExperience(): React.JSX.Element {
               className="hidden sm:block"
               onClick={() => handlePurchaseIntent({ source: "header_buy", packSize: 3 })}
             >
-              <Button className={`h-11 px-5 text-white hover:brightness-105 sm:px-6 ${activeTheme.primaryButton}`}>Comprar</Button>
+              <Button className={`h-11 px-5 text-white hover:brightness-105 sm:px-6 ${activeTheme.primaryButton}`}>
+                Comprar {activeConfig.label}
+              </Button>
             </a>
 
             <Sheet>
@@ -1164,7 +1202,7 @@ export function RevealExperience(): React.JSX.Element {
                 onClick={() => handlePurchaseIntent({ source: "hero_buy", packSize: 3 })}
               >
                 <Button variant="secondary" size="lg" className="h-12">
-                  <ShoppingCartIcon className="h-5 w-5" /> Comprar mystery bag
+                  <ShoppingCartIcon className="h-5 w-5" /> Comprar {activeConfig.label}
                 </Button>
               </a>
             </div>
@@ -1174,7 +1212,7 @@ export function RevealExperience(): React.JSX.Element {
                 <ShieldCheckIcon className="h-4 w-4 text-[var(--brand-primary)]" /> QR oficial verificado
               </span>
               <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 ${activeTheme.heroChip}`}>
-                <CubeIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Catálogo 3D por figura
+                <CubeIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Catálogo oficial por figura
               </span>
             </div>
           </div>
@@ -1332,24 +1370,27 @@ export function RevealExperience(): React.JSX.Element {
           <h3 className="font-title text-3xl text-[var(--ink-900)]">Sistema de rareza</h3>
           <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-[var(--ink-700)] ${activeTheme.rarityInfoChip}`}>
             <FireIcon className="h-4 w-4 text-orange-600" />
-            Quedan {remaining?.LEGENDARY ?? "--"} legendarios sin descubrir
+            Quedan {remainingLegendaryCount ?? "--"} legendarias sin descubrir
           </div>
         </div>
 
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {RARITY_ORDER.map((rarity) => (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {CATALOG_RARITY_ORDER.map((rarity) => (
             <Card key={rarity} className={activeTheme.rarityCard}>
               <CardContent className="space-y-3 p-5">
                 <div className="flex items-center justify-between">
-                  <h4 className="font-title text-xl text-[var(--ink-900)]">{rarityLabel(rarity)}</h4>
+                  <h4 className="font-title text-xl text-[var(--ink-900)]">{CATALOG_RARITY_CONFIG[rarity].label}</h4>
                   <span
                     className="rounded-full px-2 py-1 text-xs font-bold"
-                    style={{ color: RARITY_CONFIG[rarity].color, backgroundColor: RARITY_CONFIG[rarity].softColor }}
+                    style={{
+                      color: CATALOG_RARITY_CONFIG[rarity].color,
+                      backgroundColor: CATALOG_RARITY_CONFIG[rarity].softColor,
+                    }}
                   >
-                    {RARITY_CONFIG[rarity].probability}%
+                    {CATALOG_RARITY_CONFIG[rarity].probability}%
                   </span>
                 </div>
-                <p className="text-sm text-[var(--ink-700)]">{RARITY_CONFIG[rarity].description}</p>
+                <p className="text-sm text-[var(--ink-700)]">{CATALOG_RARITY_CONFIG[rarity].description}</p>
               </CardContent>
             </Card>
           ))}
@@ -1369,6 +1410,25 @@ export function RevealExperience(): React.JSX.Element {
             </Badge>
           </div>
         </div>
+
+        <Card className={`mb-4 ${activeTheme.panelCard}`}>
+          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+            <p className="text-sm text-[var(--ink-700)]">
+              Estás explorando <span className="font-semibold text-[var(--ink-900)]">{activeConfig.label}</span>. Comprar desde aquí abre packs del
+              mismo universo.
+            </p>
+            <a
+              href={purchaseUrlByPack[3]}
+              target="_blank"
+              rel="noreferrer"
+              onClick={() => handlePurchaseIntent({ source: "catalog_universe_buy", packSize: 3 })}
+            >
+              <Button size="sm" className={activeTheme.primaryButton}>
+                <ShoppingCartIcon className="h-4 w-4" /> Comprar {activeConfig.label} x3
+              </Button>
+            </a>
+          </CardContent>
+        </Card>
 
         <Card className={activeTheme.panelCard}>
           <CardContent className="space-y-5 p-5">
@@ -1503,7 +1563,7 @@ export function RevealExperience(): React.JSX.Element {
                     <p className="text-xs text-[var(--ink-600)]">{item.series}</p>
                     <p className="text-xs text-[var(--ink-600)]">#{String(item.collectionNumber).padStart(2, "0")}</p>
                     <Badge className="w-fit bg-white/80 text-[10px] uppercase tracking-[0.08em] text-[var(--ink-700)] ring-1 ring-black/10">
-                      {modelConfig?.modelUrl ? "3D interactivo" : "Imagen oficial"}
+                      Imagen oficial
                     </Badge>
                     <RarityPill rarity={item.rarity} />
                     <div className="mt-auto space-y-2 pt-2">
@@ -1750,25 +1810,27 @@ export function RevealExperience(): React.JSX.Element {
                     style={{ background: "transparent", display: "block" }}
                   />
                 ) : (
-                  <div className="space-y-3">
-                    <div className="flex flex-wrap items-center gap-2">
-                      <Badge className="bg-[#ecf4da] text-[var(--ink-800)] ring-1 ring-[#cbdbab]">Vista optimizada</Badge>
-                      <Badge className="bg-white/90 text-[var(--ink-700)] ring-1 ring-[#d8dfc4]">Imagen oficial 2D</Badge>
-                    </div>
+                  <div>
                     <div className="relative flex h-[332px] w-full items-center justify-center overflow-hidden rounded-3xl border border-[#dcd2af] bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.98),rgba(247,242,221,0.92)_58%,rgba(236,228,197,0.92))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_14px_30px_rgba(89,90,52,0.2)]">
                       <div className="pointer-events-none absolute inset-x-10 bottom-6 h-6 rounded-full bg-black/14 blur-md" />
                       <Image
-                        src={selectedDoflin.imageUrl}
+                        src={selectedDoflinImageSrc}
                         alt={selectedDoflin.name}
                         width={780}
                         height={780}
                         className="relative z-10 h-full max-h-[286px] w-full object-contain drop-shadow-[0_18px_30px_rgba(42,45,21,0.22)]"
+                        onError={() => {
+                          setBrokenModalImageIds((previous) => {
+                            if (previous.includes(selectedDoflin.id)) {
+                              return previous;
+                            }
+
+                            return [...previous, selectedDoflin.id];
+                          });
+                        }}
                         unoptimized
                       />
                     </div>
-                    <p className="text-xs text-[var(--ink-600)]">
-                      Vista de referencia enfocada en color y acabados. La pose puede variar segun la toma.
-                    </p>
                   </div>
                 )}
               </div>
@@ -1798,26 +1860,28 @@ export function RevealExperience(): React.JSX.Element {
                     </Badge>
                   ) : null}
                   <RarityPill rarity={selectedDoflin.rarity} />
-                  <Badge className={activeConfig.badgeClass}>{selectedDoflin.probability}% probabilidad</Badge>
-                  <Badge
-                    className={
-                      selectedDoflinHas3DModel
-                        ? "bg-[#eaf0ff] text-[#334a9a] ring-1 ring-[#cfdbff]"
-                        : "bg-[#edf4da] text-[var(--ink-700)] ring-1 ring-[#cbdbab]"
-                    }
-                  >
-                    {selectedDoflinHas3DModel ? "Vista 3D" : "Vista imagen"}
-                  </Badge>
+                  {selectedDoflinRarityConfig ? (
+                    <Badge className={activeConfig.badgeClass}>
+                      {selectedDoflinRarityConfig.probability}% {selectedDoflinRarityConfig.label.toLowerCase()}
+                    </Badge>
+                  ) : null}
                 </div>
                 {selectedDoflinVariants.length > 1 ? (
                   <div className={`rounded-2xl border p-3 ${activeTheme.panelCard}`}>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">
                       Variantes de {selectedDoflin.baseModel}
                     </p>
+                    <p className="mt-1 text-xs text-[var(--ink-600)]">
+                      {selectedDoflinIsOriginal
+                        ? "Selecciona una variante para compararla rápido."
+                        : "Compara otras variantes o vuelve al original."}
+                    </p>
                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                       {selectedDoflinVariants.map((variant) => {
                         const isCurrent = variant.id === selectedDoflin.id;
                         const isVariantOriginal = isOriginalVariant(variant.variantName);
+                        const variantCatalogRarity = toCatalogRarity(variant.rarity);
+                        const variantRarityConfig = CATALOG_RARITY_CONFIG[variantCatalogRarity];
 
                         return (
                           <button
@@ -1834,6 +1898,20 @@ export function RevealExperience(): React.JSX.Element {
                             <p className="text-xs text-[var(--ink-700)]">
                               {isVariantOriginal ? "Original" : "Variante"} · #{String(variant.collectionNumber).padStart(2, "0")}
                             </p>
+                            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
+                              <span
+                                className="rounded-full px-2 py-1"
+                                style={{
+                                  backgroundColor: variantRarityConfig.softColor,
+                                  color: variantRarityConfig.color,
+                                }}
+                              >
+                                {variantRarityConfig.label}
+                              </span>
+                              <span className="rounded-full bg-white/80 px-2 py-1 text-[var(--ink-700)] ring-1 ring-black/10">
+                                {variantRarityConfig.probability}%
+                              </span>
+                            </div>
                           </button>
                         );
                       })}
@@ -1878,14 +1956,12 @@ export function RevealExperience(): React.JSX.Element {
                     ) : null}
                   </div>
                 </div>
-                <p className="text-sm leading-relaxed text-[var(--ink-700)]">
-                  {selectedDoflinHas3DModel
-                    ? "Vista extendida de la figura para revisar acabados, volumen y estilo antes de comprar más bolsas."
-                    : "Vista optimizada para imagen: revisa pintura, color y silueta de esta edicion antes de comprar más bolsas."}
-                </p>
                 <div className="space-y-2">
+                  <p className="text-xs text-[var(--ink-600)]">
+                    Compra directa de <span className="font-semibold text-[var(--ink-800)]">{selectedPurchaseUniverseLabel}</span>.
+                  </p>
                   <a
-                    href={purchaseUrlByPack[3]}
+                    href={selectedPurchaseUrlByPack[3]}
                     target="_blank"
                     rel="noreferrer"
                     onClick={() =>
@@ -1897,11 +1973,11 @@ export function RevealExperience(): React.JSX.Element {
                     }
                   >
                     <Button className={`w-full ${activeTheme.primaryButton}`}>
-                      <ShoppingCartIcon className="h-5 w-5" /> Comprar pack x3
+                      <ShoppingCartIcon className="h-5 w-5" /> Comprar {selectedPurchaseUniverseLabel} x3
                     </Button>
                   </a>
                   <a
-                    href={purchaseUrlByPack[1]}
+                    href={selectedPurchaseUrlByPack[1]}
                     target="_blank"
                     rel="noreferrer"
                     onClick={() =>
@@ -1913,7 +1989,7 @@ export function RevealExperience(): React.JSX.Element {
                     }
                   >
                     <Button variant="secondary" className="w-full">
-                      Comprar pack x1
+                      Comprar {selectedPurchaseUniverseLabel} x1
                     </Button>
                   </a>
                 </div>
@@ -1976,7 +2052,7 @@ export function RevealExperience(): React.JSX.Element {
             }
           >
             <Button className={`h-11 w-full ${activeTheme.primaryButton}`}>
-              <ShoppingCartIcon className="h-5 w-5" /> Comprar pack x{selectedPackSize}
+              <ShoppingCartIcon className="h-5 w-5" /> Comprar {activeConfig.label} x{selectedPackSize}
             </Button>
           </a>
         </div>

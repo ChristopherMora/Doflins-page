@@ -9,6 +9,55 @@ export const RARITY_ORDER: Rarity[] = [
   "MYTHIC",
 ];
 
+export type CatalogRarity = "COMMON" | "RARE" | "EPIC" | "LEGENDARY";
+
+export const CATALOG_RARITY_ORDER: CatalogRarity[] = [
+  "COMMON",
+  "RARE",
+  "EPIC",
+  "LEGENDARY",
+];
+
+export const CATALOG_RARITY_CONFIG: Record<
+  CatalogRarity,
+  {
+    label: string;
+    color: string;
+    softColor: string;
+    probability: number;
+    description: string;
+  }
+> = {
+  COMMON: {
+    label: "Común",
+    color: "#7F856F",
+    softColor: "#EEF1E2",
+    probability: 50,
+    description: "La rareza más frecuente en la colección.",
+  },
+  RARE: {
+    label: "Especial",
+    color: "#2E7A4E",
+    softColor: "#DCEFE3",
+    probability: 30,
+    description: "Variante menos común con acabado distintivo.",
+  },
+  EPIC: {
+    label: "Épica",
+    color: "#B46A2D",
+    softColor: "#F8E3D0",
+    probability: 15,
+    description: "Edición limitada con mayor valor de colección.",
+  },
+  LEGENDARY: {
+    label: "Legendaria",
+    color: "#D59A1A",
+    softColor: "#FBE9C2",
+    probability: 5,
+    description: "Nivel más raro dentro del catálogo visible.",
+  },
+};
+
 export const RARITY_CONFIG: Record<
   Rarity,
   {
@@ -69,6 +118,18 @@ export const RARITY_CONFIG: Record<
     description: "Edición secreta de la línea Animals",
   },
 };
+
+export function toCatalogRarity(rarity: Rarity): CatalogRarity {
+  if (rarity === "ULTRA" || rarity === "MYTHIC") {
+    return "LEGENDARY";
+  }
+
+  return rarity;
+}
+
+export function catalogRarityLabel(rarity: Rarity): string {
+  return CATALOG_RARITY_CONFIG[toCatalogRarity(rarity)].label;
+}
 
 export function rarityLabel(rarity: Rarity): string {
   return RARITY_CONFIG[rarity].label;

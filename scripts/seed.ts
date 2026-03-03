@@ -6,6 +6,8 @@ import type { PackSize, Rarity } from "../lib/types/doflin";
 
 interface SeedDoflin {
   nombre: string;
+  modeloBase?: string;
+  variante?: string;
   serie: "Animals" | "Multiverse";
   rareza: Rarity;
   probabilidad: number;
@@ -23,8 +25,31 @@ interface PlannedCode {
 }
 
 const catalog: SeedDoflin[] = [
+  {
+    nombre: "Jaguar Prisma Original",
+    modeloBase: "Doflin Jaguar Prisma",
+    variante: "Original",
+    serie: "Animals",
+    rareza: "COMMON",
+    probabilidad: 50,
+  },
+  {
+    nombre: "Jaguar Prisma Rojo",
+    modeloBase: "Doflin Jaguar Prisma",
+    variante: "Rojo",
+    serie: "Animals",
+    rareza: "RARE",
+    probabilidad: 30,
+  },
+  {
+    nombre: "Jaguar Prisma Selva",
+    modeloBase: "Doflin Jaguar Prisma",
+    variante: "Selva",
+    serie: "Animals",
+    rareza: "EPIC",
+    probabilidad: 15,
+  },
   { nombre: "Brisa Solar", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Jaguar Prisma", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
   { nombre: "Koala Bronce", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
   { nombre: "Lobo Ceniza", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
   { nombre: "Panda Nube", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
@@ -113,10 +138,11 @@ async function main(): Promise<void> {
 
   const doflinValues = catalog.map((item, index) => {
     const number = index + 1;
+    const displayName = `Doflin ${item.nombre}`;
     return {
-      nombre: `Doflin ${item.nombre}`,
-      modeloBase: `Doflin ${item.nombre}`,
-      variante: "Original",
+      nombre: displayName,
+      modeloBase: item.modeloBase ?? displayName,
+      variante: item.variante ?? "Original",
       slug: `${slugify(item.nombre)}-${String(number).padStart(2, "0")}`,
       serie: item.serie,
       numeroColeccion: number,

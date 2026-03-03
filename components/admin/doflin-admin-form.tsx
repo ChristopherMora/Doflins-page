@@ -148,6 +148,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
   const [adminItems, setAdminItems] = useState<AdminDoflinItem[]>([]);
   const [crudQuery, setCrudQuery] = useState("");
   const [editingItem, setEditingItem] = useState<AdminDoflinItem | null>(null);
+  const [deletingItem, setDeletingItem] = useState<AdminDoflinItem | null>(null);
   const [editValues, setEditValues] = useState<EditValues | null>(null);
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [bulkStatus, setBulkStatus] = useState<{
@@ -773,19 +774,15 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
     }
   };
 
-  const handleDelete = async (item: AdminDoflinItem): Promise<void> => {
-    const shouldDelete = window.confirm(
-      `Eliminar ${item.name} (${item.baseModel} / ${item.variantName})? Esta acción es permanente.`,
-    );
-
-    if (!shouldDelete) {
+  const handleDelete = async (): Promise<void> => {
+    if (!deletingItem) {
       return;
     }
 
-    setDeleteLoadingId(item.id);
+    setDeleteLoadingId(deletingItem.id);
 
     try {
-      const response = await fetch(`/api/admin/doflins?id=${item.id}`, {
+      const response = await fetch(`/api/admin/doflins?id=${deletingItem.id}`, {
         method: "DELETE",
         headers: getAuthHeaders(),
       });
@@ -797,6 +794,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
 
       toast.success(payload.message || "Doflin eliminado.");
       await refreshCollection();
+      setDeletingItem(null);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Error al eliminar.");
     } finally {
@@ -1263,60 +1261,74 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                 <p className="text-sm text-[var(--ink-700)]">No hay Doflins cargados.</p>
               ) : null}
 
-              <div className="max-h-[560px] space-y-3 overflow-auto pr-1">
+              <div className="max-h-[70vh] space-y-3 overflow-auto pr-1 sm:max-h-[560px]">
                 {crudItems.map((item) => (
-                  <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-black/10 bg-white p-2">
-                    <div className="h-14 w-14 overflow-hidden rounded-xl bg-[var(--surface-200)]">
-                      <Image
-                        src={item.imageUrl}
-                        alt={item.name}
-                        width={120}
-                        height={120}
-                        className="h-full w-full object-cover"
-                        unoptimized
-                      />
+                  <div key={item.id} className="rounded-2xl border border-black/10 bg-white p-3">
+                    <div className="flex items-start gap-3">
+                      <div className="h-14 w-14 shrink-0 overflow-hidden rounded-xl bg-[var(--surface-200)]">
+                        <Image
+                          src={item.imageUrl}
+                          alt={item.name}
+                          width={120}
+                          height={120}
+                          className="h-full w-full object-cover"
+                          unoptimized
+                        />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold text-[var(--ink-900)]">{item.name}</p>
+                        <p className="text-xs text-[var(--ink-600)]">
+                          {item.series} · #{String(item.collectionNumber).padStart(2, "0")} · {item.baseModel} /{" "}
+                          {item.variantName}
+                        </p>
+                      </div>
+                      <div className="hidden flex-col items-end gap-1 sm:flex">
+                        <Badge className="bg-white text-[var(--ink-900)]">{rarityLabel(item.rarity)}</Badge>
+                        <Badge className={item.active ? "bg-[#e6f7e9] text-[#21743e]" : "bg-[#f3f4f6] text-[#6b7280]"}>
+                          {item.active ? "Activo" : "Inactivo"}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-[var(--ink-900)]">{item.name}</p>
-                      <p className="text-xs text-[var(--ink-600)]">
-                        {item.series} · #{String(item.collectionNumber).padStart(2, "0")} · {item.baseModel} /{" "}
-                        {item.variantName}
-                      </p>
-                    </div>
-                    <div className="flex flex-col items-end gap-1">
+
+                    <div className="mt-2 flex items-center gap-2 sm:hidden">
                       <Badge className="bg-white text-[var(--ink-900)]">{rarityLabel(item.rarity)}</Badge>
                       <Badge className={item.active ? "bg-[#e6f7e9] text-[#21743e]" : "bg-[#f3f4f6] text-[#6b7280]"}>
                         {item.active ? "Activo" : "Inactivo"}
                       </Badge>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          onClick={() => openEditDialog(item)}
-                          className="h-8 px-3"
-                        >
-                          <PencilSquareIcon className="h-4 w-4" />
-                          Editar
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => void handleToggleActive(item)}
-                          disabled={toggleLoadingId === item.id}
-                          className="h-8 px-2"
-                        >
+                    </div>
+
+                    <div className="mt-3 grid grid-cols-3 gap-2">
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => openEditDialog(item)}
+                        className="h-10 w-full touch-manipulation px-2"
+                      >
+                        <PencilSquareIcon className="h-4 w-4" />
+                        <span>Editar</span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => void handleToggleActive(item)}
+                        disabled={toggleLoadingId === item.id}
+                        className="h-10 w-full touch-manipulation px-2"
+                      >
+                        <span className="text-xs sm:text-sm">
                           {toggleLoadingId === item.id ? "..." : item.active ? "Desactivar" : "Activar"}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => void handleDelete(item)}
-                          disabled={deleteLoadingId === item.id}
-                          className="h-8 px-2 text-[#b42318] hover:bg-[#fdecec] hover:text-[#8f1616]"
-                        >
-                          <TrashIcon className="h-4 w-4" />
-                        </Button>
-                      </div>
+                        </span>
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setDeletingItem(item)}
+                        disabled={deleteLoadingId === item.id}
+                        aria-label={`Eliminar ${item.name}`}
+                        className="h-10 w-full touch-manipulation px-2 text-[#b42318] hover:bg-[#fdecec] hover:text-[#8f1616]"
+                      >
+                        <TrashIcon className="h-4 w-4" />
+                        <span className="text-xs sm:text-sm">{deleteLoadingId === item.id ? "Eliminando..." : "Eliminar"}</span>
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -1325,6 +1337,44 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
           </Card>
         </div>
       </div>
+
+      <Dialog
+        open={Boolean(deletingItem)}
+        onOpenChange={(open) => {
+          if (!open && deleteLoadingId === null) {
+            setDeletingItem(null);
+          }
+        }}
+      >
+        <DialogContent className="w-[min(94vw,520px)]">
+          <DialogHeader>
+            <DialogTitle>Eliminar Doflin</DialogTitle>
+            <DialogDescription>
+              {deletingItem
+                ? `Vas a eliminar ${deletingItem.name} (${deletingItem.baseModel} / ${deletingItem.variantName}). Esta acción es permanente.`
+                : "Esta acción es permanente."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={deleteLoadingId !== null}
+              onClick={() => setDeletingItem(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              disabled={deleteLoadingId !== null}
+              className="bg-[#b42318] hover:bg-[#8f1616]"
+              onClick={() => void handleDelete()}
+            >
+              {deleteLoadingId !== null ? "Eliminando..." : "Sí, eliminar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(editingItem && editValues)}

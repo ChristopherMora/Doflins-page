@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 
-import { RARITY_CONFIG } from "@/lib/constants/rarity";
+import { CATALOG_RARITY_CONFIG, toCatalogRarity } from "@/lib/constants/rarity";
 import type { Rarity } from "@/lib/types/doflin";
 import { cn } from "@/lib/utils";
 
@@ -163,7 +163,7 @@ export function Figure3D({
   autoRotateModel = false,
   lazyModel = true,
 }: Figure3DProps): React.JSX.Element {
-  const rarityColor = RARITY_CONFIG[rarity].color;
+  const rarityColor = CATALOG_RARITY_CONFIG[toCatalogRarity(rarity)].color;
   const [viewerReady, setViewerReady] = useState(false);
   const [modelLoaded, setModelLoaded] = useState(false);
   const [modelFailed, setModelFailed] = useState(false);

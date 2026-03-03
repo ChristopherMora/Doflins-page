@@ -2,14 +2,39 @@ import type { CollectionItemDTO, Rarity } from "@/lib/types/doflin";
 
 interface CatalogSeedItem {
   nombre: string;
+  modeloBase?: string;
+  variante?: string;
   serie: "Animals" | "Multiverse";
   rareza: Rarity;
   probabilidad: number;
 }
 
 const CATALOG_SEED: CatalogSeedItem[] = [
+  {
+    nombre: "Jaguar Prisma Original",
+    modeloBase: "Doflin Jaguar Prisma",
+    variante: "Original",
+    serie: "Animals",
+    rareza: "COMMON",
+    probabilidad: 50,
+  },
+  {
+    nombre: "Jaguar Prisma Rojo",
+    modeloBase: "Doflin Jaguar Prisma",
+    variante: "Rojo",
+    serie: "Animals",
+    rareza: "RARE",
+    probabilidad: 30,
+  },
+  {
+    nombre: "Jaguar Prisma Selva",
+    modeloBase: "Doflin Jaguar Prisma",
+    variante: "Selva",
+    serie: "Animals",
+    rareza: "EPIC",
+    probabilidad: 15,
+  },
   { nombre: "Brisa Solar", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Jaguar Prisma", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
   { nombre: "Koala Bronce", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
   { nombre: "Lobo Ceniza", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
   { nombre: "Panda Nube", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
@@ -47,14 +72,14 @@ export const FALLBACK_COLLECTION: CollectionItemDTO[] = CATALOG_SEED.map((item, 
   return {
     id: number,
     name: `Doflin ${item.nombre}`,
-    baseModel: `Doflin ${item.nombre}`,
-    variantName: "Original",
+    baseModel: item.modeloBase ?? `Doflin ${item.nombre}`,
+    variantName: item.variante ?? "Original",
     series: item.serie,
     collectionNumber: number,
     rarity: item.rareza,
     probability: item.probabilidad,
-    imageUrl: number === 1 ? "/images/doflins/demo-3d.svg" : `/images/doflins/doflin-${padded}.webp`,
-    silhouetteUrl: number === 1 ? "/images/doflins/demo-silhouette.svg" : `/images/doflins/silueta-${padded}.webp`,
+    imageUrl: `/images/doflins/doflin-${padded}.webp`,
+    silhouetteUrl: `/images/doflins/silueta-${padded}.webp`,
     active: true,
   };
 });
