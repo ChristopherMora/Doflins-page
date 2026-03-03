@@ -41,8 +41,11 @@ interface CreateDoflinResponse {
   item?: AdminDoflinItem;
 }
 
+type VariantMode = "original" | "variant";
+
 interface FormValues {
   name: string;
+  variantMode: VariantMode;
   baseModel: string;
   variantName: string;
   series: "Animals" | "Multiverse";
@@ -78,6 +81,7 @@ interface DoflinAdminFormProps {
 
 const INITIAL_VALUES: FormValues = {
   name: "",
+  variantMode: "original",
   baseModel: "",
   variantName: "Original",
   series: "Animals",
@@ -176,9 +180,39 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
     };
   }, [adminItems]);
 
+  const baseModelsBySeries = useMemo(() => {
+    const bySeries: Record<FormValues["series"], string[]> = { Animals: [], Multiverse: [] };
+    const seen: Record<FormValues["series"], Set<string>> = { Animals: new Set(), Multiverse: new Set() };
+
+    for (const item of adminItems) {
+      const series = item.series === "Multiverse" ? "Multiverse" : "Animals";
+      const normalizedBase = item.baseModel.trim();
+      if (!normalizedBase) {
+        continue;
+      }
+
+      const slug = normalizedBase.toLowerCase();
+      if (seen[series].has(slug)) {
+        continue;
+      }
+
+      seen[series].add(slug);
+      bySeries[series].push(normalizedBase);
+    }
+
+    bySeries.Animals.sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+    bySeries.Multiverse.sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+    return bySeries;
+  }, [adminItems]);
+
+  const availableBaseModels = useMemo(
+    () => baseModelsBySeries[formValues.series],
+    [baseModelsBySeries, formValues.series],
+  );
+
   const slugPreview = useMemo(() => toSlugPreview(formValues.name), [formValues.name]);
   const variantNumberRangePreview = useMemo(() => {
-    if (variantFiles.length === 0) {
+    if (formValues.variantMode !== "original" || variantFiles.length === 0) {
       return null;
     }
 
@@ -192,7 +226,22 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       from: safeBaseNumber + 1,
       to: safeBaseNumber + variantFiles.length,
     };
-  }, [formValues.collectionNumber, formValues.series, nextCollectionBySeries, variantFiles.length]);
+  }, [formValues.collectionNumber, formValues.series, formValues.variantMode, nextCollectionBySeries, variantFiles.length]);
+
+  const isVariantBlocked = useMemo(
+    () => formValues.variantMode === "variant" && (availableBaseModels.length === 0 || !formValues.baseModel.trim()),
+    [availableBaseModels.length, formValues.baseModel, formValues.variantMode],
+  );
+
+  const creationPreview = useMemo(() => {
+    const previewBase =
+      formValues.variantMode === "original"
+        ? formValues.baseModel.trim() || formValues.name.trim() || "—"
+        : formValues.baseModel.trim() || "—";
+    const previewVariant = formValues.variantMode === "original" ? "Original" : formValues.variantName.trim() || "—";
+
+    return `${previewBase} / ${previewVariant}`;
+  }, [formValues.baseModel, formValues.name, formValues.variantMode, formValues.variantName]);
 
   const refreshCollection = useCallback(async (): Promise<void> => {
     setIsLoadingCollection(true);
@@ -280,11 +329,82 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
     });
   }, [nextCollectionBySeries]);
 
+  useEffect(() => {
+    setFormValues((previous) => {
+      if (previous.variantMode !== "variant") {
+        return previous;
+      }
+
+      const seriesModels = baseModelsBySeries[previous.series];
+      if (seriesModels.length === 0) {
+        if (!previous.baseModel) {
+          return previous;
+        }
+
+        return {
+          ...previous,
+          baseModel: "",
+        };
+      }
+
+      if (seriesModels.includes(previous.baseModel.trim())) {
+        return previous;
+      }
+
+      return {
+        ...previous,
+        baseModel: seriesModels[0],
+      };
+    });
+  }, [baseModelsBySeries]);
+
   const onFieldChange = <T extends keyof FormValues>(field: T, value: FormValues[T]): void => {
     setFormValues((previous) => ({
       ...previous,
       [field]: value,
     }));
+  };
+
+  const handleVariantModeChange = (mode: VariantMode): void => {
+    setFormValues((previous) => {
+      if (previous.variantMode === mode) {
+        return previous;
+      }
+
+      if (mode === "original") {
+        return {
+          ...previous,
+          variantMode: "original",
+          baseModel: previous.baseModel.trim() || previous.name.trim(),
+          variantName: "Original",
+        };
+      }
+
+      return {
+        ...previous,
+        variantMode: "variant",
+        baseModel: baseModelsBySeries[previous.series][0] ?? "",
+        variantName: "",
+      };
+    });
+    setVariantFiles([]);
+  };
+
+  const handleSeriesChange = (series: FormValues["series"]): void => {
+    setFormValues((previous) => {
+      const nextValues: FormValues = {
+        ...previous,
+        series,
+        collectionNumber: String(nextCollectionBySeries[series]),
+      };
+
+      if (previous.variantMode === "variant") {
+        const seriesModels = baseModelsBySeries[series];
+        nextValues.baseModel = seriesModels.includes(previous.baseModel.trim()) ? previous.baseModel : (seriesModels[0] ?? "");
+      }
+
+      return nextValues;
+    });
   };
 
   const onBulkFieldChange = <T extends keyof BulkValues>(field: T, value: BulkValues[T]): void => {
@@ -318,12 +438,27 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       return;
     }
 
+    const normalizedName = formValues.name.trim();
+    const normalizedBaseModel =
+      formValues.variantMode === "original" ? (formValues.baseModel.trim() || normalizedName) : formValues.baseModel.trim();
+    const normalizedVariantName = formValues.variantMode === "original" ? "Original" : formValues.variantName.trim();
+
+    if (!normalizedBaseModel) {
+      toast.error("Selecciona un animal base para guardar la variante.");
+      return;
+    }
+
+    if (formValues.variantMode === "variant" && !normalizedVariantName) {
+      toast.error("Escribe el nombre de la variante.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const formData = new FormData();
-    formData.set("name", formValues.name.trim());
-    formData.set("baseModel", formValues.baseModel.trim());
-    formData.set("variantName", formValues.variantName.trim());
+    formData.set("name", normalizedName);
+    formData.set("baseModel", normalizedBaseModel);
+    formData.set("variantName", normalizedVariantName);
     formData.set("series", formValues.series);
     formData.set("collectionNumber", formValues.collectionNumber.trim());
     formData.set("rarity", formValues.rarity);
@@ -354,8 +489,8 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       let variantSuccess = 0;
       const variantFailures: string[] = [];
 
-      if (variantFiles.length > 0) {
-        const baseModel = formValues.baseModel.trim() || formValues.name.trim();
+      if (formValues.variantMode === "original" && variantFiles.length > 0) {
+        const baseModel = normalizedBaseModel;
 
         for (const [index, file] of variantFiles.entries()) {
           const inferredVariantName = fileNameToDoflinName(file.name);
@@ -400,7 +535,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
         }
       }
 
-      if (variantFiles.length > 0) {
+      if (formValues.variantMode === "original" && variantFiles.length > 0) {
         if (variantSuccess === variantFiles.length) {
           toast.success(`Doflin creado + ${variantSuccess} variante(s) guardadas.`);
         } else if (variantSuccess > 0) {
@@ -746,7 +881,10 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                         setFormValues((previous) => ({
                           ...previous,
                           name,
-                          baseModel: previous.baseModel.trim().length > 0 ? previous.baseModel : name,
+                          baseModel:
+                            previous.variantMode === "original" && previous.baseModel.trim().length === 0
+                              ? name
+                              : previous.baseModel,
                         }));
                       }}
                       placeholder="Doflin Jaguar Prisma"
@@ -757,23 +895,68 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                   </label>
 
                   <label className="space-y-1">
-                    <span className="text-sm font-semibold text-[var(--ink-800)]">Modelo base *</span>
-                    <Input
-                      required
-                      value={formValues.baseModel}
-                      onChange={(event) => onFieldChange("baseModel", event.target.value)}
-                      placeholder="Tigre"
-                    />
+                    <span className="text-sm font-semibold text-[var(--ink-800)]">¿Qué quieres crear? *</span>
+                    <select
+                      className="h-11 w-full rounded-full border border-black/15 bg-white px-4 text-sm text-[var(--ink-900)]"
+                      value={formValues.variantMode}
+                      onChange={(event) => handleVariantModeChange(event.target.value as VariantMode)}
+                    >
+                      <option value="original">Animal original</option>
+                      <option value="variant">Variante</option>
+                    </select>
+                    <p className="text-xs text-[var(--ink-600)]">
+                      Original crea el personaje base. Variante se vincula a un personaje ya creado.
+                    </p>
+                  </label>
+
+                  <label className="space-y-1">
+                    <span className="text-sm font-semibold text-[var(--ink-800)]">
+                      {formValues.variantMode === "original" ? "Personaje base *" : "Animal base *"}
+                    </span>
+                    {formValues.variantMode === "original" ? (
+                      <Input
+                        required
+                        value={formValues.baseModel}
+                        onChange={(event) => onFieldChange("baseModel", event.target.value)}
+                        placeholder="Tigre"
+                      />
+                    ) : (
+                      <select
+                        required
+                        className="h-11 w-full rounded-full border border-black/15 bg-white px-4 text-sm text-[var(--ink-900)]"
+                        value={formValues.baseModel}
+                        onChange={(event) => onFieldChange("baseModel", event.target.value)}
+                        disabled={availableBaseModels.length === 0}
+                      >
+                        {availableBaseModels.length === 0 ? (
+                          <option value="">No hay animales base en esta serie</option>
+                        ) : null}
+                        {availableBaseModels.map((baseModel) => (
+                          <option key={baseModel} value={baseModel}>
+                            {baseModel}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    {formValues.variantMode === "variant" && availableBaseModels.length === 0 ? (
+                      <p className="text-xs text-[var(--ink-600)]">
+                        Primero crea un original en {formValues.series} para luego agregar variantes.
+                      </p>
+                    ) : null}
                   </label>
 
                   <label className="space-y-1">
                     <span className="text-sm font-semibold text-[var(--ink-800)]">Variante *</span>
-                    <Input
-                      required
-                      value={formValues.variantName}
-                      onChange={(event) => onFieldChange("variantName", event.target.value)}
-                      placeholder="Naranja / Blanco / Multicolor"
-                    />
+                    {formValues.variantMode === "original" ? (
+                      <Input value="Original" disabled />
+                    ) : (
+                      <Input
+                        required
+                        value={formValues.variantName}
+                        onChange={(event) => onFieldChange("variantName", event.target.value)}
+                        placeholder="Naranja / Blanco / Prisma"
+                      />
+                    )}
                   </label>
 
                   <label className="space-y-1">
@@ -781,14 +964,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                     <select
                       className="h-11 w-full rounded-full border border-black/15 bg-white px-4 text-sm text-[var(--ink-900)]"
                       value={formValues.series}
-                      onChange={(event) => {
-                        const series = event.target.value as FormValues["series"];
-                        setFormValues((previous) => ({
-                          ...previous,
-                          series,
-                          collectionNumber: String(nextCollectionBySeries[series]),
-                        }));
-                      }}
+                      onChange={(event) => handleSeriesChange(event.target.value as FormValues["series"])}
                     >
                       <option value="Animals">Animals</option>
                       <option value="Multiverse">Multiverse</option>
@@ -856,23 +1032,29 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                     />
                   </label>
 
-                  <label className="space-y-1 sm:col-span-2">
-                    <span className="text-sm font-semibold text-[var(--ink-800)]">Subir variantes (opcional)</span>
-                    <Input
-                      type="file"
-                      multiple
-                      accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                      onChange={(event) => setVariantFiles(Array.from(event.target.files ?? []))}
-                    />
-                    <p className="text-xs text-[var(--ink-600)]">
-                      {variantFiles.length} archivo(s) seleccionados. Se crean como variantes del mismo modelo base, en números consecutivos.
-                    </p>
-                    {variantNumberRangePreview ? (
+                  {formValues.variantMode === "original" ? (
+                    <label className="space-y-1 sm:col-span-2">
+                      <span className="text-sm font-semibold text-[var(--ink-800)]">Subir variantes (opcional)</span>
+                      <Input
+                        type="file"
+                        multiple
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        onChange={(event) => setVariantFiles(Array.from(event.target.files ?? []))}
+                      />
                       <p className="text-xs text-[var(--ink-600)]">
-                        Se intentará crear desde #{variantNumberRangePreview.from} hasta #{variantNumberRangePreview.to}.
+                        {variantFiles.length} archivo(s) seleccionados. Se crean como variantes del mismo personaje base, en números consecutivos.
                       </p>
-                    ) : null}
-                  </label>
+                      {variantNumberRangePreview ? (
+                        <p className="text-xs text-[var(--ink-600)]">
+                          Se intentará crear desde #{variantNumberRangePreview.from} hasta #{variantNumberRangePreview.to}.
+                        </p>
+                      ) : null}
+                    </label>
+                  ) : (
+                    <div className="rounded-2xl border border-black/10 bg-[var(--surface-100)]/70 p-3 text-xs text-[var(--ink-700)] sm:col-span-2">
+                      En modo <strong>Variante</strong> solo se crea una pieza por envío, enlazada al animal base seleccionado.
+                    </div>
+                  )}
                 </div>
 
                 <label className="flex items-center gap-2 text-sm font-medium text-[var(--ink-800)]">
@@ -889,8 +1071,23 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                   La imagen se guarda en `public/uploads/doflins/`.
                 </div>
 
-                <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
-                  {isSubmitting ? "Guardando..." : "Crear Doflin"}
+                <div className="rounded-2xl border border-black/10 bg-[var(--surface-100)] p-3 text-sm text-[var(--ink-800)]">
+                  Se guardará como: <strong>{creationPreview}</strong>
+                </div>
+                {isVariantBlocked ? (
+                  <p className="text-sm font-medium text-[#935454]">
+                    Primero crea un original en {formValues.series} para poder guardar variantes.
+                  </p>
+                ) : null}
+
+                <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting || isVariantBlocked}>
+                  {isSubmitting
+                    ? formValues.variantMode === "original"
+                      ? "Guardando original..."
+                      : "Guardando variante..."
+                    : formValues.variantMode === "original"
+                      ? "Crear original"
+                      : "Crear variante"}
                 </Button>
               </form>
             </CardContent>
