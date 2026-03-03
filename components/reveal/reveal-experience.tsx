@@ -1724,7 +1724,7 @@ export function RevealExperience(): React.JSX.Element {
             ? Array.from({ length: 8 }, (_, skI) => (
                 <div
                   key={`skel-${skI}`}
-                  className={`space-y-3 overflow-hidden rounded-2xl border p-3 ${activeConfig.cardClass}`}
+                  className={`space-y-3 overflow-hidden rounded-[2rem] border p-3.5 ${activeConfig.cardClass}`}
                 >
                   <div className="h-[132px] animate-pulse rounded-xl bg-black/[0.07] sm:h-[145px]" />
                   <div className="mt-3 h-4 w-2/3 animate-pulse rounded bg-black/[0.06]" />
@@ -1747,9 +1747,9 @@ export function RevealExperience(): React.JSX.Element {
               <Card
                 key={item.id}
                 style={{ contentVisibility: 'auto', containIntrinsicSize: '0 280px' }}
-                className={`overflow-hidden border ${activeConfig.cardClass} ${isOwned ? "ring-2 ring-[var(--brand-primary)]/40 shadow-[0_12px_26px_rgba(29,50,103,0.2)]" : ""}`}
+                className={`overflow-hidden rounded-[2rem] border ${activeConfig.cardClass} ${isOwned ? "ring-2 ring-[var(--brand-primary)]/40 shadow-[0_12px_26px_rgba(29,50,103,0.2)]" : ""}`}
               >
-                <CardContent className="flex h-full flex-col space-y-3 p-3">
+                <CardContent className="flex h-full flex-col space-y-3 p-3.5">
                   <button
                     type="button"
                     onClick={() => handleOpenCard(item)}
@@ -1767,7 +1767,7 @@ export function RevealExperience(): React.JSX.Element {
                       alt={item.name}
                       rarity={item.rarity}
                       imageClassName="h-[132px] sm:h-[145px]"
-                      className="p-2"
+                      className="rounded-[1.25rem] p-2.5"
                       modelUrl={modelConfig?.modelUrl}
                       modelOrientation={modelConfig?.orientation}
                       modelCameraOrbit={modelConfig?.cameraOrbit}
