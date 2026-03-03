@@ -356,8 +356,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const [gridView, setGridView] = useState<"grid" | "list">("grid");
   const [showWishlistOnly, setShowWishlistOnly] = useState(false);
   const [isFabHovered, setIsFabHovered] = useState(false);
-  const [isCheckoutSheetOpen, setIsCheckoutSheetOpen] = useState(false);
-  const [checkoutEmbedUrl, setCheckoutEmbedUrl] = useState<string | null>(null);
   const [showCartQR, setShowCartQR] = useState(false);
   const knownProductIdsRef = useRef<Record<UniverseFilter, Set<string>>>({
     animals: new Set(),
@@ -879,9 +877,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       if (giftNote.trim()) {
         url += (url.includes("?") ? "&" : "?") + `note=${encodeURIComponent(giftNote.trim())}`;
       }
-      // Open embedded checkout in a sheet instead of hard redirect
-      setCheckoutEmbedUrl(url);
-      setIsCheckoutSheetOpen(true);
+      // Open checkout in a new tab (Shopify blocks iframe embedding)
+      window.open(url, "_blank", "noopener,noreferrer");
       setIsCartOpen(false);
     } catch (error) {
       setFeedbackMessage(error instanceof Error ? error.message : "No se pudo abrir checkout.");
@@ -1381,44 +1378,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </Sheet>
 
             {/* ── Embedded Shopify Checkout ── */}
-            <Sheet open={isCheckoutSheetOpen} onOpenChange={(open) => { if (!open) { setIsCheckoutSheetOpen(false); setCheckoutEmbedUrl(null); } }}>
-              <SheetContent
-                className="flex h-full w-full flex-col p-0 sm:w-[min(100vw,680px)]"
-                side="right"
-              >
-                <div className="flex items-center justify-between border-b border-[#d8d2b4] px-4 py-3">
-                  <div className="flex items-center gap-2">
-                    <ShoppingCartIcon className="h-5 w-5 text-[#4e6f2a]" />
-                    <span className="font-title text-lg text-[var(--ink-900)]">Checkout</span>
-                    <span className="rounded-full bg-[#eef5df] px-2 py-0.5 text-xs font-semibold text-[#2f5b1f]">
-                      Shopify Secure
-                    </span>
-                  </div>
-                  <a
-                    href={checkoutEmbedUrl ?? "#"}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-xs text-[var(--ink-600)] hover:underline"
-                  >
-                    Abrir en nueva pestaña ↗
-                  </a>
-                </div>
-                <div className="flex-1 overflow-hidden">
-                  {checkoutEmbedUrl ? (
-                    <iframe
-                      src={checkoutEmbedUrl}
-                      className="h-full w-full border-0"
-                      title="Shopify Checkout"
-                      allow="payment; autoplay; camera"
-                    />
-                  ) : (
-                    <div className="flex h-full items-center justify-center">
-                      <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#d8d2b4] border-t-[#4e6f2a]" />
-                    </div>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
+
           </div>
 
           <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
