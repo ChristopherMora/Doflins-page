@@ -222,7 +222,7 @@ export function MyCollection() {
         <CardContent className="p-6 space-y-4">
           <div className="flex items-end justify-between">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-600)]">
+              <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--ink-600)]">
                 Progreso total
               </p>
               <p className="font-title text-4xl text-[var(--ink-900)]">
@@ -249,7 +249,7 @@ export function MyCollection() {
                   className="rounded-2xl border border-[#d8d2b4] bg-white/70 px-3 py-2 space-y-1"
                 >
                   <div className="flex items-center justify-between">
-                    <Badge className={`text-[10px] px-2 py-0 rounded-full ${RARITY_COLORS[rarity]}`}>
+                    <Badge className={`text-xs px-2 py-0.5 rounded-full ${RARITY_COLORS[rarity]}`}>
                       {RARITY_LABELS[rarity] ?? rarity}
                     </Badge>
                     <span className="text-xs font-bold text-[var(--ink-800)]">
@@ -366,13 +366,13 @@ export function MyCollection() {
 
               {/* Info */}
               <div className="p-2 space-y-1">
-                <Badge className={`text-[9px] px-1.5 py-0 rounded-full leading-4 ${RARITY_COLORS[doflin.rareza]}`}>
+                <Badge className={`text-xs px-2 py-0.5 rounded-full ${RARITY_COLORS[doflin.rareza]}`}>
                   {RARITY_LABELS[doflin.rareza] ?? doflin.rareza}
                 </Badge>
-                <p className="text-[11px] font-semibold leading-tight text-[var(--ink-900)] truncate">
+                <p className="text-xs font-semibold leading-tight text-[var(--ink-900)] truncate">
                   {doflin.nombre}
                 </p>
-                <p className="text-[10px] text-[var(--ink-500)]">#{doflin.numeroColeccion}</p>
+                <p className="text-xs text-[var(--ink-500)]">#{doflin.numeroColeccion}</p>
               </div>
             </button>
           );

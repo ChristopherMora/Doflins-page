@@ -42,7 +42,7 @@ export function ProductViewer3D({ modelUrl, productTitle, posterUrl }: ProductVi
         <div className="flex items-center gap-2">
           <CubeIcon className="h-4 w-4 text-[#4e6f2a]" />
           <span className="text-xs font-semibold text-[var(--ink-800)]">Vista 3D</span>
-          <span className="text-[10px] text-[var(--ink-500)]">Arrastra para rotar · pellizca para zoom</span>
+          <span className="text-xs text-[var(--ink-500)]">Arrastra para rotar · pellizca para zoom</span>
         </div>
         <button
           onClick={() => setIsOpen(false)}

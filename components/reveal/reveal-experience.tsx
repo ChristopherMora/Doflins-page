@@ -2289,7 +2289,7 @@ export function RevealExperience(): React.JSX.Element {
                   </Button>
                 </div>
                 <div className="space-y-2.5 border-t border-black/[0.06] pt-4">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-500)]">Comprar sobres</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-500)]">Comprar sobres</p>
                   <Button asChild className={`w-full ${activeTheme.primaryButton}`}>
                     <a
                       href={selectedShopUrl}
@@ -2304,7 +2304,7 @@ export function RevealExperience(): React.JSX.Element {
                       <ShoppingCartIcon className="h-5 w-5" />
                       <span className="flex flex-col items-start leading-tight">
                         <span>Sobre x15</span>
-                        <span className="text-[10px] font-normal opacity-75">Más chances de conseguirla</span>
+                        <span className="text-xs font-medium opacity-80">Más chances de conseguirla</span>
                       </span>
                     </a>
                   </Button>
@@ -2321,7 +2321,7 @@ export function RevealExperience(): React.JSX.Element {
                     >
                       <span className="flex flex-col items-start leading-tight">
                         <span>Sobre x5</span>
-                        <span className="text-[10px] font-normal opacity-60">Para probar suerte</span>
+                        <span className="text-xs font-medium opacity-70">Para probar suerte</span>
                       </span>
                     </a>
                   </Button>

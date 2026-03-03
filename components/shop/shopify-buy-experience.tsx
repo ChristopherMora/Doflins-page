@@ -1156,7 +1156,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                               <div className="flex items-center gap-2">
                                 <p className="font-semibold text-[var(--ink-900)]">{line.productTitle}</p>
                                 {isFreeLine ? (
-                                  <span className="rounded-full bg-[#e8f5d8] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.08em] text-[#2f5c1f] ring-1 ring-[#bfd89b]">
+                                  <span className="rounded-full bg-[#e8f5d8] px-2 py-0.5 text-xs font-bold uppercase tracking-[0.08em] text-[#2f5c1f] ring-1 ring-[#bfd89b]">
                                     Gratis
                                   </span>
                                 ) : null}
@@ -1166,7 +1166,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                               {(() => {
                                 const avail = getLineQtyAvailable(line.merchandiseId);
                                 return avail !== null && avail > 0 && avail <= 5 ? (
-                                  <p className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-amber-700">
+                                  <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-amber-700">
                                     <ExclamationTriangleIcon className="h-3.5 w-3.5" /> Solo quedan {avail}
                                   </p>
                                 ) : null;
@@ -1276,7 +1276,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       maxLength={280}
                     />
                     {giftNote.length > 0 ? (
-                      <p className="text-right text-[10px] text-[var(--ink-600)]">{giftNote.length}/280</p>
+                      <p className="text-right text-xs text-[var(--ink-600)]">{giftNote.length}/280</p>
                     ) : null}
                   </div>
 
@@ -1694,16 +1694,16 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-700)]">{UNIVERSE_LABELS[activeUniverse]}</p>
                         <div className="flex items-center gap-1.5">
                           {rarityTag ? (
-                            <span className="rounded-full bg-[#fdf3df] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#7a4a10] ring-1 ring-[#e6c676]">
+                            <span className="rounded-full bg-[#fdf3df] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#7a4a10] ring-1 ring-[#e6c676]">
                               {/legendary|legendari/i.test(rarityTag) ? "✨ Legendaria" : /epic/i.test(rarityTag) ? "🔥 Épica" : "💚 Especial"}
                             </span>
                           ) : null}
                           {isBestSeller ? (
-                            <span className="rounded-full bg-[#ffe9b5] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-[#5e4300] ring-1 ring-[#e6c676]">
+                            <span className="rounded-full bg-[#ffe9b5] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#5e4300] ring-1 ring-[#e6c676]">
                               Top ventas
                             </span>
                           ) : null}
-                          <span className="rounded-full bg-white px-2.5 py-1 text-[11px] text-[var(--ink-700)] ring-1 ring-black/10">
+                          <span className="rounded-full bg-white px-2.5 py-1 text-xs text-[var(--ink-700)] ring-1 ring-black/10">
                             {product.variants.length} variante{product.variants.length === 1 ? "" : "s"}
                           </span>
                         </div>
@@ -1714,7 +1714,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
                       <div className="mt-auto space-y-3">
                         <div className="rounded-2xl border border-[#d8d2b4] bg-white/90 p-4">
-                          <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
+                          <p className="text-xs uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
                           <p className="font-title text-[2rem] leading-none text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</p>
                         </div>
 
@@ -1900,12 +1900,12 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   ) : null}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-xs font-medium text-[var(--ink-900)]">{line.productTitle}</p>
-                    <p className="text-[10px] text-[var(--ink-600)]">×{line.quantity} · {formatMoney(line.lineTotal)}</p>
+                    <p className="text-xs text-[var(--ink-600)]">×{line.quantity} · {formatMoney(line.lineTotal)}</p>
                   </div>
                 </div>
               ))}
               {cart.lines.length > 2 ? (
-                <p className="mt-1 text-[10px] text-[var(--ink-600)]">…y {cart.lines.length - 2} más</p>
+                <p className="mt-1 text-xs text-[var(--ink-600)]">…y {cart.lines.length - 2} más</p>
               ) : null}
               <div className="mt-2 border-t border-[#e8e8d8] pt-2 text-xs">
                 <p className="flex justify-between text-[var(--ink-700)]">
@@ -1922,7 +1922,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             onClick={() => setIsCartOpen(true)}
           >
             <ShoppingCartIcon className="h-6 w-6" />
-            <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white ring-2 ring-white">
+            <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-white">
               {cartItemCount > 9 ? "9+" : cartItemCount}
             </span>
           </button>
@@ -1935,7 +1935,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">Pack recomendado</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">Pack recomendado</p>
                   <p className="text-sm font-semibold text-[var(--ink-900)]">{stickyProduct.title}</p>
                 </div>
                 <p className="font-title text-2xl leading-none text-[var(--ink-900)]">{formatMoney(stickyVariant.price)}</p>
@@ -2040,7 +2040,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     ) : null}
                   </div>
                   <div className="rounded-2xl border border-[#d8d2b4] bg-[linear-gradient(145deg,#ffffff,#f4f6e8)] p-4">
-                    <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
+                    <p className="text-xs uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
                     <p className="font-title text-3xl text-[var(--ink-900)]">
                       {formatMoney(selectedModalVariant?.price ?? selectedProduct.price)}
                     </p>

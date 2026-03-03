@@ -33,11 +33,11 @@ export function AchievementsPanel({ input }: AchievementsPanelProps) {
             <p className="text-xs font-semibold text-ink-900 leading-tight">
               {ach.title}
             </p>
-            <p className="text-[10px] text-ink-600 leading-snug">
+            <p className="text-xs text-ink-600 leading-snug">
               {ach.description}
             </p>
             {ach.unlocked && (
-              <span className="mt-1 self-start text-[9px] font-bold uppercase tracking-wide text-primary bg-primary/10 rounded px-1 py-0.5">
+              <span className="mt-1 self-start text-xs font-bold uppercase tracking-wide text-primary bg-primary/10 rounded px-1.5 py-0.5">
                 Desbloqueado
               </span>
             )}
