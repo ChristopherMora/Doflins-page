@@ -43,14 +43,14 @@ Abre `og/template.html` y edita estos textos:
 ### Subtítulo
 ```html
 <div class="sub" id="subtitle">
-  Figuras con rareza oficial verificada. Dos universos, códigos QR únicos.
+  Figuras con rareza oficial verificada. Dos universos, infinitas posibilidades.
 </div>
 ```
 
 ### Chips (abajo)
 ```html
-<div class="chip" id="chip1">🔥 Rareza Verificada</div>
-<div class="chip" id="chip2">✨ Códigos QR</div>
+<div class="chip" id="chip1">🔥 Rareza Oficial</div>
+<div class="chip" id="chip2">✨ Coleccionables</div>
 <div class="chip" id="chip3">🇲🇽 Hecho en México</div>
 ```
 

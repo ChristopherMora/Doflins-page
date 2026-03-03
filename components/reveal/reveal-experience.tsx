@@ -1310,7 +1310,7 @@ export function RevealExperience(): React.JSX.Element {
 
             <div className="flex flex-wrap gap-2 text-sm text-[var(--ink-700)]">
               <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 ${activeTheme.heroChip}`}>
-                <ShieldCheckIcon className="h-4 w-4 text-[var(--brand-primary)]" /> QR oficial verificado
+                <ShieldCheckIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Rareza oficial
               </span>
               <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 ${activeTheme.heroChip}`}>
                 <CubeIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Catálogo oficial por figura

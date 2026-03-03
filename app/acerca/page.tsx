@@ -19,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
   title: "Acerca de DOFLINS",
-  description: "Descubre la historia detrás de DOFLINS, nuestra misión de crear la mejor colección de figuras con rareza verificada en México. Conoce los universos Animals y Multiverse.",
+  description: "Descubre la historia detrás de DOFLINS, nuestra misión de crear la mejor colección de figuras con sistema de rareza oficial. Conoce los universos Animals y Multiverse.",
   keywords: [
     "acerca de doflins",
     "historia doflins",
@@ -38,7 +38,7 @@ export default function AboutPage(): React.JSX.Element {
     {
       icon: ShieldCheckIcon,
       title: "Autenticidad",
-      description: "Cada figura incluye código QR único para verificar su rareza oficial.",
+      description: "Sistema de rareza oficial verificable en nuestro catálogo digital.",
       color: "text-blue-600",
       bg: "bg-blue-50",
     },
@@ -59,7 +59,7 @@ export default function AboutPage(): React.JSX.Element {
     {
       icon: TrophyIcon,
       title: "Innovación",
-      description: "Sistema digital de colección y rareza verificada mediante tecnología QR.",
+      description: "Plataforma digital para llevar registro de tu colección y progreso.",
       color: "text-amber-600",
       bg: "bg-amber-50",
     },
@@ -112,9 +112,9 @@ export default function AboutPage(): React.JSX.Element {
                 dimensiones alternativas, DOFLINS ofrece diversidad y sorpresa en cada pack.
               </p>
               <p className="leading-relaxed">
-                Lo que nos hace diferentes es nuestro compromiso con la autenticidad: cada figura incluye
-                un código QR único que permite verificar su rareza oficial (Común, Rara, Épica o
-                Legendaria) en nuestro catálogo digital, garantizando transparencia total.
+                Lo que nos hace diferentes es nuestro compromiso con la autenticidad: cada figura tiene
+                su rareza oficial (Común, Rara, Épica o Legendaria) verificable en nuestro catálogo
+                digital, garantizando transparencia total.
               </p>
             </div>
           </CardContent>

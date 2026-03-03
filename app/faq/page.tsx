@@ -17,18 +17,17 @@ import { Button } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Preguntas Frecuentes (FAQ)",
-  description: "Encuentra respuestas sobre colección DOFLINS, sistema de rareza, envíos, pagos, códigos QR y más. Guía completa para coleccionistas de figuras Animals y Multiverse.",
+  description: "Encuentra respuestas sobre colección DOFLINS, sistema de rareza, envíos, pagos y más. Guía completa para coleccionistas de figuras Animals y Multiverse.",
   keywords: [
     "doflins faq",
     "preguntas frecuentes doflins",
     "cómo funciona rareza doflins",
     "envíos doflins",
-    "códigos qr doflins",
     "colección animals multiverse",
   ],
   openGraph: {
     title: "Preguntas Frecuentes | DOFLINS",
-    description: "Respuestas sobre colección, rareza, envíos y códigos QR de figuras DOFLINS.",
+    description: "Respuestas sobre colección, rareza, envíos y compras de figuras DOFLINS.",
   },
 };
 
@@ -39,11 +38,11 @@ const faqs = [
     questions: [
       {
         q: "¿Qué son los DOFLINS?",
-        a: "DOFLINS son figuras coleccionables de dos universos: Animals y Multiverse. Cada figura tiene un sistema oficial de rareza verificado mediante código QR.",
+        a: "DOFLINS son figuras coleccionables de dos universos: Animals y Multiverse. Cada figura tiene un sistema oficial de rareza que puedes consultar en nuestro catálogo.",
       },
       {
         q: "¿Cómo funciona el sistema de rareza?",
-        a: "Cada figura tiene una rareza asignada: Común, Rara, Épica o Legendaria. Puedes verificar la rareza oficial escaneando el código QR que viene con cada figura en nuestra página de catálogo.",
+        a: "Cada figura tiene una rareza asignada: Común, Rara, Épica o Legendaria. Puedes consultar todas las rarezas oficiales en nuestra página de catálogo.",
       },
       {
         q: "¿Cuántas figuras existen en total?",
@@ -100,28 +99,6 @@ const faqs = [
     ],
   },
   {
-    icon: ShieldCheckIcon,
-    category: "Códigos QR y Autenticidad",
-    questions: [
-      {
-        q: "¿Para qué sirve el código QR?",
-        a: "Cada figura incluye un código QR único que puedes escanear en nuestro catálogo para verificar su autenticidad y rareza oficial.",
-      },
-      {
-        q: "¿Dónde escaneo el código QR?",
-        a: "Escanea el código QR con la cámara de tu celular y serás dirigido automáticamente a la página de verificación en nuestra web.",
-      },
-      {
-        q: "¿Qué hago si el código QR no funciona?",
-        a: "Si el código no escanea correctamente, contáctanos con una foto del código y de la figura para verificar su autenticidad manualmente.",
-      },
-      {
-        q: "¿Cómo sé si mi figura es auténtica?",
-        a: "Solo las figuras oficiales DOFLINS incluyen códigos QR verificables en nuestro sistema. Si el código no aparece en nuestra base de datos, podría no ser auténtico.",
-      },
-    ],
-  },
-  {
     icon: QuestionMarkCircleIcon,
     category: "Otros",
     questions: [
@@ -140,6 +117,10 @@ const faqs = [
       {
         q: "¿Cómo puedo contactar soporte?",
         a: "Envíanos un correo o contáctanos por WhatsApp. Los enlaces están en el pie de página de nuestro sitio.",
+      },
+      {
+        q: "¿Cómo verifico la autenticidad de mi figura?",
+        a: "Las figuras oficiales DOFLINS vienen con un código único. Si tienes dudas sobre la autenticidad, contáctanos con fotos de tu figura.",
       },
     ],
   },
