@@ -1065,16 +1065,10 @@ export function RevealExperience(): React.JSX.Element {
     void ensureModelViewer().catch(() => null);
   }, [selectedDoflinModelConfig?.modelUrl]);
 
-  const purchaseUrl = process.env.NEXT_PUBLIC_WOO_PRODUCT_URL ?? "https://dofer.mx";
   const tikTokUrl = process.env.NEXT_PUBLIC_TIKTOK_URL ?? "https://www.tiktok.com";
-  const purchaseUrlByPack = useMemo(
-    () => buildPurchaseUrls(purchaseUrl, activeUniverse),
-    [activeUniverse, purchaseUrl],
-  );
-  const selectedPurchaseUrlByPack = useMemo(
-    () => buildPurchaseUrls(purchaseUrl, selectedPurchaseUniverse),
-    [purchaseUrl, selectedPurchaseUniverse],
-  );
+  // URLs hacia la sección de compras (tienda headless en la página principal)
+  const shopUrl = `/?universe=${activeUniverse}#compras`;
+  const selectedShopUrl = `/?universe=${selectedPurchaseUniverse}#compras`;
 
   const handleShareDoflin = useCallback(async () => {
     if (!selectedDoflin) return;
@@ -1238,7 +1232,7 @@ export function RevealExperience(): React.JSX.Element {
               className={`hidden h-11 px-5 text-white hover:brightness-105 sm:inline-flex sm:px-6 ${activeTheme.primaryButton}`}
             >
               <a
-                href={purchaseUrlByPack[15]}
+                href={shopUrl}
                 onClick={() => handlePurchaseIntent({ source: "header_buy", packSize: 15 })}
               >
                 Comprar {activeConfig.label}
@@ -1340,7 +1334,7 @@ export function RevealExperience(): React.JSX.Element {
               </Button>
               <Button asChild variant="secondary" size="lg" className="h-12 touch-manipulation">
                 <a
-                  href={purchaseUrlByPack[15]}
+                  href={shopUrl}
                   onClick={() => handlePurchaseIntent({ source: "hero_buy", packSize: 15 })}
                 >
                   <ShoppingCartIcon className="h-5 w-5" /> Comprar {activeConfig.label}
@@ -1608,7 +1602,7 @@ export function RevealExperience(): React.JSX.Element {
             </p>
             <Button asChild size="sm" className={activeTheme.primaryButton}>
               <a
-                href={purchaseUrlByPack[15]}
+                href={shopUrl}
                 onClick={() => handlePurchaseIntent({ source: "catalog_universe_buy", packSize: 15 })}
               >
                 <ShoppingCartIcon className="h-4 w-4" /> Comprar {activeConfig.label} x15
@@ -2038,7 +2032,7 @@ export function RevealExperience(): React.JSX.Element {
                     className={`mt-5 w-full ${isRecommended ? activeTheme.primaryButton : "bg-[var(--ink-900)] text-white hover:brightness-125"}`}
                   >
                     <a
-                      href={purchaseUrlByPack[pack.packSize]}
+                      href={shopUrl}
                       onClick={() =>
                         handlePurchaseIntent({
                           source: `packs_section_${pack.packSize}`,
@@ -2065,7 +2059,7 @@ export function RevealExperience(): React.JSX.Element {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Button asChild className={`bg-white hover:bg-slate-100 ${activeTheme.ctaPrimaryText}`} size="lg">
                 <a
-                  href={purchaseUrlByPack[15]}
+                  href={shopUrl}
                   onClick={() => handlePurchaseIntent({ source: "footer_buy", packSize: 15 })}
                 >
                   <ShoppingCartIcon className="h-5 w-5" /> Comprar ahora
@@ -2331,7 +2325,7 @@ export function RevealExperience(): React.JSX.Element {
                   <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-500)]">Comprar sobres</p>
                   <Button asChild className={`w-full ${activeTheme.primaryButton}`}>
                     <a
-                      href={selectedPurchaseUrlByPack[15]}
+                      href={selectedShopUrl}
                       onClick={() =>
                         handlePurchaseIntent({
                           source: "modal_buy",
@@ -2349,7 +2343,7 @@ export function RevealExperience(): React.JSX.Element {
                   </Button>
                   <Button asChild variant="secondary" className="w-full">
                     <a
-                      href={selectedPurchaseUrlByPack[5]}
+                      href={selectedShopUrl}
                       onClick={() =>
                         handlePurchaseIntent({
                           source: "modal_buy",
@@ -2415,7 +2409,7 @@ export function RevealExperience(): React.JSX.Element {
           </div>
           <Button asChild className={`h-11 w-full ${activeTheme.primaryButton}`}>
             <a
-              href={purchaseUrlByPack[selectedPackSize]}
+              href={shopUrl}
               onClick={() =>
                 handlePurchaseIntent({
                   source: "sticky_mobile_buy",

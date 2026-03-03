@@ -328,6 +328,16 @@ function LazyCard({ children, skeleton }: { children: React.ReactNode; skeleton:
 
 export function ShopifyBuyExperience(): React.JSX.Element {
   const [activeUniverse, setActiveUniverse] = useState<UniverseFilter>("animals");
+
+  // Pre-filtrar universo desde ?universe= en la URL (e.g. venido del reveal)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const u = params.get("universe");
+    if (u === "animals" || u === "multiverse") {
+      setActiveUniverse(u);
+    }
+  }, []);
+
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [cart, setCart] = useState<ShopCart | null>(null);
   const [liveNewProducts, setLiveNewProducts] = useState<Record<UniverseFilter, string[]>>({
