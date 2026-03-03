@@ -1766,7 +1766,7 @@ export function RevealExperience(): React.JSX.Element {
                       fallbackSrc={FALLBACK_DOFLIN_IMAGE}
                       alt={item.name}
                       rarity={item.rarity}
-                      imageClassName="h-[132px] sm:h-[145px]"
+                      imageClassName="h-[132px] sm:h-[145px] rounded-2xl"
                       className="rounded-[1.25rem] p-2.5"
                       modelUrl={modelConfig?.modelUrl}
                       modelOrientation={modelConfig?.orientation}
@@ -2160,7 +2160,7 @@ export function RevealExperience(): React.JSX.Element {
                         alt={selectedDoflin.name}
                         width={780}
                         height={780}
-                        className="relative z-10 h-full max-h-[286px] w-full object-contain drop-shadow-[0_18px_30px_rgba(42,45,21,0.22)]"
+                        className="relative z-10 h-full max-h-[286px] w-full rounded-2xl object-contain drop-shadow-[0_18px_30px_rgba(42,45,21,0.22)]"
                         onError={() => {
                           setBrokenModalImageIds((previous) => {
                             if (previous.includes(selectedDoflin.id)) {
