@@ -137,6 +137,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
   const [bulkValues, setBulkValues] = useState<BulkValues>(INITIAL_BULK_VALUES);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [variantFiles, setVariantFiles] = useState<File[]>([]);
+  const [showVariantUpload, setShowVariantUpload] = useState(false);
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
@@ -232,16 +233,6 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
     () => formValues.variantMode === "variant" && (availableBaseModels.length === 0 || !formValues.baseModel.trim()),
     [availableBaseModels.length, formValues.baseModel, formValues.variantMode],
   );
-
-  const creationPreview = useMemo(() => {
-    const previewBase =
-      formValues.variantMode === "original"
-        ? formValues.baseModel.trim() || formValues.name.trim() || "—"
-        : formValues.baseModel.trim() || "—";
-    const previewVariant = formValues.variantMode === "original" ? "Original" : formValues.variantName.trim() || "—";
-
-    return `${previewBase} / ${previewVariant}`;
-  }, [formValues.baseModel, formValues.name, formValues.variantMode, formValues.variantName]);
 
   const refreshCollection = useCallback(async (): Promise<void> => {
     setIsLoadingCollection(true);
@@ -388,6 +379,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       };
     });
     setVariantFiles([]);
+    setShowVariantUpload(false);
   };
 
   const handleSeriesChange = (series: FormValues["series"]): void => {
@@ -558,6 +550,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       }));
       setImageFile(null);
       setVariantFiles([]);
+      setShowVariantUpload(false);
       await refreshCollection();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error al guardar el Doflin.";
@@ -815,7 +808,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
     try {
       const supabase = getSupabaseBrowserClient();
       await supabase.auth.signOut();
-      window.location.href = "/admin/login";
+      window.location.href = "/";
     } catch {
       toast.error("No se pudo cerrar sesión.");
     }
@@ -845,7 +838,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
           </Button>
           <Link href="/">
             <Button variant="ghost" size="sm">
-              Acceso rápido
+              Volver al inicio
             </Button>
           </Link>
         </div>
@@ -1033,23 +1026,47 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                   </label>
 
                   {formValues.variantMode === "original" ? (
-                    <label className="space-y-1 sm:col-span-2">
-                      <span className="text-sm font-semibold text-[var(--ink-800)]">Subir variantes (opcional)</span>
-                      <Input
-                        type="file"
-                        multiple
-                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                        onChange={(event) => setVariantFiles(Array.from(event.target.files ?? []))}
-                      />
-                      <p className="text-xs text-[var(--ink-600)]">
-                        {variantFiles.length} archivo(s) seleccionados. Se crean como variantes del mismo personaje base, en números consecutivos.
-                      </p>
-                      {variantNumberRangePreview ? (
+                    showVariantUpload ? (
+                      <div className="space-y-2 sm:col-span-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-sm font-semibold text-[var(--ink-800)]">Subir variantes (opcional)</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setVariantFiles([]);
+                              setShowVariantUpload(false);
+                            }}
+                          >
+                            Ocultar
+                          </Button>
+                        </div>
+                        <Input
+                          type="file"
+                          multiple
+                          accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                          onChange={(event) => setVariantFiles(Array.from(event.target.files ?? []))}
+                        />
                         <p className="text-xs text-[var(--ink-600)]">
-                          Se intentará crear desde #{variantNumberRangePreview.from} hasta #{variantNumberRangePreview.to}.
+                          {variantFiles.length} archivo(s) seleccionados. Se crean como variantes del mismo personaje base, en números consecutivos.
                         </p>
-                      ) : null}
-                    </label>
+                        {variantNumberRangePreview ? (
+                          <p className="text-xs text-[var(--ink-600)]">
+                            Se intentará crear desde #{variantNumberRangePreview.from} hasta #{variantNumberRangePreview.to}.
+                          </p>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <div className="rounded-2xl border border-black/10 bg-[var(--surface-100)]/70 p-3 text-xs text-[var(--ink-700)] sm:col-span-2">
+                        <p className="mb-2">
+                          Si este personaje tendrá varias variantes, puedes subirlas en lote al mismo tiempo.
+                        </p>
+                        <Button type="button" variant="secondary" size="sm" onClick={() => setShowVariantUpload(true)}>
+                          Agregar variantes (opcional)
+                        </Button>
+                      </div>
+                    )
                   ) : (
                     <div className="rounded-2xl border border-black/10 bg-[var(--surface-100)]/70 p-3 text-xs text-[var(--ink-700)] sm:col-span-2">
                       En modo <strong>Variante</strong> solo se crea una pieza por envío, enlazada al animal base seleccionado.
@@ -1067,13 +1084,6 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                   Activo en catálogo
                 </label>
 
-                <div className="rounded-2xl border border-black/10 bg-[var(--surface-200)]/60 p-3 text-xs text-[var(--ink-700)]">
-                  La imagen se guarda en `public/uploads/doflins/`.
-                </div>
-
-                <div className="rounded-2xl border border-black/10 bg-[var(--surface-100)] p-3 text-sm text-[var(--ink-800)]">
-                  Se guardará como: <strong>{creationPreview}</strong>
-                </div>
                 {isVariantBlocked ? (
                   <p className="text-sm font-medium text-[#935454]">
                     Primero crea un original en {formValues.series} para poder guardar variantes.

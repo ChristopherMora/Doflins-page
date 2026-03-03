@@ -996,20 +996,20 @@ export function RevealExperience(): React.JSX.Element {
       <div className={`pointer-events-none absolute inset-0 -z-30 ${activeTheme.pageGlow}`} />
       <div className={`pointer-events-none absolute inset-0 -z-20 ${activeTheme.pageGradient}`} />
 
-      <header className="sticky top-0 z-40 mx-auto w-full max-w-6xl px-5 pt-4 sm:px-8 lg:px-10">
-        <div className={`flex items-center justify-between rounded-full border px-3 py-2 backdrop-blur ${activeTheme.headerShell}`}>
-          <div className="flex items-center gap-3">
+      <header className="sticky top-0 z-40 mx-auto w-full max-w-[84rem] px-4 pt-4 sm:px-6 lg:px-8 xl:px-10">
+        <div className={`flex items-center gap-3 rounded-full border px-3 py-2 backdrop-blur ${activeTheme.headerShell}`}>
+          <div className="flex min-w-0 items-center gap-3">
             <div className={`grid h-10 w-10 place-items-center rounded-xl text-sm font-black text-white ${activeTheme.logoGradient}`}>
               DF
             </div>
-            <p className="font-title text-2xl font-extrabold tracking-tight text-[var(--ink-900)]">DOFLINS</p>
-            <Badge className="hidden items-center gap-1 bg-white/85 text-[var(--ink-700)] ring-1 ring-black/10 sm:inline-flex">
+            <p className="font-title text-xl font-extrabold tracking-tight text-[var(--ink-900)] sm:text-2xl">DOFLINS</p>
+            <Badge className="hidden items-center gap-1 bg-white/85 text-[var(--ink-700)] ring-1 ring-black/10 md:inline-flex">
               <SparklesIcon className="h-4 w-4" />
               Catálogo oficial
             </Badge>
           </div>
 
-          <nav className="hidden items-center gap-6 text-sm font-semibold text-[var(--ink-700)] lg:flex">
+          <nav className="ml-2 hidden items-center gap-5 text-sm font-semibold text-[var(--ink-700)] 2xl:flex">
             <button type="button" onClick={() => scrollToSection("universos")} className="transition hover:text-[var(--brand-primary)]">
               Universos
             </button>
@@ -1027,25 +1027,30 @@ export function RevealExperience(): React.JSX.Element {
             </button>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-2">
             {isAuthenticatedViewer ? (
-              <Badge className="hidden max-w-[150px] truncate bg-white/85 text-[var(--ink-700)] ring-1 ring-black/10 xl:inline-flex">
+              <Badge className="hidden max-w-[180px] truncate bg-white/85 text-[var(--ink-700)] ring-1 ring-black/10 2xl:inline-flex">
                 {viewerEmail ?? "Cuenta activa"}
               </Badge>
             ) : (
-              <Button variant="secondary" className="hidden h-11 px-4 md:inline-flex" disabled={isAuthActionLoading} onClick={() => void handleUserLogin()}>
+              <Button
+                variant="secondary"
+                className="hidden h-11 px-4 2xl:inline-flex"
+                disabled={isAuthActionLoading}
+                onClick={() => void handleUserLogin()}
+              >
                 {isAuthActionLoading ? "Abriendo..." : "Iniciar sesión"}
               </Button>
             )}
             {isAdminViewer ? (
-              <Link href="/admin/doflins" className="hidden md:block">
+              <Link href="/admin/doflins" className="hidden 2xl:block">
                 <Button variant="secondary" className="h-11 px-4">
                   <ShieldCheckIcon className="h-4 w-4" /> Admin
                 </Button>
               </Link>
             ) : null}
             {isAuthenticatedViewer ? (
-              <Button variant="ghost" className="hidden h-11 px-3 text-sm md:inline-flex" onClick={() => void handleUserLogout()}>
+              <Button variant="ghost" className="hidden h-11 px-3 text-sm 2xl:inline-flex" onClick={() => void handleUserLogout()}>
                 Salir
               </Button>
             ) : null}
@@ -1056,12 +1061,12 @@ export function RevealExperience(): React.JSX.Element {
               className="hidden sm:block"
               onClick={() => handlePurchaseIntent({ source: "header_buy", packSize: 3 })}
             >
-              <Button className={`h-11 px-6 text-white hover:brightness-105 ${activeTheme.primaryButton}`}>Comprar</Button>
+              <Button className={`h-11 px-5 text-white hover:brightness-105 sm:px-6 ${activeTheme.primaryButton}`}>Comprar</Button>
             </a>
 
             <Sheet>
               <SheetTrigger asChild>
-                <Button variant="secondary" className="h-10 w-10 rounded-full p-0 lg:hidden">
+                <Button variant="secondary" className="h-10 w-10 rounded-full p-0 2xl:hidden">
                   <Bars3Icon className="h-5 w-5" />
                   <span className="sr-only">Abrir menú</span>
                 </Button>
@@ -1104,8 +1109,18 @@ export function RevealExperience(): React.JSX.Element {
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("rareza")}>
+                      Rareza
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
                     <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("guia")}>
                       Guía rápida
+                    </Button>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("plataforma")}>
+                      Plataforma
                     </Button>
                   </SheetClose>
                   {isAdminViewer ? (
