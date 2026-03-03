@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl = 'https://doflins.com'; // Cambia cuando tengas tu dominio
+  const baseUrl = 'https://doflins.dofer.mx';
 
   return {
     rules: [

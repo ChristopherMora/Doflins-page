@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Sora } from "next/font/google";
 
 import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/gtm";
+import { SiteFooter } from "@/components/nav/site-footer";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { PwaInstallPrompt } from "@/components/ui/pwa-install-prompt";
 import { Toaster } from "@/components/ui/sonner";
@@ -21,7 +22,7 @@ const bodyFont = Manrope({
   weight: ["400", "500", "600", "700", "800"],
 });
 
-const siteUrl = 'https://doflins.com'; // Actualiza con tu dominio
+const siteUrl = 'https://doflins.dofer.mx';
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -153,6 +154,7 @@ export default function RootLayout({
         <GoogleTagManagerNoScript />
         <GoogleTagManager />
         {children}
+        <SiteFooter />
         <BackToTop />
         <PwaInstallPrompt />
         <Toaster />
