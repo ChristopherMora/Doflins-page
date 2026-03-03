@@ -14,15 +14,48 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { BottomNav } from "@/components/nav/bottom-nav";
+import { SiteHeader } from "@/components/nav/site-header";
+import { ProductViewer3D } from "@/components/shop/product-viewer-3d";
+import { resolveProductModelUrl } from "@/lib/shop/product-model";
 import type { ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
 import { fetchShopProductByHandle, fetchShopProducts, ShopifyStorefrontError } from "@/lib/server/shopify-storefront";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
-export const metadata: Metadata = {
-  title: "Detalle de pack | DOFLINS",
-  description: "Detalle de producto DOFLINS con variantes, precio y disponibilidad.",
-};
+
+export async function generateMetadata({ params }: ShopProductDetailPageProps): Promise<Metadata> {
+  const { handle } = await params;
+  try {
+    const product = await fetchShopProductByHandle(handle);
+    if (!product) {
+      return { title: "Pack no encontrado | DOFLINS" };
+    }
+    const description =
+      product.description.trim().length > 0
+        ? product.description.slice(0, 160)
+        : `Pack oficial DOFLINS ${product.title} — compra segura con checkout Shopify.`;
+    return {
+      title: `${product.title} | DOFLINS`,
+      description,
+      openGraph: {
+        title: `${product.title} | DOFLINS`,
+        description,
+        ...(product.imageUrl
+          ? { images: [{ url: product.imageUrl, width: 1200, height: 630, alt: product.imageAlt ?? product.title }] }
+          : {}),
+      },
+      twitter: {
+        card: "summary_large_image",
+        title: `${product.title} | DOFLINS`,
+        description,
+        ...(product.imageUrl ? { images: [product.imageUrl] } : {}),
+      },
+    };
+  } catch {
+    return { title: "Pack DOFLINS" };
+  }
+}
 const BEST_SELLER_HANDLES = new Set(["safari-15"]);
 
 interface ShopProductDetailPageProps {
@@ -74,20 +107,24 @@ function isBestSellerProduct(product: ShopProduct): boolean {
 
 function ErrorState({ message }: { message: string }): React.JSX.Element {
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-5 py-12 sm:px-8">
-      <Card className="w-full border border-[#e9c7c7] bg-[#fff5f5]">
-        <CardContent className="space-y-4 p-7">
-          <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8a3f3f]">No disponible</p>
-          <h1 className="font-title text-3xl text-[var(--ink-900)]">No se pudo cargar este pack</h1>
-          <p className="text-sm text-[var(--ink-700)]">{message}</p>
-          <Button asChild variant="secondary" className="w-fit">
-            <Link href="/#compras">
-              <ArrowLeftIcon className="h-4 w-4" /> Volver a catálogo
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
-    </main>
+    <>
+      <SiteHeader />
+      <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-5 py-12 pb-28 sm:px-8 sm:pb-12">
+        <Card className="w-full border border-[#e9c7c7] bg-[#fff5f5]">
+          <CardContent className="space-y-4 p-7">
+            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-[#8a3f3f]">No disponible</p>
+            <h1 className="font-title text-3xl text-[var(--ink-900)]">No se pudo cargar este pack</h1>
+            <p className="text-sm text-[var(--ink-700)]">{message}</p>
+            <Button asChild variant="secondary" className="w-fit">
+              <Link href="/#compras">
+                <ArrowLeftIcon className="h-4 w-4" /> Volver a catálogo
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </main>
+      <BottomNav />
+    </>
   );
 }
 
@@ -123,23 +160,34 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
   }
 
   return (
-    <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-5 py-12 sm:px-8">
+    <>
+      <SiteHeader />
+      <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-5 py-8 pb-28 sm:px-8 sm:pb-12">
       <div className="w-full space-y-5">
-        <Button asChild variant="ghost" className="w-fit rounded-full border border-[#d9d2b1] bg-white/70">
-          <Link href="/#compras">
-            <ArrowLeftIcon className="h-4 w-4" /> Volver a compras
-          </Link>
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button asChild variant="ghost" className="w-fit rounded-full border border-[#d9d2b1] bg-white/70">
+            <Link href="/#compras">
+              <ArrowLeftIcon className="h-4 w-4" /> Volver a compras
+            </Link>
+          </Button>
+          <p className="hidden text-xs text-[var(--ink-600)] sm:block">
+            <Link href="/" className="hover:underline">Inicio</Link>
+            {" / "}
+            <Link href="/#compras" className="hover:underline">Tienda</Link>
+            {" / "}
+            <span className="text-[var(--ink-900)] font-semibold">{product.title}</span>
+          </p>
+        </div>
 
         <Card className="overflow-hidden border border-[#d9cfad] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)] shadow-[0_18px_36px_rgba(74,79,41,0.15)]">
           <CardContent className="grid gap-0 p-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="relative flex min-h-[360px] items-center justify-center bg-[linear-gradient(155deg,#f7f8eb,#e8efde)] p-6">
+            <div className="relative flex min-h-[360px] items-center justify-center overflow-hidden bg-[linear-gradient(155deg,#f7f8eb,#e8efde)] p-6">
               {product.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={product.imageUrl}
                   alt={product.imageAlt ?? product.title}
-                  className="h-full max-h-[460px] w-full object-contain drop-shadow-[0_20px_35px_rgba(28,34,16,0.26)]"
+                  className="h-full max-h-[460px] w-full object-contain drop-shadow-[0_20px_35px_rgba(28,34,16,0.26)] transition-transform duration-500 hover:scale-105"
                 />
               ) : (
                 <div className="grid h-full w-full place-items-center text-sm text-[var(--ink-600)]">
@@ -224,6 +272,15 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                 </ul>
               </div>
 
+              {/* 3D Viewer — shows only when a model exists for this product */}
+              {resolveProductModelUrl(product.handle, product.tags) ? (
+                <ProductViewer3D
+                  modelUrl={resolveProductModelUrl(product.handle, product.tags)!}
+                  productTitle={product.title}
+                  posterUrl={product.imageUrl ?? undefined}
+                />
+              ) : null}
+
               <div className="space-y-2">
                 <Button asChild className="h-12 w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
                   <Link href="/#compras">
@@ -245,11 +302,11 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
           <CardContent className="space-y-5 p-6 sm:p-7">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">Explora más packs</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">Próximo en la colección</p>
                 <h2 className="font-title text-2xl leading-tight text-[var(--ink-900)] sm:text-3xl">
-                  Sigue descubriendo en {universeLabel(product)}
+                  Sigue completando {universeLabel(product)}
                 </h2>
-                <p className="text-sm text-[var(--ink-700)]">Compara packs y entra al catálogo para seguir armando tu colección.</p>
+                <p className="text-sm text-[var(--ink-700)]">Estos packs del mismo universo amplían tu colección más rápido.</p>
               </div>
               <Button asChild variant="secondary" className="rounded-full">
                 <Link href="/#compras">
@@ -332,6 +389,8 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
           </CardContent>
         </Card>
       </div>
-    </main>
+      </main>
+      <BottomNav />
+    </>
   );
 }

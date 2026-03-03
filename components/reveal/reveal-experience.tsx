@@ -8,6 +8,8 @@ import {
   Bars3Icon,
   BoltIcon,
   CheckCircleIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
   CubeIcon,
   FireIcon,
   FunnelIcon,
@@ -16,10 +18,13 @@ import {
   MagnifyingGlassIcon,
   MapIcon,
   RocketLaunchIcon,
+  ShareIcon,
   ShieldCheckIcon,
   ShoppingCartIcon,
   SparklesIcon,
   TicketIcon,
+  WifiIcon,
+  XMarkIcon,
 } from "@heroicons/react/24/solid";
 import { toast } from "sonner";
 
@@ -54,10 +59,11 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Toaster } from "@/components/ui/sonner";
+import { LazySection } from "@/components/ui/lazy-section";
 
 const FALLBACK_DOFLIN_IMAGE = "/images/placeholders/doflin-placeholder.svg";
 const ACTIVE_SERIES = ["Animals", "Multiverse"] as const;
+const UNIVERSE_STORAGE_KEY = "doflins_last_universe_v1";
 
 type Universe = "animals" | "multiverse";
 type RarityFilter = "all" | CatalogRarity;
@@ -245,24 +251,33 @@ const UNIVERSE_THEME: Record<Universe, UniverseTheme> = {
   },
 };
 
+function formatPackPrice(basePrice: { amount: string; currencyCode: string }, multiplier: number): string {
+  const value = Number(basePrice.amount) * multiplier;
+  return new Intl.NumberFormat("es-MX", {
+    style: "currency",
+    currency: basePrice.currencyCode,
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
 const BUY_PACK_OPTIONS: BuyPackOption[] = [
-  {
-    packSize: 1,
-    title: "Pack x1",
-    subtitle: "Entrada rápida",
-    benefit: "Ideal para iniciar colección y validar el universo que más te gusta.",
-  },
-  {
-    packSize: 3,
-    title: "Pack x3",
-    subtitle: "Balance recomendado",
-    benefit: "Mejor combinación entre variedad de figuras y costo por bolsa.",
-  },
   {
     packSize: 5,
     title: "Pack x5",
+    subtitle: "Entrada rápida",
+    benefit: "Ideal para iniciar tu colección y conocer el universo sin compromiso.",
+  },
+  {
+    packSize: 15,
+    title: "Pack x15",
+    subtitle: "Balance recomendado",
+    benefit: "Mayor variedad de figuras, mejor costo por unidad y más opciones de rareza.",
+  },
+  {
+    packSize: 30,
+    title: "Pack x30",
     subtitle: "Modo coleccionista",
-    benefit: "Sube tus probabilidades de encontrar rarezas altas en menos compras.",
+    benefit: "Maximiza tus probabilidades de obtener rarezas altas y completa universos más rápido.",
   },
 ];
 
@@ -359,9 +374,9 @@ function withPurchaseQuery(baseUrl: string, options: { packSize: PackSize; unive
 
 function buildPurchaseUrls(baseUrl: string, universe: Universe): Record<PackSize, string> {
   return {
-    1: withPurchaseQuery(baseUrl, { packSize: 1, universe }),
-    3: withPurchaseQuery(baseUrl, { packSize: 3, universe }),
     5: withPurchaseQuery(baseUrl, { packSize: 5, universe }),
+    15: withPurchaseQuery(baseUrl, { packSize: 15, universe }),
+    30: withPurchaseQuery(baseUrl, { packSize: 30, universe }),
   };
 }
 
@@ -391,18 +406,33 @@ export function RevealExperience(): React.JSX.Element {
   const [activeUniverse, setActiveUniverse] = useState<Universe>(initialUniverse);
   const [rarityFilter, setRarityFilter] = useState<RarityFilter>(initialRarityFilter);
   const [searchQuery, setSearchQuery] = useState(initialQuery);
-  const [selectedPackSize, setSelectedPackSize] = useState<PackSize>(3);
+  const [selectedPackSize, setSelectedPackSize] = useState<PackSize>(15);
   const [visiblePages, setVisiblePages] = useState(1);
   const [selectedDoflin, setSelectedDoflin] = useState<CollectionItemDTO | null>(null);
   const [ownedIds, setOwnedIds] = useState<number[]>([]);
   const [brokenModalImageIds, setBrokenModalImageIds] = useState<number[]>([]);
   const [collection, setCollection] = useState<CollectionItemDTO[]>([]);
+  const [isLoadingCollection, setIsLoadingCollection] = useState(true);
+  const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(initialQuery);
+  const [catalogAnimKey, setCatalogAnimKey] = useState(0);
   const [remaining, setRemaining] = useState<Record<Rarity, number> | null>(null);
   const [isAdminViewer, setIsAdminViewer] = useState(false);
   const [isAuthenticatedViewer, setIsAuthenticatedViewer] = useState(false);
   const [viewerEmail, setViewerEmail] = useState<string | null>(null);
   const [isAuthActionLoading, setIsAuthActionLoading] = useState(false);
   const [isAuthPromptOpen, setIsAuthPromptOpen] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [baseUnitPrice, setBaseUnitPrice] = useState<{ amount: string; currencyCode: string } | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/shop/products?universe=${activeUniverse}`)
+      .then((r) => r.json())
+      .then((data: unknown) => {
+        const price = (data as { products?: Array<{ price: { amount: string; currencyCode: string } }> }).products?.[0]?.price;
+        if (price) setBaseUnitPrice(price);
+      })
+      .catch(() => null);
+  }, [activeUniverse]);
 
   const featuredCollection = useMemo(() => {
     const subset = collection.filter((item) =>
@@ -431,7 +461,7 @@ export function RevealExperience(): React.JSX.Element {
   );
 
   const filteredCollection = useMemo(() => {
-    const normalizedSearch = searchQuery.trim().toLowerCase();
+    const normalizedSearch = debouncedSearchQuery.trim().toLowerCase();
 
     return featuredCollection
       .filter((item) => {
@@ -450,7 +480,7 @@ export function RevealExperience(): React.JSX.Element {
         return byName || bySeries || byNumber;
       })
       .sort((a, b) => a.collectionNumber - b.collectionNumber);
-  }, [featuredCollection, rarityFilter, searchQuery]);
+  }, [featuredCollection, rarityFilter, debouncedSearchQuery]);
 
   const animalsFiltered = useMemo(
     () => filteredCollection.filter((item) => normalizeSeries(item.series) === "animals"),
@@ -533,6 +563,24 @@ export function RevealExperience(): React.JSX.Element {
   const ownedActiveUniversePercent = activeUniverseCollection.length
     ? Math.round((ownedActiveUniverseCount / activeUniverseCollection.length) * 100)
     : 0;
+
+  const ownedByRarity = useMemo(() => {
+    const result: Record<CatalogRarity, { owned: number; total: number }> = {
+      COMMON: { owned: 0, total: 0 },
+      RARE: { owned: 0, total: 0 },
+      EPIC: { owned: 0, total: 0 },
+      LEGENDARY: { owned: 0, total: 0 },
+    };
+    for (const item of activeUniverseCollection) {
+      const rarity = toCatalogRarity(item.rarity);
+      result[rarity].total += 1;
+      if (ownedSet.has(item.id)) {
+        result[rarity].owned += 1;
+      }
+    }
+    return result;
+  }, [activeUniverseCollection, ownedSet]);
+
   const selectedDoflinModelConfig = selectedDoflin
     ? MODEL_CONFIG_BY_COLLECTION[selectedDoflin.collectionNumber]
     : undefined;
@@ -599,6 +647,19 @@ export function RevealExperience(): React.JSX.Element {
   );
   const hasMoreCards = visibleCardCount < activeCatalogCards.length;
 
+  const selectedDoflinIndexInCatalog = useMemo(
+    () => (selectedDoflin ? activeCatalogCards.findIndex((item) => item.id === selectedDoflin.id) : -1),
+    [activeCatalogCards, selectedDoflin],
+  );
+  const rarityCountMap = useMemo(() => {
+    const map: Record<string, number> = { all: activeCatalogCards.length };
+    for (const item of activeCatalogCards) {
+      const r = toCatalogRarity(item.rarity);
+      map[r] = (map[r] ?? 0) + 1;
+    }
+    return map;
+  }, [activeCatalogCards]);
+
   const themeVars =
     activeUniverse === "animals"
       ? ({
@@ -661,6 +722,8 @@ export function RevealExperience(): React.JSX.Element {
         }
       } catch {
         setCollection([]);
+      } finally {
+        setIsLoadingCollection(false);
       }
     }
 
@@ -755,8 +818,13 @@ export function RevealExperience(): React.JSX.Element {
         });
       }
 
+      if (typeof window !== "undefined") {
+        window.localStorage.setItem(UNIVERSE_STORAGE_KEY, target);
+      }
+
       setVisiblePages(1);
       setActiveUniverse(target);
+      setCatalogAnimKey((k) => k + 1);
 
       if (sectionId) {
         scrollToSection(sectionId);
@@ -915,6 +983,52 @@ export function RevealExperience(): React.JSX.Element {
   }, [activeUniverse, pathname, rarityFilter, router, searchQuery]);
 
   useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    setIsOffline(!navigator.onLine);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? window.localStorage.getItem(UNIVERSE_STORAGE_KEY) : null;
+    const fromUrl = searchParams.get("universe");
+    if (!fromUrl && saved) {
+      const parsed = toUniverse(saved);
+      if (parsed && parsed !== activeUniverse) {
+        setActiveUniverse(parsed);
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!selectedDoflin) return;
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") {
+        e.preventDefault();
+        const next = activeCatalogCards[selectedDoflinIndexInCatalog + 1];
+        if (next) setSelectedDoflin(next);
+      } else if (e.key === "ArrowLeft" || e.key === "ArrowUp") {
+        e.preventDefault();
+        const prev = activeCatalogCards[selectedDoflinIndexInCatalog - 1];
+        if (prev) setSelectedDoflin(prev);
+      }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
+  }, [activeCatalogCards, selectedDoflin, selectedDoflinIndexInCatalog]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedSearchQuery(searchQuery), 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  useEffect(() => {
     const sentinel = loadMoreRef.current;
     if (!sentinel || !hasMoreCards) {
       return undefined;
@@ -961,6 +1075,21 @@ export function RevealExperience(): React.JSX.Element {
     () => buildPurchaseUrls(purchaseUrl, selectedPurchaseUniverse),
     [purchaseUrl, selectedPurchaseUniverse],
   );
+
+  const handleShareDoflin = useCallback(async () => {
+    if (!selectedDoflin) return;
+    const url = `${window.location.origin}/reveal?universe=${activeUniverse}&q=${encodeURIComponent(selectedDoflin.name)}`;
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title: `${selectedDoflin.name} — DOFLINS`, url });
+      } else {
+        await navigator.clipboard.writeText(url);
+        toast.success("Link copiado al portapapeles");
+      }
+    } catch {
+      // user cancelled share — ignore
+    }
+  }, [activeUniverse, selectedDoflin]);
 
   const handlePurchaseIntent = useCallback((options?: {
     source?: string;
@@ -1029,6 +1158,12 @@ export function RevealExperience(): React.JSX.Element {
 
   return (
     <main className="relative overflow-hidden pb-36 transition-colors duration-500 md:pb-24" style={themeVars}>
+      {isOffline ? (
+        <div className="sticky top-14 z-50 flex items-center justify-center gap-2 bg-amber-100 px-4 py-2 text-center text-xs font-semibold text-amber-900 ring-1 ring-amber-300">
+          <WifiIcon className="h-4 w-4" />
+          Sin conexión — los datos pueden estar desactualizados
+        </div>
+      ) : null}
       <div className={`pointer-events-none absolute inset-0 -z-30 ${activeTheme.pageGlow}`} />
       <div className={`pointer-events-none absolute inset-0 -z-20 ${activeTheme.pageGradient}`} />
 
@@ -1103,8 +1238,8 @@ export function RevealExperience(): React.JSX.Element {
               className={`hidden h-11 px-5 text-white hover:brightness-105 sm:inline-flex sm:px-6 ${activeTheme.primaryButton}`}
             >
               <a
-                href={purchaseUrlByPack[3]}
-                onClick={() => handlePurchaseIntent({ source: "header_buy", packSize: 3 })}
+                href={purchaseUrlByPack[15]}
+                onClick={() => handlePurchaseIntent({ source: "header_buy", packSize: 15 })}
               >
                 Comprar {activeConfig.label}
               </a>
@@ -1205,8 +1340,8 @@ export function RevealExperience(): React.JSX.Element {
               </Button>
               <Button asChild variant="secondary" size="lg" className="h-12 touch-manipulation">
                 <a
-                  href={purchaseUrlByPack[3]}
-                  onClick={() => handlePurchaseIntent({ source: "hero_buy", packSize: 3 })}
+                  href={purchaseUrlByPack[15]}
+                  onClick={() => handlePurchaseIntent({ source: "hero_buy", packSize: 15 })}
                 >
                   <ShoppingCartIcon className="h-5 w-5" /> Comprar {activeConfig.label}
                 </a>
@@ -1247,6 +1382,31 @@ export function RevealExperience(): React.JSX.Element {
                   </span>
                 </div>
                 <Progress value={ownedTotalPercent} />
+                {isAuthenticatedViewer && ownedTotalCount > 0 ? (
+                  <div className="grid grid-cols-2 gap-1.5 pt-1">
+                    {CATALOG_RARITY_ORDER.map((rarity) => {
+                      const stats = ownedByRarity[rarity];
+                      const cfg = CATALOG_RARITY_CONFIG[rarity];
+                      return (
+                        <div
+                          key={rarity}
+                          className="relative flex items-center justify-between overflow-hidden rounded-lg px-2.5 py-1.5 text-[11px] font-semibold"
+                          style={{ backgroundColor: cfg.softColor, color: cfg.color }}
+                        >
+                          <span className="flex items-center gap-1">
+                            {stats.owned === stats.total && stats.total > 0 ? (
+                              <SparklesIcon className="h-3 w-3 animate-sparkle-pop" />
+                            ) : null}
+                            {cfg.label}
+                          </span>
+                          <span className="font-black">
+                            {stats.owned === stats.total && stats.total > 0 ? "✓ " : ""}{stats.owned}/{stats.total}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : null}
                 <p className="text-xs text-[var(--ink-600)]">
                   El progreso se guarda en tu cuenta. Si no inicias sesión, no se registra.
                 </p>
@@ -1319,8 +1479,10 @@ export function RevealExperience(): React.JSX.Element {
           </div>
         </div>
 
-        <div className="mb-5 flex flex-wrap gap-2">
+        <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Universo activo">
           <Button
+            role="tab"
+            aria-selected={activeUniverse === "animals"}
             size="sm"
             className={activeUniverse === "animals" ? activeTheme.primaryButton : undefined}
             variant={activeUniverse === "animals" ? "primary" : "secondary"}
@@ -1329,6 +1491,8 @@ export function RevealExperience(): React.JSX.Element {
             Ver Animals
           </Button>
           <Button
+            role="tab"
+            aria-selected={activeUniverse === "multiverse"}
             size="sm"
             className={activeUniverse === "multiverse" ? activeTheme.primaryButton : undefined}
             variant={activeUniverse === "multiverse" ? "primary" : "secondary"}
@@ -1342,11 +1506,30 @@ export function RevealExperience(): React.JSX.Element {
           <CardContent className="space-y-2 p-4">
             <div className="flex items-center justify-between text-sm font-semibold text-[var(--ink-700)]">
               <span>Tu avance en {activeConfig.label}</span>
-              <span>
-                {ownedActiveUniverseCount}/{activeUniverseCollection.length} figuras
-              </span>
+              <span className="font-black text-[var(--ink-900)]">{ownedActiveUniversePercent}%</span>
             </div>
             <Progress value={ownedActiveUniversePercent} />
+            <p className="text-right text-xs text-[var(--ink-600)]">
+              {ownedActiveUniverseCount} de {activeUniverseCollection.length} figuras
+            </p>
+            {ownedActiveUniverseCount > 0 ? (
+              <div className="grid grid-cols-2 gap-1.5 pt-1 sm:grid-cols-4">
+                {CATALOG_RARITY_ORDER.map((rarity) => {
+                  const stats = ownedByRarity[rarity];
+                  const cfg = CATALOG_RARITY_CONFIG[rarity];
+                  return (
+                    <div
+                      key={rarity}
+                      className="flex items-center justify-between overflow-hidden rounded-lg px-2.5 py-1.5 text-[11px] font-semibold"
+                      style={{ backgroundColor: cfg.softColor, color: cfg.color }}
+                    >
+                      <span>{cfg.label}</span>
+                      <span className="font-black">{stats.owned}/{stats.total}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : null}
           </CardContent>
         </Card>
 
@@ -1425,19 +1608,21 @@ export function RevealExperience(): React.JSX.Element {
             </p>
             <Button asChild size="sm" className={activeTheme.primaryButton}>
               <a
-                href={purchaseUrlByPack[3]}
-                onClick={() => handlePurchaseIntent({ source: "catalog_universe_buy", packSize: 3 })}
+                href={purchaseUrlByPack[15]}
+                onClick={() => handlePurchaseIntent({ source: "catalog_universe_buy", packSize: 15 })}
               >
-                <ShoppingCartIcon className="h-4 w-4" /> Comprar {activeConfig.label} x3
+                <ShoppingCartIcon className="h-4 w-4" /> Comprar {activeConfig.label} x15
               </a>
             </Button>
           </CardContent>
         </Card>
 
-        <Card className={activeTheme.panelCard}>
+        <Card className={`sticky top-0 z-20 backdrop-blur-sm ${activeTheme.panelCard}`}>
           <CardContent className="space-y-5 p-5">
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2" role="tablist" aria-label="Universo">
               <Button
+                role="tab"
+                aria-selected={activeUniverse === "animals"}
                 size="sm"
                 className={activeUniverse === "animals" ? activeTheme.primaryButton : undefined}
                 variant={activeUniverse === "animals" ? "primary" : "secondary"}
@@ -1446,6 +1631,8 @@ export function RevealExperience(): React.JSX.Element {
                 Mostrar Animals
               </Button>
               <Button
+                role="tab"
+                aria-selected={activeUniverse === "multiverse"}
                 size="sm"
                 className={activeUniverse === "multiverse" ? activeTheme.primaryButton : undefined}
                 variant={activeUniverse === "multiverse" ? "primary" : "secondary"}
@@ -1466,27 +1653,49 @@ export function RevealExperience(): React.JSX.Element {
                     setVisiblePages(1);
                   }}
                   placeholder="Buscar por nombre, serie o número"
-                  className="pl-10"
+                  className="pl-10 pr-8"
                 />
+                {searchQuery ? (
+                  <button
+                    type="button"
+                    aria-label="Limpiar búsqueda"
+                    onClick={() => { setSearchQuery(""); setDebouncedSearchQuery(""); setVisiblePages(1); }}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-[var(--ink-600)] transition hover:text-[var(--ink-900)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
+                  >
+                    <XMarkIcon className="h-4 w-4" />
+                  </button>
+                ) : null}
               </div>
               <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ink-600)]">
                 <FunnelIcon className="h-4 w-4" /> Rareza
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2">
+            <div
+              role="tablist"
+              aria-label="Filtro de rareza"
+              className="-mx-1 flex flex-nowrap gap-1.5 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible"
+            >
               {RARITY_FILTER_OPTIONS.map((option) => {
                 const isActive = rarityFilter === option.value;
+                const count = rarityCountMap[option.value] ?? 0;
 
                 return (
                   <Button
                     key={option.value}
+                    role="tab"
+                    aria-selected={isActive}
                     size="sm"
                     variant={isActive ? "primary" : "secondary"}
-                    className={isActive ? activeTheme.primaryButton : undefined}
+                    className={`shrink-0 ${isActive ? activeTheme.primaryButton : ""}`}
                     onClick={() => applyRarityFilter(option.value, "catalog_rarity")}
                   >
                     {option.label}
+                    {count > 0 ? (
+                      <span className="ml-1 rounded-full bg-black/15 px-1.5 py-0.5 text-[10px] font-bold leading-none">
+                        {count}
+                      </span>
+                    ) : null}
                   </Button>
                 );
               })}
@@ -1507,8 +1716,27 @@ export function RevealExperience(): React.JSX.Element {
           </Card>
         ) : null}
 
-        <div className="mt-5 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]">
-          {visibleCards.map((item, index) => {
+        <div
+          key={catalogAnimKey}
+          className="mt-5 grid animate-catalog-fadein gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]"
+        >
+          {isLoadingCollection
+            ? Array.from({ length: 8 }, (_, skI) => (
+                <div
+                  key={`skel-${skI}`}
+                  className={`space-y-3 overflow-hidden rounded-2xl border p-3 ${activeConfig.cardClass}`}
+                >
+                  <div className="h-[132px] animate-pulse rounded-xl bg-black/[0.07] sm:h-[145px]" />
+                  <div className="mt-3 h-4 w-2/3 animate-pulse rounded bg-black/[0.06]" />
+                  <div className="h-3 w-1/2 animate-pulse rounded bg-black/[0.05]" />
+                  <div className="flex gap-1.5">
+                    <div className="h-5 w-14 animate-pulse rounded-full bg-black/[0.06]" />
+                    <div className="h-5 w-12 animate-pulse rounded-full bg-black/[0.05]" />
+                  </div>
+                  <div className="mt-2 h-8 animate-pulse rounded-full bg-black/[0.07]" />
+                </div>
+              ))
+            : visibleCards.map((item, index) => {
             const modelConfig = MODEL_CONFIG_BY_COLLECTION[item.collectionNumber];
             const isOwned = ownedSet.has(item.id);
             const itemIsOriginal = isOriginalVariant(item.variantName);
@@ -1518,15 +1746,21 @@ export function RevealExperience(): React.JSX.Element {
             return (
               <Card
                 key={item.id}
+                style={{ contentVisibility: 'auto', containIntrinsicSize: '0 280px' }}
                 className={`overflow-hidden border ${activeConfig.cardClass} ${isOwned ? "ring-2 ring-[var(--brand-primary)]/40 shadow-[0_12px_26px_rgba(29,50,103,0.2)]" : ""}`}
               >
                 <CardContent className="flex h-full flex-col space-y-3 p-3">
                   <button
                     type="button"
                     onClick={() => handleOpenCard(item)}
-                    className="block w-full cursor-pointer text-left"
+                    className="relative block w-full cursor-pointer text-left"
                     aria-label={`Abrir vista de ${item.name}`}
                   >
+                    {isOwned && isAuthenticatedViewer ? (
+                      <span className="animate-sparkle-pop absolute right-2 top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-[var(--brand-primary)] shadow-lg">
+                        <CheckCircleIcon className="h-4 w-4 text-white" />
+                      </span>
+                    ) : null}
                     <Figure3D
                       src={item.imageUrl}
                       fallbackSrc={FALLBACK_DOFLIN_IMAGE}
@@ -1605,18 +1839,40 @@ export function RevealExperience(): React.JSX.Element {
         {hasMoreCards ? <div ref={loadMoreRef} className="mt-4 h-1 w-full" /> : null}
 
         {hasMoreCards ? (
-          <div className="mt-4 flex justify-center">
-            <Button variant="secondary" onClick={() => setVisiblePages((value) => value + 1)}>
-              Cargar más figuras
+          <div className="mt-6 flex flex-col items-center gap-3">
+            <p className="flex items-center gap-2 text-sm text-[var(--ink-600)]">
+              <span className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-[var(--brand-primary)] border-t-transparent" />
+              Cargando más figuras...
+            </p>
+            <Button variant="secondary" size="sm" onClick={() => setVisiblePages((value) => value + 1)}>
+              Cargar más ahora
             </Button>
           </div>
         ) : null}
 
-        {activeCatalogCards.length === 0 ? (
+        {!isLoadingCollection && activeCatalogCards.length === 0 ? (
           <Card className={`mt-5 ${activeTheme.panelCard}`}>
-            <CardContent className="p-6 text-center">
-              <p className="font-semibold text-[var(--ink-900)]">No encontramos figuras con ese filtro.</p>
-              <p className="mt-1 text-sm text-[var(--ink-700)]">Prueba otra búsqueda o quita filtros de rareza.</p>
+            <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/[0.06] text-3xl">🔍</div>
+              <div className="space-y-1">
+                <p className="font-semibold text-[var(--ink-900)]">Sin resultados</p>
+                <p className="text-sm text-[var(--ink-700)]">
+                  No hay figuras{rarityFilter !== "all" ? ` con rareza ${CATALOG_RARITY_CONFIG[rarityFilter as CatalogRarity]?.label}` : ""}
+                  {searchQuery.trim() ? ` para "${searchQuery.trim()}"` : ""}.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="secondary"
+                onClick={() => {
+                  setSearchQuery("");
+                  setDebouncedSearchQuery("");
+                  setRarityFilter("all");
+                  setVisiblePages(1);
+                }}
+              >
+                <MagnifyingGlassIcon className="h-4 w-4" /> Limpiar filtros
+              </Button>
             </CardContent>
           </Card>
         ) : null}
@@ -1716,34 +1972,87 @@ export function RevealExperience(): React.JSX.Element {
         </div>
       </section>
 
+      <LazySection>
       <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10">
-        <div className="mb-4 flex items-center justify-between gap-3">
-          <h3 className="font-title text-3xl text-[var(--ink-900)]">Packs disponibles</h3>
-          <Badge className={activeConfig.badgeClass}>x1 / x3 / x5</Badge>
+        <div className="mb-6">
+          <h3 className="font-title text-3xl text-[var(--ink-900)]">¿Cuántas figuras quieres hoy?</h3>
+          <p className="mt-1 text-sm text-[var(--ink-700)]">Elige el pack que mejor se adapte a tu ritmo de colección.</p>
         </div>
         <div className="grid gap-4 md:grid-cols-3">
-          {BUY_PACK_OPTIONS.map((pack) => (
-            <Card key={pack.packSize} className={activeTheme.panelCard}>
-              <CardContent className="space-y-3 p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-700)]">{pack.subtitle}</p>
-                <h4 className="font-title text-3xl text-[var(--ink-900)]">{pack.title}</h4>
-                <p className="text-sm text-[var(--ink-700)]">{pack.benefit}</p>
-                <Button asChild className={`w-full ${activeTheme.primaryButton}`}>
-                  <a
-                    href={purchaseUrlByPack[pack.packSize]}
-                    onClick={() =>
-                      handlePurchaseIntent({
-                        source: `packs_section_${pack.packSize}`,
-                        packSize: pack.packSize,
-                      })
-                    }
+          {BUY_PACK_OPTIONS.map((pack) => {
+            const isRecommended = pack.packSize === 15;
+            return (
+              <div
+                key={pack.packSize}
+                className={`relative flex flex-col overflow-hidden rounded-3xl border transition hover:-translate-y-1 ${
+                  isRecommended
+                    ? "border-[var(--brand-primary)] shadow-[0_8px_28px_rgba(78,111,42,0.22)]"
+                    : "border-[#d7cfb0] shadow-sm"
+                } ${activeTheme.panelCard}`}
+              >
+                {isRecommended ? (
+                  <div className={`py-1.5 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-white ${activeTheme.primaryButton}`}>
+                    Más popular
+                  </div>
+                ) : null}
+                <div className="flex flex-1 flex-col p-5">
+                  {/* big pack number as visual anchor */}
+                  <div className="mb-3 flex items-end gap-1.5">
+                    <span className="font-title text-[4.5rem] leading-none text-[var(--ink-900)]">{pack.packSize}</span>
+                    <span className="mb-2 text-sm font-semibold text-[var(--ink-600)]">figuras</span>
+                  </div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-600)]">{pack.subtitle}</p>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--ink-700)]">{pack.benefit}</p>
+
+                  {/* Estimador de probabilidad */}
+                  <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Figuras esperadas por rareza">
+                    {CATALOG_RARITY_ORDER.map((rarity) => {
+                      const cfg = CATALOG_RARITY_CONFIG[rarity];
+                      const expected = Math.round((pack.packSize * cfg.probability) / 100 * 10) / 10;
+                      if (expected < 0.5) return null;
+                      return (
+                        <span
+                          key={rarity}
+                          className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
+                          style={{
+                            background: cfg.softColor,
+                            color: cfg.color,
+                            outline: `1px solid ${cfg.color}40`,
+                          }}
+                          title={`~${expected} figura${expected === 1 ? "" : "s"} ${cfg.label}`}
+                        >
+                          ~{expected} {cfg.label}
+                        </span>
+                      );
+                    })}
+                  </div>
+
+                  {baseUnitPrice ? (
+                    <p className="mt-3 font-title text-2xl leading-none text-[var(--ink-900)]">
+                      {formatPackPrice(baseUnitPrice, pack.packSize)}
+                      <span className="ml-1.5 text-sm font-semibold text-[var(--ink-600)]">{baseUnitPrice.currencyCode}</span>
+                    </p>
+                  ) : null}
+                  <Button
+                    asChild
+                    className={`mt-5 w-full ${isRecommended ? activeTheme.primaryButton : "bg-[var(--ink-900)] text-white hover:brightness-125"}`}
                   >
-                    Comprar {pack.title}
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
-          ))}
+                    <a
+                      href={purchaseUrlByPack[pack.packSize]}
+                      onClick={() =>
+                        handlePurchaseIntent({
+                          source: `packs_section_${pack.packSize}`,
+                          packSize: pack.packSize,
+                        })
+                      }
+                    >
+                      <ShoppingCartIcon className="h-4 w-4" /> Comprar {pack.packSize} figuras
+                    </a>
+                  </Button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </section>
 
@@ -1756,8 +2065,8 @@ export function RevealExperience(): React.JSX.Element {
             <div className="flex flex-wrap items-center justify-center gap-3">
               <Button asChild className={`bg-white hover:bg-slate-100 ${activeTheme.ctaPrimaryText}`} size="lg">
                 <a
-                  href={purchaseUrlByPack[3]}
-                  onClick={() => handlePurchaseIntent({ source: "footer_buy", packSize: 3 })}
+                  href={purchaseUrlByPack[15]}
+                  onClick={() => handlePurchaseIntent({ source: "footer_buy", packSize: 15 })}
                 >
                   <ShoppingCartIcon className="h-5 w-5" /> Comprar ahora
                 </a>
@@ -1776,6 +2085,7 @@ export function RevealExperience(): React.JSX.Element {
           </CardContent>
         </Card>
       </section>
+      </LazySection>
 
       <Dialog
         open={Boolean(selectedDoflin)}
@@ -1787,6 +2097,36 @@ export function RevealExperience(): React.JSX.Element {
       >
         <DialogContent className="w-[min(96vw,980px)] gap-0 overflow-hidden p-0">
           {selectedDoflin ? (
+            <>
+              {/* Prev / Next navigation */}
+              {activeCatalogCards.length > 1 ? (
+                <div className="absolute left-0 right-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-2 md:px-3 pointer-events-none">
+                  <button
+                    type="button"
+                    aria-label="Doflin anterior"
+                    disabled={selectedDoflinIndexInCatalog <= 0}
+                    onClick={() => {
+                      const prev = activeCatalogCards[selectedDoflinIndexInCatalog - 1];
+                      if (prev) setSelectedDoflin(prev);
+                    }}
+                    className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-lg ring-1 ring-black/10 transition hover:bg-white disabled:opacity-30"
+                  >
+                    <ChevronLeftIcon className="h-5 w-5 text-[var(--ink-900)]" />
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Doflin siguiente"
+                    disabled={selectedDoflinIndexInCatalog >= activeCatalogCards.length - 1}
+                    onClick={() => {
+                      const next = activeCatalogCards[selectedDoflinIndexInCatalog + 1];
+                      if (next) setSelectedDoflin(next);
+                    }}
+                    className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-lg ring-1 ring-black/10 transition hover:bg-white disabled:opacity-30"
+                  >
+                    <ChevronRightIcon className="h-5 w-5 text-[var(--ink-900)]" />
+                  </button>
+                </div>
+              ) : null}
             <div className={`grid gap-0 ${selectedDoflinHas3DModel ? "md:grid-cols-[1.1fr_0.9fr]" : "md:grid-cols-[1fr_1fr]"}`}>
               <div
                 className={`relative min-h-[320px] p-4 sm:p-5 ${
@@ -1839,7 +2179,17 @@ export function RevealExperience(): React.JSX.Element {
 
               <div className="space-y-5 p-6">
                 <DialogHeader>
-                  <DialogTitle>{selectedDoflin.name}</DialogTitle>
+                  <DialogTitle className="flex items-center justify-between gap-2 pr-6">
+                    <span>{selectedDoflin.name}</span>
+                    <button
+                      type="button"
+                      aria-label="Compartir Doflin"
+                      onClick={() => void handleShareDoflin()}
+                      className="shrink-0 rounded-full p-1.5 text-[var(--ink-600)] transition hover:bg-black/[0.06] hover:text-[var(--ink-900)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
+                    >
+                      <ShareIcon className="h-4 w-4" />
+                    </button>
+                  </DialogTitle>
                   <DialogDescription>
                     {selectedDoflin.baseModel} · {variantLabel(selectedDoflin.variantName)} · Serie {selectedDoflin.series} · #
                     {String(selectedDoflin.collectionNumber).padStart(2, "0")}
@@ -1964,35 +2314,36 @@ export function RevealExperience(): React.JSX.Element {
                   </p>
                   <Button asChild className={`w-full ${activeTheme.primaryButton}`}>
                     <a
-                      href={selectedPurchaseUrlByPack[3]}
+                      href={selectedPurchaseUrlByPack[15]}
                       onClick={() =>
                         handlePurchaseIntent({
                           source: "modal_buy",
-                          packSize: 3,
+                          packSize: 15,
                           doflinId: selectedDoflin.id,
                         })
                       }
                     >
-                      <ShoppingCartIcon className="h-5 w-5" /> Comprar {selectedPurchaseUniverseLabel} x3
+                      <ShoppingCartIcon className="h-5 w-5" /> Comprar {selectedPurchaseUniverseLabel} x15
                     </a>
                   </Button>
                   <Button asChild variant="secondary" className="w-full">
                     <a
-                      href={selectedPurchaseUrlByPack[1]}
+                      href={selectedPurchaseUrlByPack[5]}
                       onClick={() =>
                         handlePurchaseIntent({
                           source: "modal_buy",
-                          packSize: 1,
+                          packSize: 5,
                           doflinId: selectedDoflin.id,
                         })
                       }
                     >
-                      Comprar {selectedPurchaseUniverseLabel} x1
+                      Comprar {selectedPurchaseUniverseLabel} x5
                     </a>
                   </Button>
                 </div>
               </div>
             </div>
+            </>
           ) : null}
         </DialogContent>
       </Dialog>
@@ -2053,8 +2404,6 @@ export function RevealExperience(): React.JSX.Element {
           </Button>
         </div>
       </div>
-
-      <Toaster />
     </main>
   );
 }

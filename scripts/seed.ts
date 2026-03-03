@@ -81,9 +81,9 @@ const catalog: SeedDoflin[] = [
 ];
 
 const packPlan: PackPlan[] = [
-  { size: 1, count: 300 },
-  { size: 3, count: 120 },
-  { size: 5, count: 80 },
+  { size: 5, count: 300 },
+  { size: 15, count: 120 },
+  { size: 30, count: 80 },
 ];
 
 const rarityWeights: Array<{ rarity: Rarity; weight: number }> = [

@@ -15,7 +15,7 @@ export const revealQuerySchema = z.object({
 });
 
 const raritySchema = z.enum(RARITY_ORDER);
-const packSizeSchema = z.union([z.literal(1), z.literal(3), z.literal(5)]);
+const packSizeSchema = z.union([z.literal(5), z.literal(15), z.literal(30)]);
 
 export const doflinSchema = z.object({
   id: z.number().int().positive(),

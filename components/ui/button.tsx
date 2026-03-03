@@ -5,16 +5,16 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-full text-sm font-semibold transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.96]",
   {
     variants: {
       variant: {
         primary:
-          "bg-[var(--brand-primary)] text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg focus-visible:ring-[var(--brand-primary)]",
+          "bg-[var(--brand-primary)] text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg active:shadow-sm active:brightness-90 focus-visible:ring-[var(--brand-primary)]",
         secondary:
-          "bg-white text-[var(--ink-900)] ring-1 ring-black/10 hover:bg-[var(--surface-200)] focus-visible:ring-[var(--brand-accent)]",
+          "bg-white text-[var(--ink-900)] ring-1 ring-black/10 hover:bg-[var(--surface-200)] active:bg-[var(--surface-200)] focus-visible:ring-[var(--brand-accent)]",
         ghost:
-          "bg-transparent text-[var(--ink-700)] hover:bg-white/70 focus-visible:ring-[var(--brand-accent)]",
+          "bg-transparent text-[var(--ink-700)] hover:bg-white/70 active:bg-white/50 focus-visible:ring-[var(--brand-accent)]",
       },
       size: {
         sm: "h-9 px-4",

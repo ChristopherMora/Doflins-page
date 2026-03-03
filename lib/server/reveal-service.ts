@@ -65,19 +65,19 @@ interface PurchaseIntentInput {
 const DEFAULT_USER_AGENT = "unknown";
 
 function normalizePackSize(packSize: number, totalItems: number): PackSize {
-  if (packSize === 3 || packSize === 5) {
+  if (packSize === 5 || packSize === 15 || packSize === 30) {
     return packSize;
   }
 
-  if (totalItems === 5) {
-    return 5;
+  if (totalItems === 30) {
+    return 30;
   }
 
-  if (totalItems === 3) {
-    return 3;
+  if (totalItems === 15) {
+    return 15;
   }
 
-  return 1;
+  return 5;
 }
 
 export async function logScanEvent(input: LogScanEventInput): Promise<void> {

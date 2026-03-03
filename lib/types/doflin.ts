@@ -1,5 +1,5 @@
 export type Rarity = "COMMON" | "RARE" | "EPIC" | "LEGENDARY" | "ULTRA" | "MYTHIC";
-export type PackSize = 1 | 3 | 5;
+export type PackSize = 5 | 15 | 30;
 
 export interface DoflinDTO {
   id: number;

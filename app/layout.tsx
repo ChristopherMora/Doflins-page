@@ -2,6 +2,9 @@ import type { Metadata } from "next";
 import { Manrope, Sora } from "next/font/google";
 
 import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/gtm";
+import { BackToTop } from "@/components/ui/back-to-top";
+import { PwaInstallPrompt } from "@/components/ui/pwa-install-prompt";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const titleFont = Sora({
@@ -30,10 +33,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
+      <head>
+        {/* Anti-flash: restore theme before paint */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('doflins_theme');if(t==='dark'||t==='light'){document.documentElement.dataset.theme=t;}}catch(e){}})();`,
+          }}
+        />
+      </head>
       <body suppressHydrationWarning className={`${titleFont.variable} ${bodyFont.variable} antialiased`}>
         <GoogleTagManagerNoScript />
         <GoogleTagManager />
         {children}
+        <BackToTop />
+        <PwaInstallPrompt />
+        <Toaster />
       </body>
     </html>
   );
