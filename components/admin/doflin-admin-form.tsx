@@ -132,7 +132,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
   const [formValues, setFormValues] = useState<FormValues>(INITIAL_VALUES);
   const [bulkValues, setBulkValues] = useState<BulkValues>(INITIAL_BULK_VALUES);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  const [silhouetteFile, setSilhouetteFile] = useState<File | null>(null);
+  const [variantFiles, setVariantFiles] = useState<File[]>([]);
   const [bulkFiles, setBulkFiles] = useState<File[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isBulkSubmitting, setIsBulkSubmitting] = useState(false);
@@ -145,7 +145,6 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
   const [editingItem, setEditingItem] = useState<AdminDoflinItem | null>(null);
   const [editValues, setEditValues] = useState<EditValues | null>(null);
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
-  const [editSilhouetteFile, setEditSilhouetteFile] = useState<File | null>(null);
   const [bulkStatus, setBulkStatus] = useState<{
     total: number;
     processed: number;
@@ -178,6 +177,22 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
   }, [adminItems]);
 
   const slugPreview = useMemo(() => toSlugPreview(formValues.name), [formValues.name]);
+  const variantNumberRangePreview = useMemo(() => {
+    if (variantFiles.length === 0) {
+      return null;
+    }
+
+    const parsedBaseNumber = Number.parseInt(formValues.collectionNumber, 10);
+    const safeBaseNumber =
+      Number.isInteger(parsedBaseNumber) && parsedBaseNumber > 0
+        ? parsedBaseNumber
+        : nextCollectionBySeries[formValues.series];
+
+    return {
+      from: safeBaseNumber + 1,
+      to: safeBaseNumber + variantFiles.length,
+    };
+  }, [formValues.collectionNumber, formValues.series, nextCollectionBySeries, variantFiles.length]);
 
   const refreshCollection = useCallback(async (): Promise<void> => {
     setIsLoadingCollection(true);
@@ -297,6 +312,12 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       return;
     }
 
+    const baseCollectionNumber = Number.parseInt(formValues.collectionNumber, 10);
+    if (!Number.isInteger(baseCollectionNumber) || baseCollectionNumber <= 0) {
+      toast.error("El número de colección debe ser un entero positivo.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     const formData = new FormData();
@@ -317,10 +338,6 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       formData.set("imageFile", imageFile);
     }
 
-    if (silhouetteFile) {
-      formData.set("silhouetteFile", silhouetteFile);
-    }
-
     try {
       const response = await fetch("/api/admin/doflins", {
         method: "POST",
@@ -334,14 +351,78 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
         throw new Error(payload.message || "No se pudo crear el Doflin.");
       }
 
-      toast.success(payload.message || "Doflin creado correctamente.");
+      let variantSuccess = 0;
+      const variantFailures: string[] = [];
+
+      if (variantFiles.length > 0) {
+        const baseModel = formValues.baseModel.trim() || formValues.name.trim();
+
+        for (const [index, file] of variantFiles.entries()) {
+          const inferredVariantName = fileNameToDoflinName(file.name);
+          const variantName = inferredVariantName || `Variante ${index + 1}`;
+          const variantCreateData = new FormData();
+
+          variantCreateData.set("name", `${baseModel} ${variantName}`.trim());
+          variantCreateData.set("baseModel", baseModel);
+          variantCreateData.set("variantName", variantName);
+          variantCreateData.set("series", formValues.series);
+          variantCreateData.set("collectionNumber", String(baseCollectionNumber + index + 1));
+          variantCreateData.set("rarity", formValues.rarity);
+          variantCreateData.set("probability", formValues.probability.trim());
+          variantCreateData.set("active", String(formValues.active));
+          variantCreateData.set("imageFile", file);
+
+          if (adminToken.trim()) {
+            variantCreateData.set("token", adminToken.trim());
+          }
+
+          try {
+            const variantResponse = await fetch("/api/admin/doflins", {
+              method: "POST",
+              body: variantCreateData,
+              headers: getAuthHeaders(),
+            });
+
+            const variantPayload = (await variantResponse.json()) as CreateDoflinResponse;
+            if (!variantResponse.ok || variantPayload.status !== "ok") {
+              variantFailures.push(
+                `${file.name}: ${variantPayload.message || "No se pudo crear la variante."}`,
+              );
+              continue;
+            }
+
+            variantSuccess += 1;
+          } catch (error) {
+            variantFailures.push(
+              `${file.name}: ${error instanceof Error ? error.message : "Error al crear variante."}`,
+            );
+          }
+        }
+      }
+
+      if (variantFiles.length > 0) {
+        if (variantSuccess === variantFiles.length) {
+          toast.success(`Doflin creado + ${variantSuccess} variante(s) guardadas.`);
+        } else if (variantSuccess > 0) {
+          toast.success(`Doflin creado + ${variantSuccess} variante(s). Algunas fallaron.`);
+        } else {
+          toast.success("Doflin base creado. No se pudieron crear variantes.");
+        }
+
+        if (variantFailures.length > 0) {
+          toast.error(`Errores en variantes: ${variantFailures.slice(0, 2).join(" | ")}`);
+        }
+      } else {
+        toast.success(payload.message || "Doflin creado correctamente.");
+      }
+
       setFormValues((previous) => ({
         ...INITIAL_VALUES,
         series: previous.series,
         collectionNumber: "",
       }));
       setImageFile(null);
-      setSilhouetteFile(null);
+      setVariantFiles([]);
       await refreshCollection();
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error al guardar el Doflin.";
@@ -478,14 +559,12 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       active: item.active,
     });
     setEditImageFile(null);
-    setEditSilhouetteFile(null);
   };
 
   const closeEditDialog = (): void => {
     setEditingItem(null);
     setEditValues(null);
     setEditImageFile(null);
-    setEditSilhouetteFile(null);
   };
 
   const handleEditSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
@@ -513,10 +592,6 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
 
     if (editImageFile) {
       formData.set("imageFile", editImageFile);
-    }
-
-    if (editSilhouetteFile) {
-      formData.set("silhouetteFile", editSilhouetteFile);
     }
 
     try {
@@ -781,13 +856,22 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                     />
                   </label>
 
-                  <label className="space-y-1">
-                    <span className="text-sm font-semibold text-[var(--ink-800)]">Subir silueta</span>
+                  <label className="space-y-1 sm:col-span-2">
+                    <span className="text-sm font-semibold text-[var(--ink-800)]">Subir variantes (opcional)</span>
                     <Input
                       type="file"
+                      multiple
                       accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                      onChange={(event) => setSilhouetteFile(event.target.files?.[0] ?? null)}
+                      onChange={(event) => setVariantFiles(Array.from(event.target.files ?? []))}
                     />
+                    <p className="text-xs text-[var(--ink-600)]">
+                      {variantFiles.length} archivo(s) seleccionados. Se crean como variantes del mismo modelo base, en números consecutivos.
+                    </p>
+                    {variantNumberRangePreview ? (
+                      <p className="text-xs text-[var(--ink-600)]">
+                        Se intentará crear desde #{variantNumberRangePreview.from} hasta #{variantNumberRangePreview.to}.
+                      </p>
+                    ) : null}
                   </label>
                 </div>
 
@@ -802,7 +886,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                 </label>
 
                 <div className="rounded-2xl border border-black/10 bg-[var(--surface-200)]/60 p-3 text-xs text-[var(--ink-700)]">
-                  La imagen se guarda en `public/uploads/doflins/`. Si no subes silueta, se usa placeholder automático.
+                  La imagen se guarda en `public/uploads/doflins/`.
                 </div>
 
                 <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting}>
@@ -1203,14 +1287,6 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                   />
                 </label>
 
-                <label className="space-y-1">
-                  <span className="text-sm font-semibold text-[var(--ink-800)]">Reemplazar silueta</span>
-                  <Input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp,image/svg+xml"
-                    onChange={(event) => setEditSilhouetteFile(event.target.files?.[0] ?? null)}
-                  />
-                </label>
               </div>
 
               <label className="flex items-center gap-2 text-sm font-medium text-[var(--ink-800)]">

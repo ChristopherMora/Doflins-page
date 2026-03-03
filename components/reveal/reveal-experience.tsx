@@ -288,6 +288,30 @@ function normalizeSeries(series: string): string {
   return series.trim().toLowerCase();
 }
 
+function baseModelKey(item: Pick<CollectionItemDTO, "series" | "baseModel">): string {
+  return `${normalizeSeries(item.series)}::${item.baseModel.trim().toLowerCase()}`;
+}
+
+function isOriginalVariant(variantName: string): boolean {
+  const normalized = variantName.trim().toLowerCase();
+  if (!normalized) {
+    return true;
+  }
+
+  return ["original", "base", "clasico", "clásico", "default title", "default"].some((token) =>
+    normalized.includes(token),
+  );
+}
+
+function variantLabel(variantName: string): string {
+  const cleaned = variantName.trim();
+  if (!cleaned || isOriginalVariant(cleaned)) {
+    return "Original";
+  }
+
+  return cleaned;
+}
+
 function toUniverse(value: string | null): Universe | null {
   if (!value) {
     return null;
@@ -445,6 +469,34 @@ export function RevealExperience(): React.JSX.Element {
   const activeTheme = UNIVERSE_THEME[activeUniverse];
   const ownedSet = useMemo(() => new Set(ownedIds), [ownedIds]);
   const activeUniverseCollection = activeUniverse === "animals" ? animalsCollection : multiverseCollection;
+  const activeBaseModelStats = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        total: number;
+        originals: number;
+        variants: number;
+      }
+    >();
+
+    for (const item of activeUniverseCollection) {
+      const key = baseModelKey(item);
+      const current = map.get(key) ?? { total: 0, originals: 0, variants: 0 };
+      current.total += 1;
+      if (isOriginalVariant(item.variantName)) {
+        current.originals += 1;
+      } else {
+        current.variants += 1;
+      }
+      map.set(key, current);
+    }
+
+    return {
+      map,
+      baseCount: map.size,
+      variantCount: Array.from(map.values()).reduce((total, entry) => total + entry.variants, 0),
+    };
+  }, [activeUniverseCollection]);
   const ownedTotalCount = useMemo(
     () => featuredCollection.reduce((total, item) => total + (ownedSet.has(item.id) ? 1 : 0), 0),
     [featuredCollection, ownedSet],
@@ -464,12 +516,51 @@ export function RevealExperience(): React.JSX.Element {
     : undefined;
   const selectedDoflinHas3DModel = Boolean(selectedDoflinModelConfig?.modelUrl);
   const selectedDoflinIsOwned = selectedDoflin ? ownedSet.has(selectedDoflin.id) : false;
+  const selectedDoflinGroupStats = selectedDoflin ? activeBaseModelStats.map.get(baseModelKey(selectedDoflin)) : undefined;
+  const selectedDoflinIsOriginal = selectedDoflin ? isOriginalVariant(selectedDoflin.variantName) : false;
+  const selectedDoflinVariants = useMemo(() => {
+    if (!selectedDoflin) {
+      return [];
+    }
+
+    const key = baseModelKey(selectedDoflin);
+
+    return activeUniverseCollection
+      .filter((item) => baseModelKey(item) === key)
+      .sort((a, b) => {
+        const aOriginal = isOriginalVariant(a.variantName);
+        const bOriginal = isOriginalVariant(b.variantName);
+
+        if (aOriginal !== bOriginal) {
+          return aOriginal ? -1 : 1;
+        }
+
+        return a.collectionNumber - b.collectionNumber;
+      });
+  }, [activeUniverseCollection, selectedDoflin]);
+  const activeCatalogCards = useMemo(() => {
+    const grouped = new Map<string, CollectionItemDTO[]>();
+
+    for (const item of activeConfig.cards) {
+      const key = baseModelKey(item);
+      const current = grouped.get(key) ?? [];
+      current.push(item);
+      grouped.set(key, current);
+    }
+
+    const representatives = Array.from(grouped.values()).map((group) => {
+      const ordered = [...group].sort((a, b) => a.collectionNumber - b.collectionNumber);
+      return ordered.find((item) => isOriginalVariant(item.variantName)) ?? ordered[0];
+    });
+
+    return representatives.sort((a, b) => a.collectionNumber - b.collectionNumber);
+  }, [activeConfig.cards]);
   const visibleCardCount = visiblePages * CATALOG_PAGE_SIZE;
   const visibleCards = useMemo(
-    () => activeConfig.cards.slice(0, visibleCardCount),
-    [activeConfig.cards, visibleCardCount],
+    () => activeCatalogCards.slice(0, visibleCardCount),
+    [activeCatalogCards, visibleCardCount],
   );
-  const hasMoreCards = visibleCardCount < activeConfig.cards.length;
+  const hasMoreCards = visibleCardCount < activeCatalogCards.length;
 
   const themeVars =
     activeUniverse === "animals"
@@ -1254,7 +1345,10 @@ export function RevealExperience(): React.JSX.Element {
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-title text-3xl text-[var(--ink-900)]">Catálogo de {activeConfig.label}</h3>
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className={activeConfig.badgeClass}>{activeConfig.cards.length} figuras visibles</Badge>
+            <Badge className={activeConfig.badgeClass}>{activeCatalogCards.length} animales base visibles</Badge>
+            <Badge className={activeConfig.badgeClass}>
+              {activeBaseModelStats.baseCount} base · {activeBaseModelStats.variantCount} variantes
+            </Badge>
             <Badge className={activeConfig.badgeClass}>
               Colección total {ownedTotalCount}/{featuredCollection.length} · {ownedTotalPercent}%
             </Badge>
@@ -1338,6 +1432,9 @@ export function RevealExperience(): React.JSX.Element {
           {visibleCards.map((item, index) => {
             const modelConfig = MODEL_CONFIG_BY_COLLECTION[item.collectionNumber];
             const isOwned = ownedSet.has(item.id);
+            const itemIsOriginal = isOriginalVariant(item.variantName);
+            const itemGroupStats = activeBaseModelStats.map.get(baseModelKey(item));
+            const itemVariantLabel = variantLabel(item.variantName);
 
             return (
               <Card
@@ -1368,9 +1465,26 @@ export function RevealExperience(): React.JSX.Element {
 
                   <div className="flex flex-1 flex-col space-y-1">
                     <p className="truncate font-semibold text-[var(--ink-900)]">{item.name}</p>
-                    <p className="truncate text-xs text-[var(--ink-700)]">
-                      {item.baseModel} · {item.variantName}
-                    </p>
+                    <p className="truncate text-xs text-[var(--ink-700)]">{item.baseModel}</p>
+                    <div className="flex flex-wrap gap-1 pt-0.5">
+                      <Badge
+                        className={`w-fit text-[10px] uppercase tracking-[0.08em] ${
+                          itemIsOriginal
+                            ? "bg-[#eaf5d8] text-[#2f5b1f] ring-1 ring-[#c6dba0]"
+                            : "bg-[#e9efff] text-[#2f448f] ring-1 ring-[#c9d6ff]"
+                        }`}
+                      >
+                        {itemIsOriginal ? "Animal original" : "Variante"}
+                      </Badge>
+                      <Badge className="w-fit bg-white/90 text-[10px] uppercase tracking-[0.08em] text-[var(--ink-700)] ring-1 ring-black/10">
+                        {itemVariantLabel}
+                      </Badge>
+                      {(itemGroupStats?.total ?? 1) > 1 ? (
+                        <Badge className="w-fit bg-white/90 text-[10px] uppercase tracking-[0.08em] text-[var(--ink-700)] ring-1 ring-black/10">
+                          {(itemGroupStats?.total ?? 1).toString()} versiones
+                        </Badge>
+                      ) : null}
+                    </div>
                     <p className="text-xs text-[var(--ink-600)]">{item.series}</p>
                     <p className="text-xs text-[var(--ink-600)]">#{String(item.collectionNumber).padStart(2, "0")}</p>
                     <Badge className="w-fit bg-white/80 text-[10px] uppercase tracking-[0.08em] text-[var(--ink-700)] ring-1 ring-black/10">
@@ -1419,7 +1533,7 @@ export function RevealExperience(): React.JSX.Element {
           </div>
         ) : null}
 
-        {activeConfig.cards.length === 0 ? (
+        {activeCatalogCards.length === 0 ? (
           <Card className={`mt-5 ${activeTheme.panelCard}`}>
             <CardContent className="p-6 text-center">
               <p className="font-semibold text-[var(--ink-900)]">No encontramos figuras con ese filtro.</p>
@@ -1648,11 +1762,26 @@ export function RevealExperience(): React.JSX.Element {
                 <DialogHeader>
                   <DialogTitle>{selectedDoflin.name}</DialogTitle>
                   <DialogDescription>
-                    {selectedDoflin.baseModel} · {selectedDoflin.variantName} · Serie {selectedDoflin.series} · #
+                    {selectedDoflin.baseModel} · {variantLabel(selectedDoflin.variantName)} · Serie {selectedDoflin.series} · #
                     {String(selectedDoflin.collectionNumber).padStart(2, "0")}
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex flex-wrap items-center gap-2">
+                  <Badge
+                    className={
+                      selectedDoflinIsOriginal
+                        ? "bg-[#eaf5d8] text-[#2f5b1f] ring-1 ring-[#c6dba0]"
+                        : "bg-[#e9efff] text-[#2f448f] ring-1 ring-[#c9d6ff]"
+                    }
+                  >
+                    {selectedDoflinIsOriginal ? "Animal original" : "Variante"}
+                  </Badge>
+                  <Badge className="bg-white text-[var(--ink-700)] ring-1 ring-black/10">{variantLabel(selectedDoflin.variantName)}</Badge>
+                  {selectedDoflinGroupStats && selectedDoflinGroupStats.total > 1 ? (
+                    <Badge className="bg-white text-[var(--ink-700)] ring-1 ring-black/10">
+                      {selectedDoflinGroupStats.total} versiones de {selectedDoflin.baseModel}
+                    </Badge>
+                  ) : null}
                   <RarityPill rarity={selectedDoflin.rarity} />
                   <Badge className={activeConfig.badgeClass}>{selectedDoflin.probability}% probabilidad</Badge>
                   <Badge
@@ -1665,6 +1794,37 @@ export function RevealExperience(): React.JSX.Element {
                     {selectedDoflinHas3DModel ? "Vista 3D" : "Vista imagen"}
                   </Badge>
                 </div>
+                {selectedDoflinVariants.length > 1 ? (
+                  <div className={`rounded-2xl border p-3 ${activeTheme.panelCard}`}>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">
+                      Variantes de {selectedDoflin.baseModel}
+                    </p>
+                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                      {selectedDoflinVariants.map((variant) => {
+                        const isCurrent = variant.id === selectedDoflin.id;
+                        const isVariantOriginal = isOriginalVariant(variant.variantName);
+
+                        return (
+                          <button
+                            key={variant.id}
+                            type="button"
+                            onClick={() => setSelectedDoflin(variant)}
+                            className={`rounded-xl border px-3 py-2 text-left transition ${
+                              isCurrent
+                                ? "border-[#b9d598] bg-[#edf7df] ring-1 ring-[#b9d598]"
+                                : "border-black/10 bg-white/80 hover:bg-white"
+                            }`}
+                          >
+                            <p className="text-sm font-semibold text-[var(--ink-900)]">{variantLabel(variant.variantName)}</p>
+                            <p className="text-xs text-[var(--ink-700)]">
+                              {isVariantOriginal ? "Original" : "Variante"} · #{String(variant.collectionNumber).padStart(2, "0")}
+                            </p>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : null}
                 <div className={`rounded-2xl border p-3 ${activeTheme.panelCard}`}>
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">Estado en tu colección</p>
                   <p className="mt-1 text-sm font-semibold text-[var(--ink-900)]">
