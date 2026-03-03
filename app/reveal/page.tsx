@@ -5,8 +5,13 @@ import { RevealExperience } from "@/components/reveal/reveal-experience";
 import { BottomNav } from "@/components/nav/bottom-nav";
 
 export const metadata: Metadata = {
-  title: "DOFLINS | Animals + Multiverse",
-  description: "Página oficial de DOFLINS con secciones Animals y Multiverse, rareza, filtros y catálogo completo.",
+  title: "Catálogo Oficial | DOFLINS",
+  description: "Explora el catálogo completo de DOFLINS: Animals y Multiverse. Revisa rareza oficial de cada figura, filtra por universo y descubre todos los personajes coleccionables con códigos QR verificados.",
+  openGraph: {
+    title: "Catálogo Oficial DOFLINS | Animals + Multiverse",
+    description: "Explora el catálogo completo con rareza oficial. Filtra por universo, descubre personajes únicos y verifica códigos QR.",
+  },
+  keywords: ["catálogo doflins", "rareza oficial", "animals", "multiverse", "figuras coleccionables", "código QR"],
 };
 
 function RevealSkeleton(): React.JSX.Element {

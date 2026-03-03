@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   ArrowRightIcon,
@@ -16,6 +17,14 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LiveFigureCount } from "@/components/ui/live-figure-count";
 
+export const metadata: Metadata = {
+  title: "DOFLINS | Colección Oficial Animals + Multiverse",
+  description: "Colecciona figuras DOFLINS con rareza oficial. Explora los universos Animals y Multiverse, compra packs exclusivos y completa tu colección con sistema de rareza verificado.",
+  openGraph: {
+    title: "DOFLINS | Colección Oficial Animals + Multiverse",
+    description: "Colecciona figuras DOFLINS con rareza oficial. Explora Animals y Multiverse, compra packs y completa tu colección.",
+  },
+};
 
 export default function Home(): React.JSX.Element {
   return (

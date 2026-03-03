@@ -3,8 +3,15 @@ import type { Metadata } from "next";
 import { MyCollection } from "@/components/collection/my-collection";
 
 export const metadata: Metadata = {
-  title: "Mi Colección | DOFLINS",
-  description: "Lleva el registro de los Doflins que has conseguido y descubre cuántos te faltan.",
+  title: "Mi Colección",
+  description: "Lleva el registro de los Doflins que has conseguido, revisa tu progreso por rareza y descubre cuántos te faltan para completar tu colección de Animals y Multiverse.",
+  openGraph: {
+    title: "Mi Colección DOFLINS",
+    description: "Lleva el registro de tus figuras DOFLINS, revisa tu progreso por rareza y completa tu colección.",
+  },
+  robots: {
+    index: false, // No indexar colecciones personales
+  },
 };
 
 export default function ColeccionPage(): React.JSX.Element {
