@@ -319,15 +319,19 @@ export function Figure3D({
           ) : null}
         </div>
       ) : (
-        <SmartImage
-          src={src}
-          fallbackSrc={fallbackSrc}
-          alt={alt}
+        <div
           className={cn(
-            "relative z-10 mx-auto h-full max-h-[260px] w-full object-contain drop-shadow-[0_22px_30px_rgba(44,50,23,0.26)] [transform:translateZ(36px)]",
+            "relative z-10 mx-auto overflow-hidden rounded-2xl [transform:translateZ(36px)] drop-shadow-[0_22px_30px_rgba(44,50,23,0.26)]",
             imageClassName,
           )}
-        />
+        >
+          <SmartImage
+            src={src}
+            fallbackSrc={fallbackSrc}
+            alt={alt}
+            className="h-full w-full object-cover"
+          />
+        </div>
       )}
     </motion.div>
   );

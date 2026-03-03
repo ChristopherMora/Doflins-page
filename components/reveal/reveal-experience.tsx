@@ -1766,7 +1766,7 @@ export function RevealExperience(): React.JSX.Element {
                       fallbackSrc={FALLBACK_DOFLIN_IMAGE}
                       alt={item.name}
                       rarity={item.rarity}
-                      imageClassName="h-[132px] sm:h-[145px] rounded-2xl"
+                      imageClassName="h-[132px] sm:h-[145px] w-full"
                       className="rounded-[1.25rem] p-2.5"
                       modelUrl={modelConfig?.modelUrl}
                       modelOrientation={modelConfig?.orientation}
@@ -2155,23 +2155,25 @@ export function RevealExperience(): React.JSX.Element {
                   <div>
                     <div className="relative flex h-[332px] w-full items-center justify-center overflow-hidden rounded-3xl border border-[#dcd2af] bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.98),rgba(247,242,221,0.92)_58%,rgba(236,228,197,0.92))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_14px_30px_rgba(89,90,52,0.2)]">
                       <div className="pointer-events-none absolute inset-x-10 bottom-6 h-6 rounded-full bg-black/14 blur-md" />
-                      <Image
-                        src={selectedDoflinImageSrc}
-                        alt={selectedDoflin.name}
-                        width={780}
-                        height={780}
-                        className="relative z-10 h-full max-h-[286px] w-full rounded-2xl object-contain drop-shadow-[0_18px_30px_rgba(42,45,21,0.22)]"
-                        onError={() => {
-                          setBrokenModalImageIds((previous) => {
-                            if (previous.includes(selectedDoflin.id)) {
-                              return previous;
-                            }
+                      <div className="relative z-10 h-full max-h-[286px] w-[286px] overflow-hidden rounded-2xl drop-shadow-[0_18px_30px_rgba(42,45,21,0.22)]">
+                        <Image
+                          src={selectedDoflinImageSrc}
+                          alt={selectedDoflin.name}
+                          width={780}
+                          height={780}
+                          className="h-full w-full object-cover"
+                          onError={() => {
+                            setBrokenModalImageIds((previous) => {
+                              if (previous.includes(selectedDoflin.id)) {
+                                return previous;
+                              }
 
-                            return [...previous, selectedDoflin.id];
-                          });
-                        }}
-                        unoptimized
-                      />
+                              return [...previous, selectedDoflin.id];
+                            });
+                          }}
+                          unoptimized
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
