@@ -2234,15 +2234,9 @@ export function RevealExperience(): React.JSX.Element {
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">
                       Variantes de {selectedDoflin.baseModel}
                     </p>
-                    <p className="mt-1 text-xs text-[var(--ink-600)]">
-                      {selectedDoflinIsOriginal
-                        ? "Selecciona una variante para compararla rápido."
-                        : "Compara otras variantes o vuelve al original."}
-                    </p>
-                    <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                    <div className="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-4">
                       {selectedDoflinVariants.map((variant) => {
                         const isCurrent = variant.id === selectedDoflin.id;
-                        const isVariantOriginal = isOriginalVariant(variant.variantName);
                         const variantCatalogRarity = toCatalogRarity(variant.rarity);
                         const variantRarityConfig = CATALOG_RARITY_CONFIG[variantCatalogRarity];
 
@@ -2251,30 +2245,33 @@ export function RevealExperience(): React.JSX.Element {
                             key={variant.id}
                             type="button"
                             onClick={() => setSelectedDoflin(variant)}
-                            className={`rounded-xl px-3 py-2 text-left transition ${
+                            className={`group flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-center transition ${
                               isCurrent
                                 ? "bg-[#edf7df] shadow-[inset_0_0_0_1.5px_#b9d598]"
-                                : "bg-white/70 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.09)] hover:bg-white"
+                                : "bg-white/60 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] hover:bg-white hover:shadow-[inset_0_0_0_1.5px_rgba(0,0,0,0.14)]"
                             }`}
                           >
-                            <p className="text-sm font-semibold text-[var(--ink-900)]">{variantLabel(variant.variantName)}</p>
-                            <p className="text-xs text-[var(--ink-700)]">
-                              {isVariantOriginal ? "Original" : "Variante"} · #{String(variant.collectionNumber).padStart(2, "0")}
-                            </p>
-                            <div className="mt-2 flex flex-wrap items-center gap-1.5 text-[11px] font-semibold">
-                              <span
-                                className="rounded-full px-2 py-1"
-                                style={{
-                                  backgroundColor: variantRarityConfig.softColor,
-                                  color: variantRarityConfig.color,
-                                }}
-                              >
-                                {variantRarityConfig.label}
-                              </span>
-                              <span className="rounded-full bg-white/80 px-2 py-1 text-[var(--ink-700)] ring-1 ring-black/10">
-                                {variantRarityConfig.probability}%
-                              </span>
+                            <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+                              <Image
+                                src={variant.imageUrl || FALLBACK_DOFLIN_IMAGE}
+                                alt={variant.name}
+                                fill
+                                className="object-cover transition duration-200 group-hover:scale-[1.04]"
+                                unoptimized
+                              />
                             </div>
+                            <p className="w-full truncate text-[11px] font-semibold leading-tight text-[var(--ink-900)]">
+                              {variantLabel(variant.variantName)}
+                            </p>
+                            <span
+                              className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none"
+                              style={{
+                                backgroundColor: variantRarityConfig.softColor,
+                                color: variantRarityConfig.color,
+                              }}
+                            >
+                              {variantRarityConfig.label}
+                            </span>
                           </button>
                         );
                       })}
