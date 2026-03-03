@@ -2029,7 +2029,8 @@ export function RevealExperience(): React.JSX.Element {
                   ) : null}
                   <Button
                     asChild
-                    className={`mt-5 w-full ${isRecommended ? activeTheme.primaryButton : "bg-[var(--ink-900)] text-white hover:brightness-125"}`}
+                    variant={isRecommended ? undefined : "ghost"}
+                    className={`mt-5 w-full ${isRecommended ? activeTheme.primaryButton : "bg-[var(--ink-900)] !text-white hover:brightness-125"}`}
                   >
                     <a
                       href={shopUrl}
@@ -2057,7 +2058,7 @@ export function RevealExperience(): React.JSX.Element {
             <h3 className="font-title text-3xl sm:text-4xl">{activeConfig.ctaTitle}</h3>
             <p className="mx-auto max-w-2xl text-white/85">Selecciona tu universo favorito o combínalos para completar todo el catálogo.</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button asChild className={`bg-white hover:bg-slate-100 ${activeTheme.ctaPrimaryText}`} size="lg">
+              <Button asChild variant="ghost" className={`bg-white hover:bg-slate-100 ${activeTheme.ctaPrimaryText}`} size="lg">
                 <a
                   href={shopUrl}
                   onClick={() => handlePurchaseIntent({ source: "footer_buy", packSize: 15 })}
