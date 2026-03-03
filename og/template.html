@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1200, initial-scale=1" />
+  <title>DOFLINS Open Graph</title>
+  <style>
+    /* Canvas fijo OG */
+    html, body { margin: 0; padding: 0; background:#1f2a1a; }
+    .og {
+      width: 1200px;
+      height: 630px;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Sora', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color: #1f2a1a;
+      background:
+        radial-gradient(900px 500px at 20% 20%, rgba(213,229,178,.45), transparent 60%),
+        radial-gradient(700px 500px at 80% 20%, rgba(78,111,42,.35), transparent 55%),
+        radial-gradient(900px 700px at 50% 110%, rgba(202,216,158,.24), transparent 60%),
+        linear-gradient(135deg, #f5f8e8 0%, #e8f1d2 40%, #d5e5b2 100%);
+    }
+
+    /* Grid sutil */
+    .grid {
+      position:absolute; inset:0;
+      background-image:
+        linear-gradient(rgba(78,111,42,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(78,111,42,.08) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: .35;
+      mask-image: radial-gradient(circle at 30% 20%, #000 10%, transparent 60%);
+    }
+
+    /* Bloque de contenido */
+    .wrap {
+      position:absolute; inset:0;
+      padding: 70px 78px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+    }
+
+    .brand {
+      display:flex; align-items:center; gap:16px;
+    }
+    .logo {
+      width: 72px; height: 72px; border-radius: 20px;
+      background: linear-gradient(135deg, #425f2d, #6f8740);
+      border: 2px solid rgba(78,111,42,.4);
+      box-shadow: 0 14px 40px rgba(78,111,42,.45);
+      display:flex; align-items:center; justify-content:center;
+      font-weight: 800;
+      font-size: 32px;
+      letter-spacing: .5px;
+      color: #fff;
+    }
+    .brandtext .name {
+      font-size: 36px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      line-height: 1.1;
+      color: #1f2a1a;
+    }
+    .brandtext .tag {
+      margin-top: 6px;
+      font-size: 18px;
+      color: #3d5230;
+      opacity: .85;
+      font-weight: 600;
+    }
+
+    .hero {
+      max-width: 980px;
+      margin-top: 26px;
+    }
+    .kicker {
+      display:inline-flex; align-items:center; gap:10px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(78,111,42,.12);
+      border: 2px solid rgba(78,111,42,.25);
+      font-size: 15px;
+      font-weight: 700;
+      letter-spacing: .3px;
+      color: #1f2a1a;
+    }
+    .dot {
+      width: 10px; height: 10px; border-radius: 999px;
+      background: #4e6f2a;
+      box-shadow: 0 0 0 5px rgba(78,111,42,.25);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: .6; }
+    }
+
+    h1 {
+      margin: 20px 0 0 0;
+      font-size: 82px;
+      line-height: 1;
+      font-weight: 900;
+      letter-spacing: -2px;
+      color: #1f2a1a;
+      text-shadow: 0 4px 20px rgba(78,111,42,.15);
+    }
+    .sub {
+      margin-top: 20px;
+      font-size: 28px;
+      line-height: 1.35;
+      color: #3d5230;
+      font-weight: 600;
+      max-width: 900px;
+    }
+
+    .footer {
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 22px;
+    }
+
+    .chips {
+      display:flex;
+      gap: 12px;
+      flex-wrap:wrap;
+      max-width: 820px;
+    }
+    .chip {
+      font-size: 16px;
+      font-weight: 700;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.7);
+      border: 2px solid #cad89e;
+      color: #1f2a1a;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 12px rgba(78,111,42,.12);
+    }
+
+    .qr {
+      width: 140px;
+      height: 140px;
+      border-radius: 20px;
+      background: #fff;
+      padding: 12px;
+      box-shadow: 0 14px 40px rgba(78,111,42,.35);
+      display:flex; align-items:center; justify-content:center;
+      overflow:hidden;
+      border: 2px solid #cad89e;
+    }
+    .qr-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 6px;
+      background: linear-gradient(135deg, #f5f8e8, #e8f1d2);
+      border-radius: 12px;
+    }
+    .qr-placeholder .icon {
+      font-size: 42px;
+      line-height: 1;
+    }
+    .qr-placeholder span {
+      color:#3d5230;
+      font-size: 11px;
+      font-weight: 700;
+      opacity: .7;
+    }
+
+    /* Elemento decor */
+    .blob {
+      position:absolute;
+      width: 560px; height: 560px;
+      right: -140px; bottom: -170px;
+      background: radial-gradient(circle at 30% 30%, rgba(213,229,178,.55), transparent 60%),
+                  radial-gradient(circle at 70% 60%, rgba(78,111,42,.35), transparent 55%),
+                  radial-gradient(circle at 40% 80%, rgba(202,216,158,.30), transparent 55%);
+      filter: blur(80px);
+      opacity: .6;
+      transform: rotate(12deg);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="og">
+    <div class="grid"></div>
+    <div class="blob"></div>
+
+    <div class="wrap">
+      <div>
+        <div class="brand">
+          <div class="logo">DF</div>
+          <div class="brandtext">
+            <div class="name">DOFLINS</div>
+            <div class="tag">Colección Oficial • Animals + Multiverse</div>
+          </div>
+        </div>
+
+        <div class="hero">
+          <div class="kicker"><span class="dot"></span><span id="kicker">COLECCIÓN EN LÍNEA</span></div>
+          <h1 id="title">Colecciona.<br>Explora.<br>Completa.</h1>
+          <div class="sub" id="subtitle">
+            Figuras con rareza oficial verificada. Dos universos, códigos QR únicos.
+          </div>
+        </div>
+      </div>
+
+      <div class="footer">
+        <div class="chips">
+          <div class="chip" id="chip1">🔥 Rareza Verificada</div>
+          <div class="chip" id="chip2">✨ Códigos QR</div>
+          <div class="chip" id="chip3">🇲🇽 Hecho en México</div>
+        </div>
+
+        <!-- QR placeholder -->
+        <div class="qr" id="qr">
+          <div class="qr-placeholder">
+            <div class="icon">📱</div>
+            <span>ESCANEA</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
