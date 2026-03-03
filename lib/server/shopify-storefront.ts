@@ -387,13 +387,22 @@ interface CartLineUpdateInput {
 }
 
 function getShopifyConfig(): ShopifyConfig {
-  const domain = process.env.SHOPIFY_STORE_DOMAIN?.trim();
-  const storefrontToken = process.env.SHOPIFY_STOREFRONT_TOKEN?.trim();
+  const domain = process.env.SHOPIFY_STORE_DOMAIN?.trim() || process.env.SHOPIFY_DOMAIN?.trim();
+  const storefrontToken =
+    process.env.SHOPIFY_STOREFRONT_TOKEN?.trim() || process.env.SHOPIFY_STOREFRONT_ACCESS_TOKEN?.trim();
   const apiVersion = process.env.SHOPIFY_API_VERSION?.trim() || DEFAULT_SHOPIFY_API_VERSION;
 
   if (!domain || !storefrontToken) {
+    const missing: string[] = [];
+    if (!domain) {
+      missing.push("SHOPIFY_STORE_DOMAIN");
+    }
+    if (!storefrontToken) {
+      missing.push("SHOPIFY_STOREFRONT_TOKEN (o SHOPIFY_STOREFRONT_ACCESS_TOKEN)");
+    }
+
     throw new ShopifyStorefrontError(
-      "Configura SHOPIFY_STORE_DOMAIN y SHOPIFY_STOREFRONT_TOKEN para habilitar compras.",
+      `Faltan variables de Shopify en runtime: ${missing.join(", ")}.`,
       503,
       "shopify_config_missing",
     );
