@@ -88,7 +88,7 @@ const CART_SNAPSHOT_STORAGE_KEY = "doflins_cart_snapshot_v1";
 const CART_SNAPSHOT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 14;
 const SUPPORT_WHATSAPP_URL =
   process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL?.trim() ??
-  "https://wa.me/?text=Hola%20equipo%20DOFLINS,%20necesito%20ayuda%20con%20mi%20compra.";
+  "https://wa.me/529812425698?text=Hola%20equipo%20DOFLINS,%20necesito%20ayuda%20con%20mi%20compra.";
 const PROMO_EXPIRES_ENV = process.env.NEXT_PUBLIC_PROMO_EXPIRES?.trim() ?? "";
 const QTY_HISTORY_KEY = "doflins_qty_history_v1";
 const WISHLIST_KEY = "doflins_wishlist_v1";
