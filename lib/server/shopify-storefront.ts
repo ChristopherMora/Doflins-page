@@ -149,7 +149,6 @@ const PRODUCTS_BY_COLLECTION_QUERY = `
               id
               title
               availableForSale
-              quantityAvailable
               price {
                 amount
                 currencyCode
@@ -188,7 +187,6 @@ const PRODUCTS_BY_QUERY_QUERY = `
             id
             title
             availableForSale
-            quantityAvailable
             price {
               amount
               currencyCode
@@ -225,7 +223,6 @@ const PRODUCT_BY_HANDLE_QUERY = `
           id
           title
           availableForSale
-          quantityAvailable
           price {
             amount
             currencyCode
@@ -505,7 +502,7 @@ function normalizeVariant(node: ShopifyProductVariantNode): ShopProductVariant {
     id: node.id,
     title: node.title,
     availableForSale: node.availableForSale,
-    quantityAvailable: node.quantityAvailable ?? null,
+    quantityAvailable: null,
     price: node.price,
   };
 }
