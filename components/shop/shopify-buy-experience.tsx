@@ -1047,7 +1047,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
   return (
     <section id="compras" className="space-y-5 pb-28 lg:pb-6">
-      <Card className="border border-[#d9cfa8] bg-[linear-gradient(145deg,#fffaf0,#f2f6e8)] shadow-[0_18px_36px_rgba(86,98,51,0.16)]">
+      <Card className="ink-light border border-[#d9cfa8] bg-[linear-gradient(145deg,#fffaf0,#f2f6e8)] shadow-[0_18px_36px_rgba(86,98,51,0.16)]">
         <CardContent className="space-y-6 p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-3">
@@ -1443,9 +1443,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 <BoltIcon className="h-4 w-4" /> Multiverse
               </Button>
             </div>
-            <p className="text-xs font-medium uppercase tracking-[0.08em] text-[var(--ink-600)]">
-              Catálogo activo: {UNIVERSE_LABELS[activeUniverse]}
-            </p>
+
           </div>
           <div className="flex gap-2">
             <div className="relative flex-1">
@@ -1476,20 +1474,19 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             ) : null}
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-xs text-[var(--ink-600)]">Tip: toca una tarjeta para abrir vista rápida sin salir del catálogo.</p>
+          <div className="flex flex-wrap items-center justify-end gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex overflow-hidden rounded-full border border-[#d7d2b4] bg-white/75 text-xs shadow-sm">
+              <div className="inline-flex gap-1 rounded-full border border-[#d7d2b4] bg-white/75 p-1 text-xs shadow-sm">
                 {(["default", "new", "asc", "desc"] as const).map((order) => {
-                  const labels: Record<typeof order, string> = { default: "Por defecto", new: "Nuevos", asc: "Menor precio", desc: "Mayor precio" };
+                  const labels: Record<typeof order, string> = { default: "Todos", new: "Nuevos", asc: "Menor precio", desc: "Mayor precio" };
                   return (
                     <button
                       key={order}
                       type="button"
-                      className={`px-3 py-1.5 font-medium transition ${
+                      className={`rounded-full px-3 py-1 font-medium transition ${
                         sortOrder === order
-                          ? "bg-[var(--brand-primary)] text-white"
-                          : "text-[var(--ink-700)] hover:bg-black/[0.05]"
+                          ? "bg-[var(--brand-primary)] text-white shadow-sm"
+                          : "text-[#445538] hover:bg-black/[0.05]"
                       }`}
                       onClick={() => setSortOrder(order)}
                     >
@@ -1523,26 +1520,25 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </div>
           </div>
 
-          <div className="grid gap-2 rounded-2xl border border-[#d6d2b4] bg-white/80 p-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-[#d9e2c3] bg-[#f5faea] px-3 py-2 text-xs text-[var(--ink-700)]">
-              <p className="flex items-center gap-1.5 font-semibold text-[var(--ink-900)]">
-                <TruckIcon className="h-4 w-4 text-[var(--brand-primary)]" />
-                Envío nacional
-              </p>
-              <p className="mt-0.5">2-6 días hábiles según zona.</p>
-            </div>
-            <div className="rounded-xl border border-[#d9e2c3] bg-[#f5faea] px-3 py-2 text-xs text-[var(--ink-700)]">
-              <p className="flex items-center gap-1.5 font-semibold text-[var(--ink-900)]">
-                <ClockIcon className="h-4 w-4 text-[var(--brand-primary)]" />
-                Preparación rápida
-              </p>
-              <p className="mt-0.5">Despacho estimado en 24-48 horas.</p>
-            </div>
-            <Button asChild variant="secondary" size="sm" className="h-11 w-full touch-manipulation sm:h-full">
-              <a href={SUPPORT_WHATSAPP_URL} rel="noreferrer" target="_blank">
-                <ChatBubbleLeftRightIcon className="h-4 w-4" /> Soporte WhatsApp
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d9e2c3] bg-white/80 px-3 py-1.5 text-xs text-[#445538]">
+                <TruckIcon className="h-3.5 w-3.5 text-[#4e6f2a]" />
+                <span><strong className="font-semibold">Envío nacional</strong> · 2-6 días hábiles</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d9e2c3] bg-white/80 px-3 py-1.5 text-xs text-[#445538]">
+                <ClockIcon className="h-3.5 w-3.5 text-[#4e6f2a]" />
+                <span><strong className="font-semibold">Preparación</strong> · 24-48 horas</span>
+              </span>
+              <a
+                href={SUPPORT_WHATSAPP_URL}
+                rel="noreferrer"
+                target="_blank"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#d9e2c3] bg-white/80 px-3 py-1.5 text-xs font-semibold text-[#2c5e1e] transition hover:bg-[#eef8df] hover:border-[#b5d48a]"
+              >
+                <ChatBubbleLeftRightIcon className="h-3.5 w-3.5" /> Soporte WhatsApp
               </a>
-            </Button>
+            </div>
           </div>
 
           {feedbackMessage ? (
@@ -1750,7 +1746,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       <p className="min-h-[3rem] text-sm leading-relaxed text-[var(--ink-700)]">{getProductDescription(product, activeUniverse)}</p>
 
                       <div className="mt-auto space-y-3">
-                        <div className="rounded-2xl border border-[#d8d2b4] bg-white/90 p-3.5">
+                        <div className="rounded-2xl border border-[#d8d2b4] bg-white/90 p-4">
                           <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
                           <p className="font-title text-[2rem] leading-none text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</p>
                         </div>
@@ -1968,7 +1964,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
       {stickyProduct && stickyVariant ? (
         <div className="fixed inset-x-0 bottom-14 z-40 px-3 pb-1.5 sm:bottom-0 sm:pb-[calc(env(safe-area-inset-bottom)+0.65rem)] lg:hidden">
-          <div className="mx-auto w-full max-w-3xl rounded-2xl border border-[#d0c79f] bg-[linear-gradient(160deg,#fffef9,#eef4df)] p-3 shadow-[0_-10px_30px_rgba(51,57,26,0.26)]">
+          <div className="ink-light mx-auto w-full max-w-3xl rounded-2xl border border-[#d0c79f] bg-[linear-gradient(160deg,#fffef9,#eef4df)] p-3 shadow-[0_-10px_30px_rgba(51,57,26,0.26)]">
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <div>
