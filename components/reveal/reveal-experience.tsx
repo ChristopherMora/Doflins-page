@@ -2177,7 +2177,7 @@ export function RevealExperience(): React.JSX.Element {
                 )}
               </div>
 
-              <div className="space-y-5 p-6">
+              <div className="flex flex-col gap-4 overflow-y-auto p-5 sm:p-6 max-h-[65vh] md:max-h-none">
                 <DialogHeader>
                   <DialogTitle className="flex items-center justify-between gap-2 pr-6">
                     <span>{selectedDoflin.name}</span>
@@ -2219,7 +2219,7 @@ export function RevealExperience(): React.JSX.Element {
                   ) : null}
                 </div>
                 {selectedDoflinVariants.length > 1 ? (
-                  <div className={`rounded-2xl border p-3 ${activeTheme.panelCard}`}>
+                  <div className={`rounded-2xl p-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] ${activeTheme.panelCard}`}>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">
                       Variantes de {selectedDoflin.baseModel}
                     </p>
@@ -2240,10 +2240,10 @@ export function RevealExperience(): React.JSX.Element {
                             key={variant.id}
                             type="button"
                             onClick={() => setSelectedDoflin(variant)}
-                            className={`rounded-xl border px-3 py-2 text-left transition ${
+                            className={`rounded-xl px-3 py-2 text-left transition ${
                               isCurrent
-                                ? "border-[#b9d598] bg-[#edf7df] ring-1 ring-[#b9d598]"
-                                : "border-black/10 bg-white/80 hover:bg-white"
+                                ? "bg-[#edf7df] shadow-[inset_0_0_0_1.5px_#b9d598]"
+                                : "bg-white/70 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.09)] hover:bg-white"
                             }`}
                           >
                             <p className="text-sm font-semibold text-[var(--ink-900)]">{variantLabel(variant.variantName)}</p>
@@ -2270,48 +2270,57 @@ export function RevealExperience(): React.JSX.Element {
                     </div>
                   </div>
                 ) : null}
-                <div className={`rounded-2xl border p-3 ${activeTheme.panelCard}`}>
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">Estado en tu colección</p>
-                  <p className="mt-1 text-sm font-semibold text-[var(--ink-900)]">
+                <div className={`rounded-2xl p-4 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] ${activeTheme.panelCard}`}>
+                  <div className="flex items-center gap-1.5">
+                    <CheckCircleIcon
+                      className={`h-4 w-4 shrink-0 transition-colors ${
+                        isAuthenticatedViewer && selectedDoflinIsOwned
+                          ? "text-[var(--brand-primary)]"
+                          : "text-[var(--ink-400)]"
+                      }`}
+                    />
+                    <p className="text-xs font-semibold text-[var(--ink-700)]">Tu colección</p>
+                  </div>
+                  <p className="mt-1.5 text-sm font-semibold text-[var(--ink-900)]">
                     {isAuthenticatedViewer
                       ? selectedDoflinIsOwned
-                        ? "Guardado en tu progreso"
-                        : "Aun no guardado"
-                      : "Crea tu cuenta con Google para guardar tu progreso"}
+                        ? "Ya la tienes guardada"
+                        : "Todavía no la tienes marcada"
+                      : "Guarda tu progreso con una cuenta gratuita"}
                   </p>
-                  <div className="mt-3 flex gap-2">
-                    <Button
-                      size="sm"
-                      className={`flex-1 ${selectedDoflinIsOwned ? activeTheme.primaryButton : ""}`}
-                      variant={!isAuthenticatedViewer ? "secondary" : selectedDoflinIsOwned ? "primary" : "secondary"}
-                      onClick={() => {
-                        if (!isAuthenticatedViewer) {
-                          requestAuthForProgress();
-                          return;
-                        }
+                  <Button
+                    size="sm"
+                    className={`mt-3 w-full ${
+                      isAuthenticatedViewer && !selectedDoflinIsOwned ? activeTheme.primaryButton : ""
+                    }`}
+                    variant={
+                      !isAuthenticatedViewer
+                        ? "secondary"
+                        : selectedDoflinIsOwned
+                          ? "secondary"
+                          : "primary"
+                    }
+                    onClick={() => {
+                      if (!isAuthenticatedViewer) {
+                        requestAuthForProgress();
+                        return;
+                      }
+                      if (selectedDoflinIsOwned) {
+                        clearOwnedMark(selectedDoflin.id);
+                      } else {
                         markAsOwned(selectedDoflin.id);
-                      }}
-                    >
-                      Guardar progreso
-                    </Button>
-                    {isAuthenticatedViewer ? (
-                      <Button
-                        size="sm"
-                        className="flex-1"
-                        variant={!selectedDoflinIsOwned ? "primary" : "secondary"}
-                        onClick={() => {
-                          clearOwnedMark(selectedDoflin.id);
-                        }}
-                      >
-                        Quitar progreso
-                      </Button>
-                    ) : null}
-                  </div>
+                      }
+                    }}
+                  >
+                    {!isAuthenticatedViewer
+                      ? "Crear cuenta gratis"
+                      : selectedDoflinIsOwned
+                        ? "Quitar de mi colección"
+                        : "Marcar como conseguida"}
+                  </Button>
                 </div>
-                <div className="space-y-2">
-                  <p className="text-xs text-[var(--ink-600)]">
-                    Compra directa de <span className="font-semibold text-[var(--ink-800)]">{selectedPurchaseUniverseLabel}</span>.
-                  </p>
+                <div className="space-y-2.5 border-t border-black/[0.06] pt-4">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-500)]">Comprar sobres</p>
                   <Button asChild className={`w-full ${activeTheme.primaryButton}`}>
                     <a
                       href={selectedPurchaseUrlByPack[15]}
@@ -2323,7 +2332,11 @@ export function RevealExperience(): React.JSX.Element {
                         })
                       }
                     >
-                      <ShoppingCartIcon className="h-5 w-5" /> Comprar {selectedPurchaseUniverseLabel} x15
+                      <ShoppingCartIcon className="h-5 w-5" />
+                      <span className="flex flex-col items-start leading-tight">
+                        <span>Sobre x15</span>
+                        <span className="text-[10px] font-normal opacity-75">Más chances de conseguirla</span>
+                      </span>
                     </a>
                   </Button>
                   <Button asChild variant="secondary" className="w-full">
@@ -2337,7 +2350,10 @@ export function RevealExperience(): React.JSX.Element {
                         })
                       }
                     >
-                      Comprar {selectedPurchaseUniverseLabel} x5
+                      <span className="flex flex-col items-start leading-tight">
+                        <span>Sobre x5</span>
+                        <span className="text-[10px] font-normal opacity-60">Para probar suerte</span>
+                      </span>
                     </a>
                   </Button>
                 </div>
