@@ -1,5 +1,12 @@
 import Link from "next/link";
-import { GlobeAltIcon, RectangleStackIcon, ShoppingCartIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { 
+  GlobeAltIcon, 
+  RectangleStackIcon, 
+  ShoppingCartIcon, 
+  SparklesIcon,
+  QuestionMarkCircleIcon,
+  InformationCircleIcon,
+} from "@heroicons/react/24/solid";
 
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 
@@ -46,6 +53,20 @@ export function SiteHeader(): React.JSX.Element {
           >
             <RectangleStackIcon className="h-4 w-4" />
             Colección
+          </Link>
+          <Link
+            href="/faq"
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 transition hover:bg-[var(--brand-primary)]/10 hover:text-[var(--brand-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
+          >
+            <QuestionMarkCircleIcon className="h-4 w-4" />
+            FAQ
+          </Link>
+          <Link
+            href="/acerca"
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 transition hover:bg-[var(--brand-primary)]/10 hover:text-[var(--brand-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
+          >
+            <InformationCircleIcon className="h-4 w-4" />
+            Acerca
           </Link>
         </nav>
 
