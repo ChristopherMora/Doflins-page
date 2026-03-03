@@ -1912,7 +1912,7 @@ export function RevealExperience(): React.JSX.Element {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 lg:px-10" id="plataforma">
-        <h3 className="mb-5 font-title text-3xl text-[var(--ink-900)]">Plataforma y experiencia de usuario</h3>
+        <h3 className="mb-5 font-title text-3xl text-[var(--ink-900)]">Todo lo que necesitas para coleccionar</h3>
         <Card className={`mb-4 ${activeTheme.platformCard}`}>
           <CardContent className="space-y-3 p-5">
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">Cuenta coleccionista</p>
@@ -1944,29 +1944,29 @@ export function RevealExperience(): React.JSX.Element {
           <Card className={activeTheme.platformCard}>
             <CardContent className="space-y-2 p-5">
               <CubeIcon className="h-6 w-6 text-[var(--brand-primary)]" />
-              <p className="font-semibold text-[var(--ink-900)]">Disponibilidad confiable</p>
-              <p className="text-sm text-[var(--ink-700)]">Mostramos packs activos para que compres con información clara.</p>
+              <p className="font-semibold text-[var(--ink-900)]">Solo lo que puedes comprar</p>
+              <p className="text-sm text-[var(--ink-700)]">Mostramos únicamente packs con stock real. Sin decepciones al llegar al pago.</p>
             </CardContent>
           </Card>
           <Card className={activeTheme.platformCard}>
             <CardContent className="space-y-2 p-5">
               <InformationCircleIcon className="h-6 w-6 text-[var(--brand-primary)]" />
-              <p className="font-semibold text-[var(--ink-900)]">2 personalidades</p>
-              <p className="text-sm text-[var(--ink-700)]">Cada universo se visualiza por separado con selector activo.</p>
+              <p className="font-semibold text-[var(--ink-900)]">Animals y Multiverse por separado</p>
+              <p className="text-sm text-[var(--ink-700)]">Cambia de universo sin perder el hilo. Cada colección en su propio espacio.</p>
             </CardContent>
           </Card>
           <Card className={activeTheme.platformCard}>
             <CardContent className="space-y-2 p-5">
               <TicketIcon className="h-6 w-6 text-[var(--brand-primary)]" />
-              <p className="font-semibold text-[var(--ink-900)]">Compra sin fricción</p>
-              <p className="text-sm text-[var(--ink-700)]">Agrega al carrito y finaliza en checkout con un flujo simple y rápido.</p>
+              <p className="font-semibold text-[var(--ink-900)]">Paga sin crear cuenta</p>
+              <p className="text-sm text-[var(--ink-700)]">Agrega al carrito y paga en Shopify seguro. No necesitas registrarte.</p>
             </CardContent>
           </Card>
           <Card className={activeTheme.platformCard}>
             <CardContent className="space-y-2 p-5">
               <SparklesIcon className="h-6 w-6 text-[var(--brand-primary)]" />
-              <p className="font-semibold text-[var(--ink-900)]">Catálogo utilizable</p>
-              <p className="text-sm text-[var(--ink-700)]">Búsqueda + rareza sin mezclar universos en pantalla.</p>
+              <p className="font-semibold text-[var(--ink-900)]">Encuentra tu figura en segundos</p>
+              <p className="text-sm text-[var(--ink-700)]">Busca por nombre o filtra por rareza. El catálogo siempre ordenado.</p>
             </CardContent>
           </Card>
         </div>

@@ -1052,11 +1052,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-3">
               <Badge className="w-fit bg-[#e8efd8] text-[var(--ink-900)]">
-                <ShoppingCartIcon className="h-4 w-4" /> Shopify checkout
+                <ShoppingCartIcon className="h-4 w-4" /> Pago 100% seguro
               </Badge>
               <h3 className="font-title text-3xl leading-tight text-[var(--ink-900)] sm:text-4xl">Compra tus packs DOFLINS</h3>
               <p className="max-w-2xl text-sm text-[var(--ink-700)] sm:text-base">
-                Carrito en esta web y pago en Shopify seguro (sin guardar tarjeta en nuestro servidor).
+                Elige tu pack, agrégalo al carrito y paga de forma segura. Nunca guardamos tu tarjeta.
               </p>
               {FREE_GIFT_PROMO_LABEL || FREE_GIFT_MIN_SUBTOTAL ? (
                 <p className="inline-flex w-fit items-center gap-2 rounded-full bg-[#e8f5d8] px-3 py-1 text-xs font-semibold text-[#2f5c1f] ring-1 ring-[#bfd89b]">
@@ -1073,11 +1073,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
                   <CheckCircleIcon className="h-4 w-4 text-[var(--brand-primary)]" /> {productsCountLabel}
                 </span>
-                <span className="inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
-                  Moneda {currencyCode}
-                </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
-                  <ClockIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Carrito persistente
+                  <ClockIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Tu carrito se guarda solo
                 </span>
                 <WatchingBadge universe={activeUniverse} />
               </div>
@@ -1093,7 +1090,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 <div className="flex-1 space-y-4 overflow-y-auto p-5 pb-28">
                   <SheetHeader>
                     <SheetTitle>Tu carrito DOFLINS</SheetTitle>
-                    <SheetDescription>Revisa cantidades y continúa al checkout de Shopify.</SheetDescription>
+                    <SheetDescription>Revisa tus packs y procede al pago cuando estés listo.</SheetDescription>
                   </SheetHeader>
                   <p className="text-xs text-[var(--ink-600)]">Guardamos tu carrito en este dispositivo para que no pierdas tu avance.</p>
 
@@ -1121,7 +1118,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                             hasCartLines ? "border-[#b8d493] bg-[#edf8dd] text-[#2e5d1e]" : "border-[#dddcc8] bg-white text-[var(--ink-700)]"
                           }`}
                         >
-                          2. Checkout
+                          2. Pago
                         </div>
                         <div className="rounded-xl border border-[#dddcc8] bg-white px-2 py-2 text-center text-xs text-[var(--ink-700)]">
                           3. Confirmación
