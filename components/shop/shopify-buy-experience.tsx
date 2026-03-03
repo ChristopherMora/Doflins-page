@@ -2016,15 +2016,18 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               {/* LEFT: image panel */}
               <div className="relative flex min-h-[320px] items-center justify-center bg-[linear-gradient(150deg,#f4f6e8,#e7eddc)] p-4 sm:p-6">
                 {selectedProduct.imageUrl ? (
-                  <Image
-                    src={selectedProduct.imageUrl}
-                    alt={selectedProduct.imageAlt ?? selectedProduct.title}
-                    fill
-                    placeholder="blur"
-                    blurDataURL={BLUR_DATA_URL}
-                    className="object-contain drop-shadow-[0_20px_30px_rgba(33,38,22,0.22)]"
-                    unoptimized
-                  />
+                  <div className="relative h-[280px] w-full overflow-hidden rounded-2xl shadow-[0_14px_30px_rgba(33,38,22,0.18)] sm:h-[340px]">
+                    <Image
+                      src={selectedProduct.imageUrl}
+                      alt={selectedProduct.imageAlt ?? selectedProduct.title}
+                      fill
+                      placeholder="blur"
+                      blurDataURL={BLUR_DATA_URL}
+                      className="object-cover transition duration-300"
+                      unoptimized
+                    />
+                  </div>
+                  </div>
                 ) : (
                   <div className="grid h-full w-full place-items-center text-sm text-[var(--ink-600)]">
                     <PhotoIcon className="h-7 w-7" /> Sin imagen disponible
