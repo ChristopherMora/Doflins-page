@@ -149,6 +149,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
   const [crudQuery, setCrudQuery] = useState("");
   const [editingItem, setEditingItem] = useState<AdminDoflinItem | null>(null);
   const [deletingItem, setDeletingItem] = useState<AdminDoflinItem | null>(null);
+  const [pendingToggleItem, setPendingToggleItem] = useState<AdminDoflinItem | null>(null);
   const [editValues, setEditValues] = useState<EditValues | null>(null);
   const [editImageFile, setEditImageFile] = useState<File | null>(null);
   const [bulkStatus, setBulkStatus] = useState<{
@@ -766,6 +767,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       }
 
       toast.success(payload.message || "Estado actualizado.");
+      setPendingToggleItem(null);
       await refreshCollection();
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Error al cambiar estado.");
@@ -1297,12 +1299,12 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                       </Badge>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-3 gap-2">
+                    <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-3">
                       <Button
                         variant="secondary"
                         size="sm"
                         onClick={() => openEditDialog(item)}
-                        className="h-10 w-full touch-manipulation px-2"
+                        className="h-11 w-full touch-manipulation px-3"
                       >
                         <PencilSquareIcon className="h-4 w-4" />
                         <span>Editar</span>
@@ -1310,11 +1312,11 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => void handleToggleActive(item)}
+                        onClick={() => setPendingToggleItem(item)}
                         disabled={toggleLoadingId === item.id}
-                        className="h-10 w-full touch-manipulation px-2"
+                        className="h-11 w-full touch-manipulation px-3"
                       >
-                        <span className="text-xs sm:text-sm">
+                        <span className="text-sm">
                           {toggleLoadingId === item.id ? "..." : item.active ? "Desactivar" : "Activar"}
                         </span>
                       </Button>
@@ -1324,10 +1326,10 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                         onClick={() => setDeletingItem(item)}
                         disabled={deleteLoadingId === item.id}
                         aria-label={`Eliminar ${item.name}`}
-                        className="h-10 w-full touch-manipulation px-2 text-[#b42318] hover:bg-[#fdecec] hover:text-[#8f1616]"
+                        className="h-11 w-full touch-manipulation px-3 text-[#b42318] hover:bg-[#fdecec] hover:text-[#8f1616]"
                       >
                         <TrashIcon className="h-4 w-4" />
-                        <span className="text-xs sm:text-sm">{deleteLoadingId === item.id ? "Eliminando..." : "Eliminar"}</span>
+                        <span className="text-sm">{deleteLoadingId === item.id ? "Eliminando..." : "Eliminar"}</span>
                       </Button>
                     </div>
                   </div>
@@ -1337,6 +1339,50 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
           </Card>
         </div>
       </div>
+
+      <Dialog
+        open={Boolean(pendingToggleItem)}
+        onOpenChange={(open) => {
+          if (!open && toggleLoadingId === null) {
+            setPendingToggleItem(null);
+          }
+        }}
+      >
+        <DialogContent className="w-[min(94vw,520px)]">
+          <DialogHeader>
+            <DialogTitle>{pendingToggleItem?.active ? "Desactivar Doflin" : "Activar Doflin"}</DialogTitle>
+            <DialogDescription>
+              {pendingToggleItem
+                ? `Vas a ${pendingToggleItem.active ? "desactivar" : "activar"} ${pendingToggleItem.name} (${pendingToggleItem.baseModel} / ${pendingToggleItem.variantName}).`
+                : "Confirma el cambio de estado."}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-11 touch-manipulation"
+              disabled={toggleLoadingId !== null}
+              onClick={() => setPendingToggleItem(null)}
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              className="h-11 touch-manipulation"
+              disabled={toggleLoadingId !== null || !pendingToggleItem}
+              onClick={() => {
+                if (!pendingToggleItem) {
+                  return;
+                }
+                void handleToggleActive(pendingToggleItem);
+              }}
+            >
+              {toggleLoadingId !== null ? "Guardando..." : pendingToggleItem?.active ? "Sí, desactivar" : "Sí, activar"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog
         open={Boolean(deletingItem)}
@@ -1359,6 +1405,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
             <Button
               type="button"
               variant="secondary"
+              className="h-11 touch-manipulation"
               disabled={deleteLoadingId !== null}
               onClick={() => setDeletingItem(null)}
             >
@@ -1367,7 +1414,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
             <Button
               type="button"
               disabled={deleteLoadingId !== null}
-              className="bg-[#b42318] hover:bg-[#8f1616]"
+              className="h-11 touch-manipulation bg-[#b42318] hover:bg-[#8f1616]"
               onClick={() => void handleDelete()}
             >
               {deleteLoadingId !== null ? "Eliminando..." : "Sí, eliminar"}

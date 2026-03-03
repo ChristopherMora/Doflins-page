@@ -74,6 +74,9 @@ const FREE_GIFT_PROMO_LABEL = process.env.NEXT_PUBLIC_FREE_GIFT_PROMO_LABEL?.tri
 const FREE_GIFT_MIN_SUBTOTAL_ENV = Number(process.env.NEXT_PUBLIC_FREE_GIFT_MIN_SUBTOTAL ?? 1200);
 const FREE_GIFT_MIN_SUBTOTAL =
   Number.isFinite(FREE_GIFT_MIN_SUBTOTAL_ENV) && FREE_GIFT_MIN_SUBTOTAL_ENV > 0 ? FREE_GIFT_MIN_SUBTOTAL_ENV : null;
+const LOW_STOCK_THRESHOLD = 5;
+const CART_SNAPSHOT_STORAGE_KEY = "doflins_cart_snapshot_v1";
+const CART_SNAPSHOT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 14;
 const SUPPORT_WHATSAPP_URL =
   process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL?.trim() ??
   "https://wa.me/?text=Hola%20equipo%20DOFLINS,%20necesito%20ayuda%20con%20mi%20compra.";
@@ -108,6 +111,125 @@ const TRUST_PROMISES = [
     icon: ClockIcon,
   },
 ] as const;
+
+interface CartSnapshotLine {
+  merchandiseId: string;
+  quantity: number;
+}
+
+interface CartSnapshotPayload {
+  updatedAt: number;
+  checkoutUrl: string | null;
+  lines: CartSnapshotLine[];
+}
+
+interface StockBadge {
+  label: string;
+  className: string;
+  detail: string | null;
+}
+
+function readCartSnapshot(): CartSnapshotPayload | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    const raw = window.localStorage.getItem(CART_SNAPSHOT_STORAGE_KEY);
+    if (!raw) {
+      return null;
+    }
+
+    const parsed = JSON.parse(raw) as Partial<CartSnapshotPayload>;
+    const lines = Array.isArray(parsed.lines)
+      ? parsed.lines
+          .map((line) => ({
+            merchandiseId: typeof line?.merchandiseId === "string" ? line.merchandiseId : "",
+            quantity: Number.isFinite(line?.quantity) ? Math.max(1, Math.floor(Number(line?.quantity))) : 1,
+          }))
+          .filter((line) => line.merchandiseId.length > 0)
+      : [];
+    const updatedAt = Number(parsed.updatedAt);
+    if (!Number.isFinite(updatedAt) || Date.now() - updatedAt > CART_SNAPSHOT_MAX_AGE_MS || lines.length === 0) {
+      window.localStorage.removeItem(CART_SNAPSHOT_STORAGE_KEY);
+      return null;
+    }
+
+    return {
+      updatedAt,
+      checkoutUrl: typeof parsed.checkoutUrl === "string" ? parsed.checkoutUrl : null,
+      lines,
+    };
+  } catch {
+    return null;
+  }
+}
+
+function writeCartSnapshot(cart: ShopCart): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const lines = cart.lines
+    .map((line) => ({
+      merchandiseId: line.merchandiseId,
+      quantity: Math.max(1, Math.floor(line.quantity)),
+    }))
+    .filter((line) => line.merchandiseId.length > 0);
+
+  if (!lines.length) {
+    window.localStorage.removeItem(CART_SNAPSHOT_STORAGE_KEY);
+    return;
+  }
+
+  const payload: CartSnapshotPayload = {
+    updatedAt: Date.now(),
+    checkoutUrl: cart.checkoutUrl ?? null,
+    lines,
+  };
+
+  try {
+    window.localStorage.setItem(CART_SNAPSHOT_STORAGE_KEY, JSON.stringify(payload));
+  } catch {
+    // Ignore write failures in private mode/quota limits.
+  }
+}
+
+function clearCartSnapshot(): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+  window.localStorage.removeItem(CART_SNAPSHOT_STORAGE_KEY);
+}
+
+function resolveStockBadge(variant: ShopProductVariant | null): StockBadge {
+  const quantity =
+    variant && typeof variant.quantityAvailable === "number" && Number.isFinite(variant.quantityAvailable)
+      ? variant.quantityAvailable
+      : null;
+
+  if (!variant?.availableForSale || quantity === 0) {
+    return {
+      label: "Agotado",
+      className: "bg-[#e5d3d3] text-[#7a3a3a] ring-1 ring-[#d6b8b8]",
+      detail: null,
+    };
+  }
+
+  if (quantity !== null && quantity <= LOW_STOCK_THRESHOLD) {
+    return {
+      label: "Pocas piezas",
+      className: "bg-[#fde8c8] text-[#7a4a10] ring-1 ring-[#efcb92]",
+      detail: `Solo ${quantity} disponible${quantity === 1 ? "" : "s"}`,
+    };
+  }
+
+  return {
+    label: "Disponible",
+    className: "bg-[#dff0c7] text-[#2f5c1f] ring-1 ring-[#b7d494]",
+    detail: quantity !== null ? `${quantity} disponibles` : null,
+  };
+}
 
 function formatMoney(money: ShopifyMoney | null): string {
   if (!money) {
@@ -190,13 +312,48 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const [isLoadingCart, setIsLoadingCart] = useState(true);
   const [isMutatingCart, setIsMutatingCart] = useState(false);
   const [productsError, setProductsError] = useState<string | null>(null);
+  const [productsErrorCode, setProductsErrorCode] = useState<string | null>(null);
   const knownProductIdsRef = useRef<Record<UniverseFilter, Set<string>>>({
     animals: new Set(),
     multiverse: new Set(),
   });
   const liveRefreshInFlightRef = useRef(false);
+  const snapshotRecoveryAttemptedRef = useRef(false);
 
   const cartItemCount = cart?.totalQuantity ?? 0;
+
+  const tryRestoreCartFromSnapshot = useCallback(async (): Promise<ShopCart | null> => {
+    if (snapshotRecoveryAttemptedRef.current) {
+      return null;
+    }
+    snapshotRecoveryAttemptedRef.current = true;
+
+    const snapshot = readCartSnapshot();
+    if (!snapshot?.lines.length) {
+      return null;
+    }
+
+    try {
+      const response = await fetch("/api/cart/create", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          lines: snapshot.lines,
+        }),
+      });
+      const payload = await parseApiResponse<CartResponse>(response);
+      if (!payload.cart) {
+        clearCartSnapshot();
+        return null;
+      }
+      setFeedbackMessage("Recuperamos tu carrito guardado en este dispositivo.");
+      return payload.cart;
+    } catch {
+      return null;
+    }
+  }, []);
 
   const loadCart = useCallback(async () => {
     setIsLoadingCart(true);
@@ -206,13 +363,20 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         cache: "no-store",
       });
       const payload = await parseApiResponse<CartResponse>(response);
-      setCart(payload.cart);
+
+      if (payload.cart) {
+        setCart(payload.cart);
+        return;
+      }
+
+      const restoredCart = await tryRestoreCartFromSnapshot();
+      setCart(restoredCart);
     } catch (error) {
       setFeedbackMessage(error instanceof Error ? error.message : "No se pudo cargar el carrito.");
     } finally {
       setIsLoadingCart(false);
     }
-  }, []);
+  }, [tryRestoreCartFromSnapshot]);
 
   const loadProducts = useCallback(
     async (
@@ -236,6 +400,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
       if (!silent) {
         setProductsError(null);
+        setProductsErrorCode(null);
       }
 
       try {
@@ -269,6 +434,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         }
 
         setProducts(payload.products);
+        setProductsErrorCode(null);
         setSelectedVariantByProduct((previous) => {
           const next = { ...previous };
           for (const product of payload.products) {
@@ -283,8 +449,17 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           return next;
         });
       } catch (error) {
+        const code = (error as ApiError)?.code ?? null;
+        const baseMessage = error instanceof Error ? error.message : "No se pudieron cargar los productos.";
+        const nextMessage =
+          code === "shopify_config_missing"
+            ? "La compra está temporalmente desconfigurada en Shopify. Puedes reintentar o contactarnos por WhatsApp."
+            : code === "shopify_network_timeout"
+              ? "No pudimos conectar con Shopify en este momento. Intenta nuevamente."
+              : baseMessage;
         if (!silent) {
-          setProductsError(error instanceof Error ? error.message : "No se pudieron cargar los productos.");
+          setProductsError(nextMessage);
+          setProductsErrorCode(code);
         }
         if (!silent) {
           setProducts([]);
@@ -351,6 +526,19 @@ export function ShopifyBuyExperience(): React.JSX.Element {
     };
   }, [activeUniverse, loadProducts]);
 
+  useEffect(() => {
+    if (isLoadingCart) {
+      return;
+    }
+
+    if (cart?.lines.length) {
+      writeCartSnapshot(cart);
+      return;
+    }
+
+    clearCartSnapshot();
+  }, [cart, isLoadingCart]);
+
   const applyCartPayload = useCallback((nextCart: ShopCart) => {
     setCart(nextCart);
     setIsCartOpen(true);
@@ -365,8 +553,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   );
 
   const addToCart = useCallback(
-    async (product: ShopProduct) => {
+    async (product: ShopProduct, quantity = 1) => {
       const selectedVariant = getSelectedVariant(product);
+      const normalizedQuantity = Number.isFinite(quantity) ? Math.max(1, Math.floor(quantity)) : 1;
       if (!selectedVariant) {
         setFeedbackMessage("Este producto no tiene variantes disponibles para compra.");
         return;
@@ -389,7 +578,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             lines: [
               {
                 merchandiseId: selectedVariant.id,
-                quantity: 1,
+                quantity: normalizedQuantity,
               },
             ],
           }),
@@ -399,7 +588,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           throw new Error("No se pudo actualizar el carrito.");
         }
         applyCartPayload(payload.cart);
-        setFeedbackMessage(`${product.title} agregado al carrito.`);
+        setFeedbackMessage(`${product.title} x${normalizedQuantity} agregado al carrito.`);
       } catch (error) {
         const message = error instanceof Error ? error.message : "No se pudo agregar al carrito.";
         const code = (error as ApiError)?.code;
@@ -643,7 +832,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const productsCountLabel = `${products.length} pack${products.length === 1 ? "" : "s"}`;
   const selectedModalVariant = selectedProduct ? getSelectedVariant(selectedProduct) : null;
   const selectedModalSoldOut = !selectedModalVariant?.availableForSale;
+  const selectedModalStock = resolveStockBadge(selectedModalVariant);
   const hasCartLines = Boolean(cart?.lines.length);
+  const retryProductsLoad = useCallback(() => {
+    void loadProducts(activeUniverse, {
+      forceRealtime: true,
+    });
+  }, [activeUniverse, loadProducts]);
 
   return (
     <section id="compras" className="space-y-5 pb-28 lg:pb-6">
@@ -670,6 +865,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 <span className="inline-flex items-center rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
                   Moneda {currencyCode}
                 </span>
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
+                  <ClockIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Carrito persistente
+                </span>
               </div>
             </div>
 
@@ -685,6 +883,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     <SheetTitle>Tu carrito DOFLINS</SheetTitle>
                     <SheetDescription>Revisa cantidades y continúa al checkout de Shopify.</SheetDescription>
                   </SheetHeader>
+                  <p className="text-xs text-[var(--ink-600)]">Guardamos tu carrito en este dispositivo para que no pierdas tu avance.</p>
 
                   {isLoadingCart ? <p className="text-sm text-[var(--ink-700)]">Cargando carrito...</p> : null}
 
@@ -932,6 +1131,28 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           </div>
           <p className="text-xs text-[var(--ink-600)]">Tip: toca una tarjeta para abrir vista rápida sin salir del catálogo.</p>
 
+          <div className="grid gap-2 rounded-2xl border border-[#d6d2b4] bg-white/80 p-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-[#d9e2c3] bg-[#f5faea] px-3 py-2 text-xs text-[var(--ink-700)]">
+              <p className="flex items-center gap-1.5 font-semibold text-[var(--ink-900)]">
+                <TruckIcon className="h-4 w-4 text-[var(--brand-primary)]" />
+                Envío nacional
+              </p>
+              <p className="mt-0.5">2-6 días hábiles según zona.</p>
+            </div>
+            <div className="rounded-xl border border-[#d9e2c3] bg-[#f5faea] px-3 py-2 text-xs text-[var(--ink-700)]">
+              <p className="flex items-center gap-1.5 font-semibold text-[var(--ink-900)]">
+                <ClockIcon className="h-4 w-4 text-[var(--brand-primary)]" />
+                Preparación rápida
+              </p>
+              <p className="mt-0.5">Despacho estimado en 24-48 horas.</p>
+            </div>
+            <Button asChild variant="secondary" size="sm" className="h-11 w-full touch-manipulation sm:h-full">
+              <a href={SUPPORT_WHATSAPP_URL} rel="noreferrer" target="_blank">
+                <ChatBubbleLeftRightIcon className="h-4 w-4" /> Soporte WhatsApp
+              </a>
+            </Button>
+          </div>
+
           {feedbackMessage ? (
             <p
               className={`rounded-2xl border px-4 py-2 text-sm ${
@@ -945,10 +1166,23 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           ) : null}
 
           {productsError ? (
-            <p className="rounded-2xl border border-[#efc5c5] bg-[#fff1f1] px-4 py-2 text-sm text-[#7b2e2e]">
-              <ExclamationTriangleIcon className="mr-1 inline h-4 w-4" />
-              {productsError}
-            </p>
+            <div className="rounded-2xl border border-[#efc5c5] bg-[#fff1f1] px-4 py-3 text-sm text-[#7b2e2e]">
+              <p className="font-medium">
+                <ExclamationTriangleIcon className="mr-1 inline h-4 w-4" />
+                {productsError}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <Button variant="secondary" size="sm" className="h-10 touch-manipulation" onClick={retryProductsLoad}>
+                  <ArrowPathIcon className="h-4 w-4" /> Reintentar
+                </Button>
+                <Button asChild size="sm" className="h-10 bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
+                  <a href={SUPPORT_WHATSAPP_URL} rel="noreferrer" target="_blank">
+                    <ChatBubbleLeftRightIcon className="h-4 w-4" /> Ir a WhatsApp
+                  </a>
+                </Button>
+              </div>
+              {productsErrorCode ? <p className="mt-2 text-xs text-[#8f4949]">Código: {productsErrorCode}</p> : null}
+            </div>
           ) : null}
 
           {isLoadingProducts ? (
@@ -982,6 +1216,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 const isSoldOut = !selectedVariant?.availableForSale;
                 const isLiveNew = liveNewProducts[activeUniverse].includes(product.id);
                 const isBestSeller = BEST_SELLER_HANDLES.has(product.handle.toLowerCase());
+                const stockBadge = resolveStockBadge(selectedVariant);
 
                 return (
                   <article
@@ -1029,15 +1264,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         </div>
                       )}
                       <div className="absolute right-3 top-3">
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${
-                            isSoldOut
-                              ? "bg-[#e5d3d3] text-[#7a3a3a] ring-1 ring-[#d6b8b8]"
-                              : "bg-[#dff0c7] text-[#2f5c1f] ring-1 ring-[#b7d494]"
-                          }`}
-                        >
-                          {isSoldOut ? "Agotado" : "Disponible"}
-                        </span>
+                        <span className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${stockBadge.className}`}>{stockBadge.label}</span>
                       </div>
                     </div>
 
@@ -1080,11 +1307,18 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           >
                             {product.variants.map((variant) => (
                               <option key={variant.id} value={variant.id}>
-                                {variant.title} {variant.availableForSale ? "" : "(Agotado)"}
+                                {variant.title}{" "}
+                                {variant.availableForSale
+                                  ? typeof variant.quantityAvailable === "number"
+                                    ? `(${variant.quantityAvailable} disp.)`
+                                    : ""
+                                  : "(Agotado)"}
                               </option>
                             ))}
                           </select>
                         ) : null}
+
+                        {stockBadge.detail ? <p className="text-xs font-medium text-[var(--ink-700)]">{stockBadge.detail}</p> : null}
 
                         <Button
                           asChild
@@ -1098,17 +1332,30 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           </Link>
                         </Button>
 
-                        <Button
-                          className={`w-full ${isSoldOut ? "bg-[#c3cfb0] text-white" : "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]"}`}
-                          disabled={isMutatingCart || isSoldOut}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            void addToCart(product);
-                          }}
-                        >
-                          <ShoppingCartIcon className="h-5 w-5" />
-                          {isSoldOut ? "Agotado" : "Agregar al carrito"}
-                        </Button>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            className={`w-full ${isSoldOut ? "bg-[#c3cfb0] text-white" : "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]"}`}
+                            disabled={isMutatingCart || isSoldOut}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void addToCart(product, 1);
+                            }}
+                          >
+                            <ShoppingCartIcon className="h-5 w-5" />
+                            {isSoldOut ? "Agotado" : "Agregar x1"}
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            className="w-full"
+                            disabled={isMutatingCart || isSoldOut}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              void addToCart(product, 3);
+                            }}
+                          >
+                            <PlusIcon className="h-4 w-4" /> Agregar x3
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </article>
@@ -1148,9 +1395,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               ) : null}
 
               <Button
-                className={`h-11 w-full ${stickyVariant.availableForSale ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]" : "bg-[#c3cfb0] text-white"}`}
+                className={`h-11 w-full touch-manipulation ${
+                  stickyVariant.availableForSale ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]" : "bg-[#c3cfb0] text-white"
+                }`}
                 disabled={stickyCtaDisabled}
-                onClick={() => void addToCart(stickyProduct)}
+                onClick={() => void addToCart(stickyProduct, 1)}
               >
                 <ShoppingCartIcon className="h-5 w-5" />
                 {stickyVariant.availableForSale ? "Agregar al carrito" : "Agotado"}
@@ -1187,13 +1436,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   </div>
                 )}
                 <span
-                  className={`absolute right-4 top-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
-                    selectedModalSoldOut
-                      ? "bg-[#e5d3d3] text-[#7a3a3a] ring-1 ring-[#d6b8b8]"
-                      : "bg-[#dff0c7] text-[#2f5c1f] ring-1 ring-[#b7d494]"
-                  }`}
+                  className={`absolute right-4 top-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${selectedModalStock.className}`}
                 >
-                  {selectedModalSoldOut ? "Agotado" : "Disponible"}
+                  {selectedModalStock.label}
                 </span>
               </div>
 
@@ -1211,6 +1456,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   <Badge className={selectedModalSoldOut ? "bg-[#f5e2e2] text-[#8a3f3f]" : "bg-[#e1f1cb] text-[#2d5c1f]"}>
                     {selectedModalSoldOut ? "Sin stock" : "En stock"}
                   </Badge>
+                  {selectedModalStock.detail ? <Badge className="bg-[#fdf3df] text-[#7a4a10]">{selectedModalStock.detail}</Badge> : null}
                 </div>
 
                 <div className="rounded-2xl border border-[#d8d2b4] bg-[linear-gradient(145deg,#ffffff,#f4f6e8)] p-4">
@@ -1231,23 +1477,41 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   >
                     {selectedProduct.variants.map((variant) => (
                       <option key={variant.id} value={variant.id}>
-                        {variant.title} {variant.availableForSale ? "" : "(Agotado)"}
+                        {variant.title}{" "}
+                        {variant.availableForSale
+                          ? typeof variant.quantityAvailable === "number"
+                            ? `(${variant.quantityAvailable} disp.)`
+                            : ""
+                          : "(Agotado)"}
                       </option>
                     ))}
                   </select>
                 ) : null}
 
                 <div className="space-y-2">
-                  <Button
-                    className={`w-full ${selectedModalSoldOut ? "bg-[#b9c8a3] text-white" : "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]"}`}
-                    disabled={isMutatingCart || selectedModalSoldOut}
-                    onClick={() => {
-                      void addToCart(selectedProduct);
-                      setSelectedProduct(null);
-                    }}
-                  >
-                    <ShoppingCartIcon className="h-5 w-5" /> {selectedModalSoldOut ? "Agotado" : "Agregar al carrito"}
-                  </Button>
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      className={`w-full ${selectedModalSoldOut ? "bg-[#b9c8a3] text-white" : "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]"}`}
+                      disabled={isMutatingCart || selectedModalSoldOut}
+                      onClick={() => {
+                        void addToCart(selectedProduct, 1);
+                        setSelectedProduct(null);
+                      }}
+                    >
+                      <ShoppingCartIcon className="h-5 w-5" /> {selectedModalSoldOut ? "Agotado" : "Agregar x1"}
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      className="w-full"
+                      disabled={isMutatingCart || selectedModalSoldOut}
+                      onClick={() => {
+                        void addToCart(selectedProduct, 3);
+                        setSelectedProduct(null);
+                      }}
+                    >
+                      <PlusIcon className="h-4 w-4" /> Agregar x3
+                    </Button>
+                  </div>
 
                   <Button asChild variant="secondary" className="w-full">
                     <Link href={`/shop/${selectedProduct.handle}`}>

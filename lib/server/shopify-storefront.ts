@@ -149,6 +149,7 @@ const PRODUCTS_BY_COLLECTION_QUERY = `
               id
               title
               availableForSale
+              quantityAvailable
               price {
                 amount
                 currencyCode
@@ -187,6 +188,7 @@ const PRODUCTS_BY_QUERY_QUERY = `
             id
             title
             availableForSale
+            quantityAvailable
             price {
               amount
               currencyCode
@@ -223,6 +225,7 @@ const PRODUCT_BY_HANDLE_QUERY = `
           id
           title
           availableForSale
+          quantityAvailable
           price {
             amount
             currencyCode
