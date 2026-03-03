@@ -1766,7 +1766,7 @@ export function RevealExperience(): React.JSX.Element {
                       fallbackSrc={FALLBACK_DOFLIN_IMAGE}
                       alt={item.name}
                       rarity={item.rarity}
-                      imageClassName="h-[132px] sm:h-[145px] w-full"
+                      imageClassName="h-[132px] w-[132px] sm:h-[145px] sm:w-[145px] mx-auto"
                       className="rounded-[1.25rem] p-2.5"
                       modelUrl={modelConfig?.modelUrl}
                       modelOrientation={modelConfig?.orientation}

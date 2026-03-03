@@ -321,7 +321,7 @@ export function Figure3D({
       ) : (
         <div
           className={cn(
-            "relative z-10 mx-auto overflow-hidden rounded-2xl [transform:translateZ(36px)] drop-shadow-[0_22px_30px_rgba(44,50,23,0.26)]",
+            "relative z-10 mx-auto aspect-square overflow-hidden rounded-2xl [transform:translateZ(36px)] drop-shadow-[0_22px_30px_rgba(44,50,23,0.26)]",
             imageClassName,
           )}
         >
