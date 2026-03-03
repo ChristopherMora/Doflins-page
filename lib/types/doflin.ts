@@ -38,6 +38,7 @@ export interface CollectionItemDTO {
   imageUrl: string;
   silhouetteUrl: string;
   active: boolean;
+  funFact?: string | null;
 }
 
 export interface RemainingStatsResponse {

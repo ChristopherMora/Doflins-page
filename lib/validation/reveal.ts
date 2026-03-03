@@ -54,6 +54,7 @@ export const collectionItemSchema = z.object({
   imageUrl: z.string().min(1),
   silhouetteUrl: z.string().min(1),
   active: z.boolean(),
+  funFact: z.string().nullable().optional(),
 });
 
 export const collectionResponseSchema = z.object({

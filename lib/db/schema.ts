@@ -4,6 +4,7 @@ import {
   int,
   mysqlEnum,
   mysqlTable,
+  text,
   timestamp,
   uniqueIndex,
   varchar,
@@ -47,6 +48,7 @@ export const doflins = mysqlTable(
     imagenUrl: varchar("imagen_url", { length: 512 }).notNull(),
     siluetaUrl: varchar("silueta_url", { length: 512 }).notNull(),
     activo: boolean("activo").notNull().default(true),
+    datoCurioso: text("dato_curioso"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .notNull()

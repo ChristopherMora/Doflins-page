@@ -73,6 +73,7 @@ interface EditValues {
   rarity: Rarity;
   probability: string;
   active: boolean;
+  funFact: string;
 }
 
 interface DoflinAdminFormProps {
@@ -687,6 +688,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
       rarity: item.rarity,
       probability: String(item.probability),
       active: item.active,
+      funFact: item.funFact ?? "",
     });
     setEditImageFile(null);
   };
@@ -715,6 +717,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
     formData.set("rarity", editValues.rarity);
     formData.set("probability", editValues.probability.trim());
     formData.set("active", String(editValues.active));
+    formData.set("funFact", editValues.funFact.trim());
 
     if (adminToken.trim()) {
       formData.set("token", adminToken.trim());
@@ -1589,6 +1592,23 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                     accept="image/png,image/jpeg,image/webp,image/svg+xml"
                     onChange={(event) => setEditImageFile(event.target.files?.[0] ?? null)}
                   />
+                </label>
+
+                <label className="col-span-2 space-y-1">
+                  <span className="text-sm font-semibold text-[var(--ink-800)]">Dato curioso 🦔 <span className="font-normal text-[var(--ink-600)]">(opcional)</span></span>
+                  <textarea
+                    rows={3}
+                    maxLength={400}
+                    placeholder="Ej: El erizo puede recorrer hasta 3 km por noche en busca de alimento."
+                    className="w-full resize-none rounded-xl border border-black/10 bg-white/80 px-3 py-2 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-400)] focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)]"
+                    value={editValues.funFact}
+                    onChange={(event) =>
+                      setEditValues((previous) =>
+                        previous ? { ...previous, funFact: event.target.value } : previous,
+                      )
+                    }
+                  />
+                  <p className="text-right text-[11px] text-[var(--ink-500)]">{editValues.funFact.length}/400</p>
                 </label>
 
               </div>

@@ -284,6 +284,7 @@ export async function getCollection(database?: Database): Promise<CollectionItem
       imageUrl: doflins.imagenUrl,
       silhouetteUrl: doflins.siluetaUrl,
       active: doflins.activo,
+      funFact: doflins.datoCurioso,
     })
     .from(doflins)
     .orderBy(doflins.serie, doflins.numeroColeccion, doflins.id);

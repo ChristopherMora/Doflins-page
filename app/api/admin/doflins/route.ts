@@ -33,6 +33,7 @@ const DOFLIN_SELECT = {
   imageUrl: doflins.imagenUrl,
   silhouetteUrl: doflins.siluetaUrl,
   active: doflins.activo,
+  funFact: doflins.datoCurioso,
   createdAt: doflins.createdAt,
   updatedAt: doflins.updatedAt,
 } as const;
@@ -606,6 +607,7 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
         imagenUrl: imageUrl,
         siluetaUrl: silhouetteUrl,
         activo: parsedActive,
+        datoCurioso: formData.has("funFact") ? (String(formData.get("funFact") || "").trim() || null) : undefined,
         updatedAt: new Date(),
       })
       .where(eq(doflins.id, id));

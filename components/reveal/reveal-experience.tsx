@@ -2220,6 +2220,15 @@ export function RevealExperience(): React.JSX.Element {
                     </Badge>
                   ) : null}
                 </div>
+                {selectedDoflin.funFact ? (
+                  <div className={`rounded-2xl p-3.5 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.07)] ${activeTheme.panelCard}`}>
+                    <div className="flex items-center gap-1.5">
+                      <SparklesIcon className="h-3.5 w-3.5 shrink-0 text-[var(--brand-accent)]" />
+                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink-600)]">Dato curioso</p>
+                    </div>
+                    <p className="mt-1.5 text-sm leading-relaxed text-[var(--ink-800)]">{selectedDoflin.funFact}</p>
+                  </div>
+                ) : null}
                 {selectedDoflinVariants.length > 1 ? (
                   <div className={`rounded-2xl p-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] ${activeTheme.panelCard}`}>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">
