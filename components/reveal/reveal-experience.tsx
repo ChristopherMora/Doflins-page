@@ -17,6 +17,7 @@ import {
   InformationCircleIcon,
   MagnifyingGlassIcon,
   MapIcon,
+  RectangleStackIcon,
   RocketLaunchIcon,
   ShareIcon,
   ShieldCheckIcon,
@@ -1176,57 +1177,21 @@ export function RevealExperience(): React.JSX.Element {
               </div>
               <p className="font-title text-xl font-extrabold tracking-tight text-[var(--ink-900)] sm:text-2xl">DOFLINS</p>
             </Link>
-            <Badge className="hidden items-center gap-1 bg-white/85 text-[var(--ink-700)] ring-1 ring-black/10 md:inline-flex">
-              <ShieldCheckIcon className="h-4 w-4" />
-              Catálogo oficial
-            </Badge>
           </div>
 
-          <nav className="ml-2 hidden items-center gap-5 text-sm font-semibold text-[var(--ink-700)] 2xl:flex">
-            <button type="button" onClick={() => scrollToSection("universos")} className="transition hover:text-[var(--brand-primary)]">
-              Universos
-            </button>
-            <button type="button" onClick={() => scrollToSection("rareza")} className="transition hover:text-[var(--brand-primary)]">
-              Rareza
-            </button>
+          <nav className="ml-2 hidden items-center gap-5 text-sm font-semibold text-[var(--ink-700)] lg:flex">
             <button type="button" onClick={() => scrollToSection("catalogo")} className="transition hover:text-[var(--brand-primary)]">
               Catálogo
             </button>
-            <button type="button" onClick={() => scrollToSection("guia")} className="transition hover:text-[var(--brand-primary)]">
-              Guía rápida
-            </button>
+            <Link href="/#compras" className="transition hover:text-[var(--brand-primary)]">
+              Tienda
+            </Link>
             <button type="button" onClick={() => scrollToSection("plataforma")} className="transition hover:text-[var(--brand-primary)]">
-              Plataforma
+              Colección
             </button>
           </nav>
 
           <div className="ml-auto flex shrink-0 items-center gap-2">
-            {isAuthenticatedViewer ? (
-              <Badge className="hidden max-w-[180px] truncate bg-white/85 text-[var(--ink-700)] ring-1 ring-black/10 2xl:inline-flex">
-                {viewerEmail ?? "Cuenta activa"}
-              </Badge>
-            ) : (
-              <Button
-                variant="secondary"
-                className="hidden h-11 px-4 2xl:inline-flex"
-                disabled={isAuthActionLoading}
-                onClick={() => void handleUserLogin()}
-              >
-                {isAuthActionLoading ? "Abriendo..." : "Iniciar sesión"}
-              </Button>
-            )}
-            {isAdminViewer ? (
-              <Link href="/admin/doflins" className="hidden 2xl:block">
-                <Button variant="secondary" className="h-11 px-4">
-                  <ShieldCheckIcon className="h-4 w-4" /> Admin
-                </Button>
-              </Link>
-            ) : null}
-            {isAuthenticatedViewer ? (
-              <Button variant="ghost" className="hidden h-11 px-3 text-sm 2xl:inline-flex" onClick={() => void handleUserLogout()}>
-                Salir
-              </Button>
-            ) : null}
             <Button
               asChild
               className={`hidden h-11 px-5 text-white hover:brightness-105 sm:inline-flex sm:px-6 ${activeTheme.primaryButton}`}
@@ -1253,60 +1218,61 @@ export function RevealExperience(): React.JSX.Element {
                 </SheetHeader>
                 <div className="space-y-2">
                   <SheetClose asChild>
-                    {isAuthenticatedViewer ? (
-                      <Button variant="secondary" className="w-full justify-start" onClick={() => void handleUserLogout()}>
-                        Cerrar sesión
-                      </Button>
-                    ) : (
-                      <Button variant="secondary" className="w-full justify-start" onClick={() => void handleUserLogin()}>
-                        Iniciar sesión
-                      </Button>
-                    )}
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("catalogo")}>
+                      <SparklesIcon className="h-4 w-4" /> Catálogo
+                    </Button>
                   </SheetClose>
                   <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("universos")}>
-                      Universos
+                    <Link href="/#compras" className="w-full">
+                      <Button variant="secondary" className="w-full justify-start">
+                        <ShoppingCartIcon className="h-4 w-4" /> Tienda
+                      </Button>
+                    </Link>
+                  </SheetClose>
+                  <SheetClose asChild>
+                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("plataforma")}>
+                      <RectangleStackIcon className="h-4 w-4" /> Colección
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
                     <Button variant="secondary" className="w-full justify-start" onClick={() => switchUniverse("animals", "menu", "universo-activo")}>
-                      Animals
+                      <CubeIcon className="h-4 w-4" /> Animals
                     </Button>
                   </SheetClose>
                   <SheetClose asChild>
                     <Button variant="secondary" className="w-full justify-start" onClick={() => switchUniverse("multiverse", "menu", "universo-activo")}>
-                      Multiverse
+                      <BoltIcon className="h-4 w-4" /> Multiverse
                     </Button>
                   </SheetClose>
-                  <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("catalogo")}>
-                      Catálogo
-                    </Button>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("rareza")}>
-                      Rareza
-                    </Button>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("guia")}>
-                      Guía rápida
-                    </Button>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("plataforma")}>
-                      Plataforma
-                    </Button>
-                  </SheetClose>
-                  {isAdminViewer ? (
-                    <SheetClose asChild>
-                      <Link href="/admin/doflins">
-                        <Button variant="secondary" className="w-full justify-start">
-                          <ShieldCheckIcon className="h-4 w-4" /> Ir a admin
+                  <div className="!mt-4 border-t border-black/10 pt-2">
+                    {isAuthenticatedViewer ? (
+                      <>
+                        {viewerEmail ? (
+                          <p className="mb-2 truncate px-3 text-xs text-[var(--ink-600)]">{viewerEmail}</p>
+                        ) : null}
+                        <SheetClose asChild>
+                          <Button variant="ghost" className="w-full justify-start" onClick={() => void handleUserLogout()}>
+                            Cerrar sesión
+                          </Button>
+                        </SheetClose>
+                      </>
+                    ) : (
+                      <SheetClose asChild>
+                        <Button variant="secondary" className="w-full justify-start" onClick={() => void handleUserLogin()}>
+                          Iniciar sesión
                         </Button>
-                      </Link>
-                    </SheetClose>
-                  ) : null}
+                      </SheetClose>
+                    )}
+                    {isAdminViewer ? (
+                      <SheetClose asChild>
+                        <Link href="/admin/doflins">
+                          <Button variant="ghost" className="w-full justify-start">
+                            <ShieldCheckIcon className="h-4 w-4" /> Admin
+                          </Button>
+                        </Link>
+                      </SheetClose>
+                    ) : null}
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
