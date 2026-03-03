@@ -102,9 +102,10 @@ export default function AboutPage(): React.JSX.Element {
             
             <div className="space-y-4 text-[#3d5230]">
               <p className="leading-relaxed">
-                DOFLINS nació de la pasión por crear figuras coleccionables que combinaran calidad,
-                diseño único y un sistema de rareza auténtico y verificable. Queríamos llevar la
-                experiencia de coleccionar al siguiente nivel.
+                DOFLINS es creado por <strong>DOFER</strong>, una marca mexicana dedicada al diseño y
+                fabricación de productos innovadores. Nuestro proyecto nació de la pasión por crear
+                figuras coleccionables que combinaran calidad, diseño único y un sistema de rareza
+                auténtico y verificable. Queríamos llevar la experiencia de coleccionar al siguiente nivel.
               </p>
               <p className="leading-relaxed">
                 Con dos universos únicos — <strong>Animals</strong> y <strong>Multiverse</strong> — cada

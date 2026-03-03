@@ -15,6 +15,9 @@ export function SiteFooter(): React.JSX.Element {
               Dos universos, infinitas posibilidades.
             </p>
             <p className="mt-4 text-xs text-[#3d5230]">
+              🛠️ Creado por <strong>DOFER</strong>
+            </p>
+            <p className="text-xs text-[#3d5230]">
               🇲🇽 Hecho con pasión en México
             </p>
           </div>
@@ -111,16 +114,16 @@ export function SiteFooter(): React.JSX.Element {
               </li>
             </ul>
 
-            {/* Redes sociales - Placeholder */}
+            {/* Redes sociales */}
             <div className="mt-6">
               <h5 className="mb-3 text-sm font-semibold text-[#1f2a1a]">Síguenos</h5>
               <div className="flex gap-3">
                 {/* Instagram */}
                 <a
-                  href="https://instagram.com/doflins"
+                  href="https://www.instagram.com/doferworkshop/"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Instagram"
+                  aria-label="Instagram DOFER Workshop"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e6f2d0] text-[#4e6f2a] transition-colors hover:bg-[#4e6f2a] hover:text-white"
                 >
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -130,10 +133,10 @@ export function SiteFooter(): React.JSX.Element {
 
                 {/* Facebook */}
                 <a
-                  href="https://facebook.com/doflins"
+                  href="https://www.facebook.com/profile.php?id=61554032801394"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="Facebook"
+                  aria-label="Facebook DOFER"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e6f2d0] text-[#4e6f2a] transition-colors hover:bg-[#4e6f2a] hover:text-white"
                 >
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -143,10 +146,10 @@ export function SiteFooter(): React.JSX.Element {
 
                 {/* TikTok */}
                 <a
-                  href="https://tiktok.com/@doflins"
+                  href="https://www.tiktok.com/@dofershop"
                   target="_blank"
                   rel="noopener noreferrer"
-                  aria-label="TikTok"
+                  aria-label="TikTok DOFER Shop"
                   className="flex h-9 w-9 items-center justify-center rounded-full bg-[#e6f2d0] text-[#4e6f2a] transition-colors hover:bg-[#4e6f2a] hover:text-white"
                 >
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -154,9 +157,6 @@ export function SiteFooter(): React.JSX.Element {
                   </svg>
                 </a>
               </div>
-              <p className="mt-3 text-xs text-[#3d5230]">
-                (Actualiza los links de redes sociales)
-              </p>
             </div>
           </div>
         </div>

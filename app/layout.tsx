@@ -101,12 +101,11 @@ export default function RootLayout({
     name: "DOFLINS",
     url: siteUrl,
     logo: `${siteUrl}/images/logo.png`,
-    description: "Colección oficial de figuras DOFLINS con rareza verificada",
+    description: "Colección oficial de figuras DOFLINS con rareza verificada. Creado por DOFER.",
     sameAs: [
-      // Agrega tus redes sociales aquí cuando las tengas
-      // "https://www.facebook.com/doflins",
-      // "https://www.instagram.com/doflins",
-      // "https://www.tiktok.com/@doflins",
+      "https://www.instagram.com/doferworkshop/",
+      "https://www.facebook.com/profile.php?id=61554032801394",
+      "https://www.tiktok.com/@dofershop",
     ],
   };
 
