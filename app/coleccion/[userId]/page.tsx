@@ -1,7 +1,9 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
+import { ChevronLeftIcon } from "@heroicons/react/24/solid";
 
 const RARITY_COLORS: Record<string, string> = {
   common: "#7F856F",
@@ -74,6 +76,16 @@ export default function PublicCollectionPage({
 
   return (
     <main className="min-h-screen bg-surface-50 px-4 py-10 max-w-3xl mx-auto">
+      {/* Back button */}
+      <div className="mb-6">
+        <Link 
+          href="/"
+          className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-ink-700 hover:bg-surface-100 transition"
+        >
+          <ChevronLeftIcon className="h-4 w-4" /> Volver al inicio
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="bg-white dark:bg-surface-200 rounded-2xl shadow-sm p-6 mb-8 text-center">
         <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">

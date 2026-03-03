@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRightOnRectangleIcon,
@@ -8,6 +9,7 @@ import {
   LockClosedIcon,
   SparklesIcon,
   XMarkIcon,
+  ChevronLeftIcon,
 } from "@heroicons/react/24/solid";
 import type { User } from "@supabase/supabase-js";
 
@@ -203,6 +205,16 @@ export function MyCollection() {
 
   return (
     <div className="space-y-6">
+      {/* Back button */}
+      <div className="mb-6">
+        <Link 
+          href="/"
+          className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-medium text-[var(--ink-700)] hover:bg-[#f4f6e8] transition"
+        >
+          <ChevronLeftIcon className="h-4 w-4" /> Volver al inicio
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
