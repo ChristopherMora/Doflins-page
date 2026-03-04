@@ -33,6 +33,7 @@ import {
 } from "@heroicons/react/24/solid";
 
 import type { ShopCart, ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
+import { broadcastUniverse } from "@/lib/universe-store";
 import { Badge } from "@/components/ui/badge";
 import { WatchingBadge } from "@/components/ui/watching-badge";
 import { Button } from "@/components/ui/button";
@@ -337,6 +338,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       setActiveUniverse(u);
     }
   }, []);
+
+  // Broadcast universe changes so the site header and other components can react
+  useEffect(() => {
+    broadcastUniverse(activeUniverse);
+  }, [activeUniverse]);
 
   const [products, setProducts] = useState<ShopProduct[]>([]);
   const [cart, setCart] = useState<ShopCart | null>(null);
