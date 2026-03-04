@@ -168,6 +168,15 @@ interface ShopVisualTheme {
   imageShadow: string;
   addedBadgeBg: string;
   modalUniverseBadgeBg: string;
+  // Card & control theming
+  cardBg: string;
+  cardBorder: string;
+  cardShadow: string;
+  cardHoverShadow: string;
+  controlBg: string;
+  controlBorder: string;
+  skeletonBase: string;
+  skeletonHighlight: string;
 }
 
 const SHOP_VISUAL_THEMES: Record<Universe, ShopVisualTheme> = {
@@ -191,6 +200,14 @@ const SHOP_VISUAL_THEMES: Record<Universe, ShopVisualTheme> = {
     imageShadow: "0 14px 30px rgba(38,63,58,0.2)",
     addedBadgeBg: "#2f6f67",
     modalUniverseBadgeBg: "#2f6f67",
+    cardBg: "linear-gradient(160deg,#ffffff,#f2f6f0)",
+    cardBorder: "#d0d8ca",
+    cardShadow: "0 8px 20px rgba(48,64,44,0.10)",
+    cardHoverShadow: "0 16px 32px rgba(48,64,44,0.18)",
+    controlBg: "rgba(255,255,255,0.78)",
+    controlBorder: "#ced4c6",
+    skeletonBase: "#eaece5",
+    skeletonHighlight: "#dfe2d8",
   },
   animals: {
     shellClassName: "ink-light",
@@ -212,6 +229,14 @@ const SHOP_VISUAL_THEMES: Record<Universe, ShopVisualTheme> = {
     imageShadow: "0 14px 30px rgba(35,43,22,0.19)",
     addedBadgeBg: "#4f7f2d",
     modalUniverseBadgeBg: "#4f7f2d",
+    cardBg: "linear-gradient(160deg,#ffffff,#f4f8ea)",
+    cardBorder: "#cfd8a8",
+    cardShadow: "0 8px 20px rgba(64,80,30,0.10)",
+    cardHoverShadow: "0 18px 34px rgba(64,80,30,0.18)",
+    controlBg: "rgba(245,250,235,0.88)",
+    controlBorder: "#c8d89a",
+    skeletonBase: "#e8ecd5",
+    skeletonHighlight: "#dde4c2",
   },
   multiverse: {
     shellClassName: "ink-light-blue",
@@ -233,6 +258,14 @@ const SHOP_VISUAL_THEMES: Record<Universe, ShopVisualTheme> = {
     imageShadow: "0 14px 30px rgba(30,43,102,0.28)",
     addedBadgeBg: "#4360d2",
     modalUniverseBadgeBg: "#4360d2",
+    cardBg: "linear-gradient(160deg,#f6f8ff,#eaefff)",
+    cardBorder: "#c2cef8",
+    cardShadow: "0 8px 20px rgba(60,80,180,0.12)",
+    cardHoverShadow: "0 18px 34px rgba(60,80,180,0.22)",
+    controlBg: "rgba(234,240,255,0.90)",
+    controlBorder: "#bac8f8",
+    skeletonBase: "#dce5fa",
+    skeletonHighlight: "#ccd8f6",
   },
 };
 
@@ -584,6 +617,14 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         "--shop-image-shadow": visualTheme.imageShadow,
         "--shop-added-badge-bg": visualTheme.addedBadgeBg,
         "--shop-modal-universe-badge-bg": visualTheme.modalUniverseBadgeBg,
+        "--shop-card-bg": visualTheme.cardBg,
+        "--shop-card-border": visualTheme.cardBorder,
+        "--shop-card-shadow": visualTheme.cardShadow,
+        "--shop-card-hover-shadow": visualTheme.cardHoverShadow,
+        "--shop-control-bg": visualTheme.controlBg,
+        "--shop-control-border": visualTheme.controlBorder,
+        "--shop-skeleton-base": visualTheme.skeletonBase,
+        "--shop-skeleton-hi": visualTheme.skeletonHighlight,
       }) as React.CSSProperties,
     [visualTheme],
   );
@@ -1586,7 +1627,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       value={giftNote}
                       onChange={(event) => setGiftNote(event.target.value)}
                       placeholder="Ej: ¡Feliz cumpleaños! Esta figura es especial para ti."
-                      className="w-full resize-none rounded-xl border border-[#d8d2b4] bg-white/90 px-3 py-2.5 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-500)] outline-none focus:ring-1 focus:ring-[var(--shop-primary-from)]"
+                      className="w-full resize-none rounded-xl border border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] px-3 py-2.5 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-500)] outline-none focus:ring-1 focus:ring-[var(--shop-primary-from)]"
                       maxLength={280}
                     />
                     {giftNote.length > 0 ? (
@@ -1674,7 +1715,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     <div className="mt-2 space-y-1">
                       <button
                         onClick={() => setShowCartQR((v) => !v)}
-                        className="w-full rounded-xl border border-[#d8d2b4] bg-white/70 py-2 text-xs font-medium text-[var(--ink-700)] hover:bg-[#f4f6e8] transition flex items-center justify-center gap-1.5"
+                        className="w-full rounded-xl border border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] py-2 text-xs font-medium text-[var(--ink-700)] hover:opacity-80 transition flex items-center justify-center gap-1.5"
                       >
                         <span>📲</span>
                         {showCartQR ? "Ocultar QR" : "Ver QR del carrito"}
@@ -1687,7 +1728,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                             alt="QR del carrito"
                             width={160}
                             height={160}
-                            className="rounded-xl border border-[#d8d2b4]"
+                            className="rounded-xl border border-[var(--shop-card-border)]"
                           />
                         </div>
                       )}
@@ -1818,7 +1859,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
                   showWishlistOnly
                     ? "border-red-400 bg-red-50 text-red-500"
-                    : "border-[#d8d2b4] bg-white/90 text-[var(--ink-500)] hover:text-red-400"
+                    : "border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] text-[var(--ink-500)] hover:text-red-400"
                 }`}
                 onClick={() => setShowWishlistOnly((v) => !v)}
               >
@@ -1829,7 +1870,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
           <div className="flex flex-wrap items-center justify-end gap-2">
             <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex gap-1 rounded-full border border-[#d7d2b4] bg-white/75 p-1 text-xs shadow-sm">
+              <div className="inline-flex gap-1 rounded-full border p-1 text-xs shadow-sm" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
                 {(["default", "new", "asc", "desc"] as const).map((order) => {
                   const labels: Record<typeof order, string> = { default: "Todos", new: "Nuevos", asc: "Menor precio", desc: "Mayor precio" };
                   return (
@@ -1848,7 +1889,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   );
                 })}
               </div>
-              <div className="inline-flex rounded-full border border-[#d7d2b4] bg-white/75 p-1">
+              <div className="inline-flex rounded-full border p-1" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
                 <button
                   type="button"
                   aria-label="Vista grilla"
@@ -1895,7 +1936,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           </div>
 
           {!isLoadingProducts ? (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#d7d2b4] bg-white/70 px-4 py-3">
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-4 py-3" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
               <div>
                 <p className="text-sm font-semibold text-[var(--ink-900)]">Bolsas disponibles ahora</p>
                 <p className="text-xs text-[var(--ink-700)]">Prioridad: elige bolsa, agrega al carrito y finaliza en Shopify.</p>
@@ -2037,18 +2078,25 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   <LazyCard
                     key={product.id}
                     skeleton={
-                      <div className="overflow-hidden rounded-3xl border border-[#d8d1b1] bg-white/60">
-                        <div className="aspect-[16/11] w-full animate-pulse bg-[#ebecd9]" />
+                      <div className="overflow-hidden rounded-3xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
+                        <div className="aspect-[16/11] w-full animate-pulse" style={{ background: "var(--shop-skeleton-base)" }} />
                         <div className="p-5 space-y-3">
-                          <div className="h-3 w-16 animate-pulse rounded bg-[#e2e4cf]" />
-                          <div className="h-7 w-4/5 animate-pulse rounded bg-[#dfe2cb]" />
-                          <div className="h-12 animate-pulse rounded-full bg-[#d9dec0]" />
+                          <div className="h-3 w-16 animate-pulse rounded" style={{ background: "var(--shop-skeleton-hi)" }} />
+                          <div className="h-7 w-4/5 animate-pulse rounded" style={{ background: "var(--shop-skeleton-hi)" }} />
+                          <div className="h-12 animate-pulse rounded-full" style={{ background: "var(--shop-skeleton-base)" }} />
                         </div>
                       </div>
                     }
                   >
                     <article
-                    className={`group flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border border-[#d8d1b1] bg-[linear-gradient(160deg,#ffffff,#f4f6e7)] shadow-[0_12px_24px_rgba(72,73,35,0.11)] transition hover:-translate-y-1.5 hover:shadow-[0_20px_34px_rgba(72,73,35,0.17)] ${gridView === "list" ? "md:flex-row" : ""}`}
+                    className={`group flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border transition hover:-translate-y-1.5 ${gridView === "list" ? "md:flex-row" : ""}`}
+                    style={{
+                      background: "var(--shop-card-bg)",
+                      borderColor: "var(--shop-card-border)",
+                      boxShadow: "var(--shop-card-shadow)",
+                    }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shop-card-hover-shadow)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shop-card-shadow)"; }}
                     role="button"
                     tabIndex={0}
                     aria-label={`Ver detalle rápido de ${product.title}`}
@@ -2147,7 +2195,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       <p className="min-h-[3rem] text-sm leading-relaxed text-[var(--ink-700)]">{getProductDescription(product, activeUniverse)}</p>
 
                       <div className="mt-auto space-y-3">
-                        <div className="rounded-2xl border border-[#d8d2b4] bg-white/90 p-4">
+                        <div className="rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-card-bg)" }}>
                           <p className="text-xs uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
                           <p className="font-title text-[2rem] leading-none text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</p>
                         </div>
@@ -2171,7 +2219,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                                   selectedVariant?.id === variant.id
                                     ? "border-[var(--shop-primary-from)] bg-[var(--shop-primary-from)] text-white"
                                     : variant.availableForSale
-                                      ? "border-[#d8d2b4] bg-white/90 text-[var(--ink-800)] hover:border-[var(--shop-primary-from)]"
+                                      ? "border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] text-[var(--ink-800)] hover:border-[var(--shop-primary-from)]"
                                       : "cursor-not-allowed border-[#ddd9d0] bg-[#f5f4ef] text-[var(--ink-500)] line-through"
                                 }`}
                                 onClick={() =>
@@ -2231,7 +2279,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                               onKeyDown={(e) => e.stopPropagation()}
                             >
                               {/* Stepper compacto */}
-                              <div className="flex shrink-0 items-center gap-1 rounded-full border border-[#d8d2b4] bg-white/90 px-2 py-1.5">
+                              <div className="flex shrink-0 items-center gap-1 rounded-full border px-2 py-1.5" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
                                 <button
                                   type="button"
                                   aria-label="Reducir cantidad"
@@ -2279,7 +2327,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           >
                             <EyeIcon className="h-3.5 w-3.5" /> Ver detalle
                           </Link>
-                          <span className="h-4 w-px bg-[#d8d2b4]" />
+                          <span className="h-4 w-px" style={{ background: "var(--shop-card-border)" }} />
                           <button
                             type="button"
                             className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-medium text-[var(--ink-600)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]"
@@ -2335,7 +2383,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       const tier = toDropTier(item.rarity);
                       const itemLabel = formatCollectionPreviewName(item);
                       return (
-                        <article key={`catalog-showcase-${activeUniverse}-${item.id}`} className="overflow-hidden rounded-2xl border border-[#d8d2b4] bg-white/90">
+                        <article key={`catalog-showcase-${activeUniverse}-${item.id}`} className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                           <div className="relative aspect-square bg-[var(--shop-image-panel-bg)]">
                             {item.imageUrl ? (
                               <Image
@@ -2551,7 +2599,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       </Badge>
                     ) : null}
                   </div>
-                  <div className="rounded-2xl border border-[#d8d2b4] bg-[linear-gradient(145deg,#ffffff,#f4f6e8)] p-4">
+                  <div className="rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-card-bg)" }}>
                     <p className="text-xs uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
                     <p className="font-title text-3xl text-[var(--ink-900)]">
                       {formatMoney(selectedModalVariant?.price ?? selectedProduct.price)}
@@ -2581,7 +2629,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     </select>
                   ) : null}
                   {/* Qty stepper */}
-                  <div className="flex items-center justify-between gap-2 rounded-full border border-[#d8d2b4] bg-white/90 px-3 py-1">
+                  <div className="flex items-center justify-between gap-2 rounded-full border px-3 py-1" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
                     <button
                       type="button"
                       aria-label="Reducir cantidad"
@@ -2614,7 +2662,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   </Button>
                 </div>
                 {/* Sticky footer */}
-                <div className="shrink-0 border-t border-[#d8d2b4] bg-white p-4">
+                <div className="shrink-0 border-t p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                   <Button
                     className={`w-full ${selectedModalSoldOut ? "bg-[#b9c8a3] text-white" : "bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] text-white hover:opacity-90"}`}
                     disabled={isMutatingCart || selectedModalSoldOut}
