@@ -23,7 +23,12 @@ export function LiveFigureCount({ className, countClassName }: LiveFigureCountPr
       .catch(() => null);
   }, []);
 
-  if (count === null) return <></>;
+  if (count === null) return (
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1">
+      <span className="h-3 w-6 animate-pulse rounded bg-black/10" />
+      <span className="h-3 w-16 animate-pulse rounded bg-black/[0.08]" />
+    </span>
+  );
 
   return (
     <span className={cn("inline-flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 ring-1 ring-[#cad89e]", className)}>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import {
   GlobeAltIcon,
+  HomeIcon,
   InformationCircleIcon,
   QuestionMarkCircleIcon,
   RectangleStackIcon,
@@ -85,8 +86,9 @@ export function SiteHeader(): React.JSX.Element {
       : dark ? "0 8px 20px rgba(57,102,153,0.35)" : "0 4px 14px rgba(58,109,153,0.33)";
 
   const navLinks = [
+    { href: "/", Icon: HomeIcon, label: "Inicio" },
     { href: "/reveal?universe=animals", Icon: Squares2X2Icon, label: "Catálogo" },
-    { href: "#compras", Icon: ShoppingCartIcon, label: "Tienda", isAnchor: true },
+    { href: "/#compras", Icon: ShoppingCartIcon, label: "Tienda", isAnchor: true },
     { href: "/coleccion", Icon: RectangleStackIcon, label: "Colección" },
     { href: "/faq", Icon: QuestionMarkCircleIcon, label: "FAQ" },
     { href: "/acerca", Icon: InformationCircleIcon, label: "Acerca" },
@@ -151,13 +153,12 @@ export function SiteHeader(): React.JSX.Element {
         <div className="flex items-center gap-2">
           <DarkModeToggle />
           <a
-            href="#compras"
-            className="inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            href="/#compras"
+            className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             style={{ background: ctaGradient, boxShadow: ctaShadow }}
           >
             <GlobeAltIcon className="h-4 w-4" />
-            <span className="hidden sm:inline">Comprar packs</span>
-            <span className="sm:hidden">Packs</span>
+            Comprar packs
           </a>
         </div>
       </div>

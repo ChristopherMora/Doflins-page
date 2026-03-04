@@ -14,7 +14,7 @@ interface BottomNavItem {
 const NAV_ITEMS: BottomNavItem[] = [
   { href: "/", label: "Inicio", icon: HomeIcon },
   { href: "/reveal?universe=animals", label: "Catálogo", icon: Squares2X2Icon },
-  { href: "#compras", label: "Tienda", icon: ShoppingCartIcon, isAnchor: true },
+  { href: "/#compras", label: "Tienda", icon: ShoppingCartIcon, isAnchor: true },
   { href: "/coleccion", label: "Colección", icon: RectangleStackIcon },
 ];
 
@@ -35,9 +35,11 @@ export function BottomNav(): React.JSX.Element {
               <a
                 key={href}
                 href={href}
-                className="flex flex-col items-center gap-0.5 px-5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] text-[var(--ink-600)] transition active:scale-95"
+                className={`flex flex-col items-center gap-0.5 px-5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] transition active:scale-95 ${
+                  pathname === "/" ? "text-[var(--brand-primary)]" : "text-[var(--ink-600)]"
+                }`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className={`h-5 w-5 transition-transform ${pathname === "/" ? "scale-110" : ""}`} />
                 {label}
               </a>
             );

@@ -48,12 +48,12 @@ const RARITY_LABELS: Record<string, string> = {
   MYTHIC: "Mítico",
 };
 const RARITY_COLORS: Record<string, string> = {
-  COMMON: "bg-[#e8f2d6] text-[#2f5b1f]",
-  RARE: "bg-[#dbe4ff] text-[#24336c]",
-  EPIC: "bg-[#f0dbff] text-[#5a1a8a]",
-  LEGENDARY: "bg-[#ffe9b5] text-[#5e4300]",
-  ULTRA: "bg-[#ffd6d6] text-[#7a1a1a]",
-  MYTHIC: "bg-[#ffd6f5] text-[#6b006b]",
+  COMMON: "bg-[#f0f1eb] text-[#7a8070]",
+  RARE: "bg-[#e4eef1] text-[#4a7a8a]",
+  EPIC: "bg-[#f3e6db] text-[#a06040]",
+  LEGENDARY: "bg-[#f5ecdc] text-[#a07830]",
+  ULTRA: "bg-[#f5e0e0] text-[#8a4040]",
+  MYTHIC: "bg-[#f3e0f5] text-[#7a3a7a]",
 };
 
 const BLUR_DATA_URL =

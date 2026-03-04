@@ -1832,13 +1832,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             <button
               type="button"
               onClick={() => activateUniverse("animals")}
-              className={`group flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+              className={`group flex items-center gap-2 sm:gap-3 rounded-2xl border-2 p-2.5 sm:p-4 text-left transition-all duration-200 ${
                 visualUniverse === "animals"
                   ? "border-[#4e6f2a] bg-[linear-gradient(135deg,#eef5de,#daeab8)] shadow-[0_8px_20px_rgba(78,111,42,0.22)]"
                   : "border-black/10 bg-white/60 hover:bg-white/80 hover:border-black/20"
               }`}
             >
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+              <span className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl transition-all ${
                 visualUniverse === "animals" ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] text-white shadow-md" : "bg-black/[0.06] text-[var(--ink-600)]"
               }`}>
                 <SparklesIcon className="h-5 w-5" />
@@ -1853,13 +1853,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             <button
               type="button"
               onClick={() => activateUniverse("multiverse")}
-              className={`group flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+              className={`group flex items-center gap-2 sm:gap-3 rounded-2xl border-2 p-2.5 sm:p-4 text-left transition-all duration-200 ${
                 visualUniverse === "multiverse"
                   ? "border-[#4b5fc0] bg-[linear-gradient(135deg,#eef0ff,#d8deff)] shadow-[0_8px_20px_rgba(75,95,192,0.22)]"
                   : "border-black/10 bg-white/60 hover:bg-white/80 hover:border-black/20"
               }`}
             >
-              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+              <span className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl transition-all ${
                 visualUniverse === "multiverse" ? "bg-[linear-gradient(135deg,#4b5fc0,#687ff1)] text-white shadow-md" : "bg-black/[0.06] text-[var(--ink-600)]"
               }`}>
                 <BoltIcon className="h-5 w-5" />
@@ -1946,38 +1946,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--shop-chip-ring)] bg-white/80 px-3 py-1.5 text-xs text-[var(--ink-700)]">
-                <TruckIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from)]" />
-                <span><strong className="font-semibold">Envío nacional</strong> · 2-6 días hábiles</span>
-              </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--shop-chip-ring)] bg-white/80 px-3 py-1.5 text-xs text-[var(--ink-700)]">
-                <ClockIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from)]" />
-                <span><strong className="font-semibold">Preparación</strong> · 24-48 horas</span>
-              </span>
-              <a
-                href={SUPPORT_WHATSAPP_URL}
-                rel="noreferrer"
-                target="_blank"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--shop-chip-ring)] bg-white/80 px-3 py-1.5 text-xs font-semibold text-[var(--shop-chip-text)] transition hover:bg-[var(--shop-support-hover-bg)] hover:border-[var(--shop-support-hover-border)]"
-              >
-                <ChatBubbleLeftRightIcon className="h-3.5 w-3.5" /> Soporte WhatsApp
-              </a>
-            </div>
-          </div>
 
-          {!isLoadingProducts ? (
-            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border px-4 py-3" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
-              <div>
-                <p className="text-sm font-semibold text-[var(--ink-900)]">Bolsas disponibles ahora</p>
-                <p className="text-xs text-[var(--ink-700)]">Prioridad: elige bolsa, agrega al carrito y finaliza en Shopify.</p>
-              </div>
-              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-700)]">
-                {filteredProducts.length} pack{filteredProducts.length === 1 ? "" : "s"} visibles
-              </p>
-            </div>
-          ) : null}
+
+
 
           {feedbackMessage ? (
             <p
@@ -2110,6 +2081,15 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   <LazyCard
                     key={product.id}
                     skeleton={
+                      gridView === "list" ? (
+                        <div className="flex h-20 overflow-hidden rounded-3xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
+                          <div className="aspect-square w-24 shrink-0 animate-pulse" style={{ background: "var(--shop-skeleton-base)" }} />
+                          <div className="flex flex-1 flex-col justify-center gap-2 p-4">
+                            <div className="h-3 w-2/3 animate-pulse rounded" style={{ background: "var(--shop-skeleton-hi)" }} />
+                            <div className="h-4 w-1/2 animate-pulse rounded" style={{ background: "var(--shop-skeleton-hi)" }} />
+                          </div>
+                        </div>
+                      ) : (
                       <div className="overflow-hidden rounded-3xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                         <div className="aspect-[16/11] w-full animate-pulse" style={{ background: "var(--shop-skeleton-base)" }} />
                         <div className="p-5 space-y-3">
@@ -2118,10 +2098,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           <div className="h-12 animate-pulse rounded-full" style={{ background: "var(--shop-skeleton-base)" }} />
                         </div>
                       </div>
+                      )
                     }
                   >
                     <article
-                    className={`group flex h-full cursor-pointer flex-col overflow-hidden rounded-3xl border transition hover:-translate-y-1.5 ${gridView === "list" ? "md:flex-row" : ""}`}
+                    className={`group flex h-full cursor-pointer overflow-hidden rounded-3xl border transition hover:-translate-y-0.5 ${
+                      gridView === "list" ? "flex-row" : "flex-col hover:-translate-y-1.5"
+                    }`}
                     style={{
                       background: "var(--shop-card-bg)",
                       borderColor: "var(--shop-card-border)",
@@ -2141,9 +2124,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     }}
                     >
                     <div className={`relative overflow-hidden bg-[var(--shop-image-panel-bg)] ${
-                        gridView === "list" ? "aspect-square w-32 shrink-0 md:aspect-auto md:h-full" : "aspect-[16/11] w-full"
+                        gridView === "list" ? "aspect-square w-24 shrink-0 sm:w-32" : "aspect-[16/11] w-full"
                       }`}>
-                      {isLiveNew || isBestSeller ? (
+                      {(isLiveNew || isBestSeller) && gridView !== "list" ? (
                         <div className="absolute left-3 top-3 z-10 flex flex-col gap-1.5">
                           {isBestSeller ? (
                             <span className="inline-flex rounded-full bg-[#ffe9b5] px-3 py-1 text-xs font-bold text-[#5e4300] ring-1 ring-[#e6c676]">
@@ -2203,18 +2186,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       </button>
                     </div>
 
-                    <div className="flex flex-1 flex-col space-y-3 p-5">
+                    <div className={`flex flex-1 flex-col space-y-3 ${ gridView === "list" ? "justify-center p-3 sm:p-4" : "p-5" }`}>
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-700)]">{UNIVERSE_LABELS[activeUniverse]}</p>
                         <div className="flex items-center gap-1.5">
-                          {rarityTag ? (
+                          {rarityTag && gridView !== "list" ? (
                             <span className="rounded-full bg-[#fdf3df] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#7a4a10] ring-1 ring-[#e6c676]">
                               {/legendary|legendari/i.test(rarityTag) ? "✨ Legendaria" : /epic/i.test(rarityTag) ? "🔥 Épica" : "💚 Especial"}
-                            </span>
-                          ) : null}
-                          {isBestSeller ? (
-                            <span className="rounded-full bg-[#ffe9b5] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#5e4300] ring-1 ring-[#e6c676]">
-                              Top ventas
                             </span>
                           ) : null}
                           <span className="rounded-full bg-white px-2.5 py-1 text-xs text-[var(--ink-700)] ring-1 ring-black/10">
@@ -2223,9 +2201,26 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         </div>
                       </div>
 
-                      <h4 className="font-title text-2xl leading-tight text-[var(--ink-900)] sm:text-[2rem]">{product.title}</h4>
-                      <p className="min-h-[3rem] text-sm leading-relaxed text-[var(--ink-700)]">{getProductDescription(product, activeUniverse)}</p>
+                      <h4 className={`font-title leading-tight text-[var(--ink-900)] ${ gridView === "list" ? "text-base sm:text-lg" : "text-2xl sm:text-[2rem]" }`}>{product.title}</h4>
+                      {gridView !== "list" ? <p className="min-h-[3rem] text-sm leading-relaxed text-[var(--ink-700)]">{getProductDescription(product, activeUniverse)}</p> : null}
 
+                      {gridView === "list" ? (
+                        /* ── Lista: precio + CTA inline ── */
+                        <div className="mt-auto flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
+                          <span className="font-title text-lg font-bold text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</span>
+                          {isSoldOut ? (
+                            <span className="ml-auto rounded-full bg-[#f5f4ef] px-3 py-1.5 text-xs font-medium text-[var(--ink-500)]">Agotado</span>
+                          ) : (
+                            <Button
+                              className="ml-auto h-9 shrink-0 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] px-4 text-sm font-bold"
+                              disabled={isMutatingCart}
+                              onClick={(e) => { e.stopPropagation(); void addToCart(product, 1); }}
+                            >
+                              <ShoppingCartIcon className="h-4 w-4" /> Agregar
+                            </Button>
+                          )}
+                        </div>
+                      ) : (
                       <div className="mt-auto space-y-3">
                         <div className="rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-card-bg)" }}>
                           <p className="text-xs uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
@@ -2402,6 +2397,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           </button>
                         </div>
                       </div>
+                      )}
                     </div>
                   </article>
                   </LazyCard>
