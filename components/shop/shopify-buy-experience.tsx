@@ -1412,16 +1412,12 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   </Link>
                 </Button>
               </div>
-              <div className="flex flex-wrap gap-2 text-xs font-semibold text-[var(--ink-700)]">
-                <span className="inline-flex items-center rounded-full border border-[var(--shop-chip-ring)] bg-white/85 px-3 py-1">
-                  1. Elige universo
-                </span>
-                <span className="inline-flex items-center rounded-full border border-[var(--shop-chip-ring)] bg-white/85 px-3 py-1">
-                  2. Agrega tu bolsa
-                </span>
-                <span className="inline-flex items-center rounded-full border border-[var(--shop-chip-ring)] bg-white/85 px-3 py-1">
-                  3. Finaliza en Shopify
-                </span>
+              <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--ink-600)]">
+                <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">1 · Universo</span>
+                <span className="text-[var(--ink-400)]">→</span>
+                <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">2 · Tu bolsa</span>
+                <span className="text-[var(--ink-400)]">→</span>
+                <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">3 · Shopify</span>
               </div>
               {FREE_GIFT_PROMO_LABEL || FREE_GIFT_MIN_SUBTOTAL ? (
                 <p className="inline-flex w-fit items-center gap-2 rounded-full bg-[var(--shop-chip-bg)] px-3 py-1 text-xs font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
@@ -1434,21 +1430,23 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   ) : null}
                 </p>
               ) : null}
-              <div className="flex flex-wrap gap-2 text-xs">
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
-                  <CheckCircleIcon className="h-4 w-4 text-[var(--shop-primary-from)]" /> {productsCountLabel}
-                </span>
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
-                  <ClockIcon className="h-4 w-4 text-[var(--shop-primary-from)]" /> Tu carrito se guarda solo
-                </span>
+              <div className="flex flex-wrap items-center gap-2 text-xs">
                 <WatchingBadge universe={activeUniverse} />
+                <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
+                  <LockClosedIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from)]" /> Pago seguro Shopify
+                </span>
               </div>
             </div>
 
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
               <SheetTrigger asChild>
-                <Button className="h-12 shrink-0 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] px-6">
-                  <ShoppingCartIcon className="h-5 w-5" /> Carrito ({cartItemCount})
+                <Button className="h-12 shrink-0 flex-col gap-0 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] px-5 leading-none">
+                  <span className="flex items-center gap-1.5 text-sm font-semibold">
+                    <ShoppingCartIcon className="h-4 w-4" /> Carrito ({cartItemCount})
+                  </span>
+                  {cartItemCount > 0 ? (
+                    <span className="text-[0.68rem] font-medium opacity-85">{totals.total}</span>
+                  ) : null}
                 </Button>
               </SheetTrigger>
               <SheetContent className="flex h-full w-[min(100vw,460px)] flex-col p-0" side="right">
@@ -1746,26 +1744,49 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
           </div>
 
-          <div className="mt-1 flex flex-wrap items-center justify-between gap-3">
-            <div className="inline-flex rounded-full border border-[#d7d2b4] bg-white/75 p-1 shadow-[0_6px_14px_rgba(44,47,23,0.08)]">
-              <Button
-                size="sm"
-                className={visualUniverse === "animals" ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] text-white" : "shadow-none"}
-                variant={visualUniverse === "animals" ? "primary" : "ghost"}
-                onClick={() => activateUniverse("animals")}
-              >
-                <SparklesIcon className="h-4 w-4" /> Animals
-              </Button>
-              <Button
-                size="sm"
-                className={visualUniverse === "multiverse" ? "bg-[linear-gradient(135deg,#4b5fc0,#687ff1)] text-white" : "shadow-none"}
-                variant={visualUniverse === "multiverse" ? "primary" : "ghost"}
-                onClick={() => activateUniverse("multiverse")}
-              >
-                <BoltIcon className="h-4 w-4" /> Multiverse
-              </Button>
-            </div>
+          {/* ── Universe selector ── */}
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              type="button"
+              onClick={() => activateUniverse("animals")}
+              className={`group flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+                visualUniverse === "animals"
+                  ? "border-[#4e6f2a] bg-[linear-gradient(135deg,#eef5de,#daeab8)] shadow-[0_8px_20px_rgba(78,111,42,0.22)]"
+                  : "border-[#d8d0b2] bg-white/70 hover:border-[#b0c985] hover:bg-[#f5f9eb]"
+              }`}
+            >
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+                visualUniverse === "animals" ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] text-white shadow-md" : "bg-[#e6f2d0] text-[#4e6f2a]"
+              }`}>
+                <SparklesIcon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className={`text-sm font-bold leading-tight ${ visualUniverse === "animals" ? "text-[#1f2a1a]" : "text-[var(--ink-700)]" }`}>Animals</p>
+                <p className={`truncate text-xs ${ visualUniverse === "animals" ? "text-[#3d5230]" : "text-[var(--ink-500)]" }`}>Criaturas &amp; rarezas naturales</p>
+              </div>
+              {visualUniverse === "animals" ? <CheckCircleIcon className="ml-auto h-5 w-5 shrink-0 text-[#4e6f2a]" /> : null}
+            </button>
 
+            <button
+              type="button"
+              onClick={() => activateUniverse("multiverse")}
+              className={`group flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
+                visualUniverse === "multiverse"
+                  ? "border-[#4b5fc0] bg-[linear-gradient(135deg,#eef0ff,#d8deff)] shadow-[0_8px_20px_rgba(75,95,192,0.22)]"
+                  : "border-[#d8d0b2] bg-white/70 hover:border-[#9baee8] hover:bg-[#f0f2ff]"
+              }`}
+            >
+              <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
+                visualUniverse === "multiverse" ? "bg-[linear-gradient(135deg,#4b5fc0,#687ff1)] text-white shadow-md" : "bg-[#dde3ff] text-[#4b5fc0]"
+              }`}>
+                <BoltIcon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className={`text-sm font-bold leading-tight ${ visualUniverse === "multiverse" ? "text-[#1c2960]" : "text-[var(--ink-700)]" }`}>Multiverse</p>
+                <p className={`truncate text-xs ${ visualUniverse === "multiverse" ? "text-[#2d3f7a]" : "text-[var(--ink-500)]" }`}>Sci-fi &amp; rarezas de alto impacto</p>
+              </div>
+              {visualUniverse === "multiverse" ? <CheckCircleIcon className="ml-auto h-5 w-5 shrink-0 text-[#4b5fc0]" /> : null}
+            </button>
           </div>
           <div className="flex gap-2">
             <div className="relative flex-1">
