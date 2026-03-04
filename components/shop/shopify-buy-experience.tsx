@@ -1803,11 +1803,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               className={`group flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
                 visualUniverse === "animals"
                   ? "border-[#4e6f2a] bg-[linear-gradient(135deg,#eef5de,#daeab8)] shadow-[0_8px_20px_rgba(78,111,42,0.22)]"
-                  : "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)] hover:border-[#b0c985] hover:brightness-95"
+                  : "border-black/10 bg-white/60 hover:bg-white/80 hover:border-black/20"
               }`}
             >
               <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
-                visualUniverse === "animals" ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] text-white shadow-md" : "bg-[var(--shop-shell-bg)] text-[#4e6f2a] ring-1 ring-[var(--shop-chip-ring)]"
+                visualUniverse === "animals" ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] text-white shadow-md" : "bg-black/[0.06] text-[var(--ink-600)]"
               }`}>
                 <SparklesIcon className="h-5 w-5" />
               </span>
@@ -1824,11 +1824,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               className={`group flex items-center gap-3 rounded-2xl border-2 p-4 text-left transition-all duration-200 ${
                 visualUniverse === "multiverse"
                   ? "border-[#4b5fc0] bg-[linear-gradient(135deg,#eef0ff,#d8deff)] shadow-[0_8px_20px_rgba(75,95,192,0.22)]"
-                  : "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)] hover:border-[#9baee8] hover:brightness-95"
+                  : "border-black/10 bg-white/60 hover:bg-white/80 hover:border-black/20"
               }`}
             >
               <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl transition-all ${
-                visualUniverse === "multiverse" ? "bg-[linear-gradient(135deg,#4b5fc0,#687ff1)] text-white shadow-md" : "bg-[var(--shop-shell-bg)] text-[#4b5fc0] ring-1 ring-[var(--shop-chip-ring)]"
+                visualUniverse === "multiverse" ? "bg-[linear-gradient(135deg,#4b5fc0,#687ff1)] text-white shadow-md" : "bg-black/[0.06] text-[var(--ink-600)]"
               }`}>
                 <BoltIcon className="h-5 w-5" />
               </span>
