@@ -558,6 +558,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const [gridAnimKey, setGridAnimKey] = useState(0);
   const [giftNote, setGiftNote] = useState("");
   const [shopSearch, setShopSearch] = useState("");
+  const [mutatingLineIds, setMutatingLineIds] = useState<Set<string>>(new Set());
   const [promoTimeLeft, setPromoTimeLeft] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   const [gridView, setGridView] = useState<"grid" | "list">("grid");
@@ -1092,6 +1093,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       }
 
       // Optimistic update: update qty + recalculate lineTotal immediately
+      setMutatingLineIds((prev) => { const next = new Set(prev); next.add(lineId); return next; });
       let previousCart: ShopCart | null = null;
       setCart((prev) => {
         previousCart = prev;
@@ -1113,7 +1115,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         };
       });
 
-      setIsMutatingCart(true);
       setFeedbackMessage(null);
       try {
         const response = await fetch("/api/cart/lines/update", {
@@ -1134,7 +1135,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         setCart(previousCart);
         setFeedbackMessage(error instanceof Error ? error.message : "No se pudo actualizar la cantidad.");
       } finally {
-        setIsMutatingCart(false);
+        setMutatingLineIds((prev) => { const next = new Set(prev); next.delete(lineId); return next; });
       }
     },
     [],
@@ -1142,6 +1143,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
   const removeLine = useCallback(async (lineId: string) => {
     setFeedbackMessage(null);
+    setMutatingLineIds((prev) => { const next = new Set(prev); next.add(lineId); return next; });
     // Capture previous state and apply optimistic update in one step
     let previousCart: ShopCart | null = null;
     setCart((prev) => {
@@ -1165,6 +1167,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       // Revert optimistic update
       setCart(previousCart);
       setFeedbackMessage(error instanceof Error ? error.message : "No se pudo eliminar el item.");
+    } finally {
+      setMutatingLineIds((prev) => { const next = new Set(prev); next.delete(lineId); return next; });
     }
   }, []);
 
@@ -1485,30 +1489,30 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   {isLoadingCart ? <p className="text-sm text-[var(--ink-700)]">Cargando carrito...</p> : null}
 
                   {!isLoadingCart && (!cart || cart.lines.length === 0) ? (
-                    <p className="rounded-2xl border border-[#d7d7c3] bg-white/80 p-4 text-sm text-[var(--ink-700)]">
+                    <p className="rounded-2xl border p-4 text-sm text-[var(--ink-700)]" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                       Aún no tienes productos en carrito.
                     </p>
                   ) : null}
 
                   {!isLoadingCart ? (
-                    <div className="space-y-2 rounded-2xl border border-[#d8dcc5] bg-[linear-gradient(160deg,#ffffff,#f5f8e9)] p-4">
+                    <div className="space-y-2 rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-card-bg)" }}>
                       <p className="text-sm font-semibold text-[var(--ink-900)]">Tu compra en 3 pasos</p>
                       <div className="grid grid-cols-3 gap-2">
                         <div
                           className={`rounded-xl border px-2 py-2 text-center text-xs ${
-                            hasCartLines ? "border-[#b8d493] bg-[#edf8dd] text-[#2e5d1e]" : "border-[#dddcc8] bg-white text-[var(--ink-700)]"
+                            hasCartLines ? "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)] text-[var(--shop-chip-text)]" : "border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] text-[var(--ink-700)]"
                           }`}
                         >
                           1. Carrito
                         </div>
                         <div
                           className={`rounded-xl border px-2 py-2 text-center text-xs ${
-                            hasCartLines ? "border-[#b8d493] bg-[#edf8dd] text-[#2e5d1e]" : "border-[#dddcc8] bg-white text-[var(--ink-700)]"
+                            hasCartLines ? "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)] text-[var(--shop-chip-text)]" : "border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] text-[var(--ink-700)]"
                           }`}
                         >
                           2. Pago
                         </div>
-                        <div className="rounded-xl border border-[#dddcc8] bg-white px-2 py-2 text-center text-xs text-[var(--ink-700)]">
+                        <div className="rounded-xl border px-2 py-2 text-center text-xs" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
                           3. Confirmación
                         </div>
                       </div>
@@ -1522,7 +1526,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       <article key={line.id} className={`animate-catalog-fadein rounded-2xl border p-3 ${
                         isFreeLine
                           ? "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)]"
-                          : "border-[#d7d7c3] bg-white/85"
+                          : "border-[var(--shop-card-border)] bg-[var(--shop-control-bg)]"
                       }`}>
                         {isFreeLine ? (
                           <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[var(--shop-chip-text)]">
@@ -1532,7 +1536,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3">
                             {line.imageUrl ? (
-                              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-[#ddd9c5] bg-[#f1f2e6]">
+                              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-skeleton-base)" }}>
                                 <Image
                                   src={line.imageUrl}
                                   alt={line.imageAlt ?? line.productTitle}
@@ -1551,7 +1555,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                                   </span>
                                 ) : null}
                               </div>
-                              <p className="text-xs text-[var(--ink-700)]">{line.variantTitle}</p>
+                              {line.variantTitle && line.variantTitle !== "Default Title" ? (
+                                <p className="text-xs text-[var(--ink-700)]">{line.variantTitle}</p>
+                              ) : null}
                               <p className="mt-1 text-sm text-[var(--ink-700)]">{isFreeLine ? "$0.00" : formatMoney(line.lineTotal)}</p>
                               {(() => {
                                 const avail = getLineQtyAvailable(line.merchandiseId);
@@ -1568,7 +1574,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                               variant="ghost"
                               size="sm"
                               className="h-8 px-2"
-                              disabled={isMutatingCart}
+                              disabled={mutatingLineIds.has(line.id)}
                               onClick={() => void removeLine(line.id)}
                             >
                               <TrashIcon className="h-4 w-4" />
@@ -1583,7 +1589,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                             variant="secondary"
                             size="sm"
                             className="h-8 px-2"
-                            disabled={isMutatingCart || line.quantity <= 1}
+                            disabled={mutatingLineIds.has(line.id) || line.quantity <= 1}
                             onClick={() => void updateLineQuantity(line.id, Math.max(1, line.quantity - 1))}
                           >
                             <MinusIcon className="h-4 w-4" />
@@ -1593,7 +1599,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                             variant="secondary"
                             size="sm"
                             className="h-8 px-2"
-                            disabled={isMutatingCart}
+                            disabled={mutatingLineIds.has(line.id)}
                             onClick={() => void updateLineQuantity(line.id, line.quantity + 1)}
                           >
                             <PlusIcon className="h-4 w-4" />
@@ -1605,13 +1611,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   })}
 
                   {freeGiftProgress.enabled && cart?.lines.length ? (
-                    <div className="space-y-2 rounded-2xl border border-[#cfdab2] bg-[#eef5df] p-4 text-sm text-[var(--ink-700)]">
+                    <div className="space-y-2 rounded-2xl border p-4 text-sm text-[var(--ink-700)]" style={{ borderColor: "var(--shop-chip-ring)", background: "var(--shop-chip-bg)" }}>
                       <p className="font-semibold text-[var(--ink-900)]">
                         {freeGiftProgress.unlocked
-                          ? "Regalo gratis desbloqueado"
+                          ? "🎁 Regalo gratis desbloqueado"
                           : `Te faltan ${formatCurrencyAmount(freeGiftProgress.remaining, pricingCurrencyCode)} para tu regalo gratis`}
                       </p>
-                      <div className="h-2.5 overflow-hidden rounded-full bg-[#d9e7c2]">
+                      <div className="h-2.5 overflow-hidden rounded-full" style={{ background: "var(--shop-card-border)" }}>
                         <div
                           className="h-full rounded-full bg-[linear-gradient(90deg,var(--shop-primary-from),var(--shop-primary-to))] transition-all duration-500"
                           style={{ width: `${freeGiftProgress.percent}%` }}
@@ -1624,7 +1630,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     </div>
                   ) : null}
 
-                  <div className="space-y-2 rounded-2xl border border-[#d7d7c3] bg-white/85 p-4 text-sm text-[var(--ink-700)]">
+                  <div className="space-y-2 rounded-2xl border p-4 text-sm text-[var(--ink-700)]" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                     <p className="flex items-center justify-between">
                       <span>Subtotal</span>
                       <strong className="text-[var(--ink-900)]">{totals.subtotal}</strong>
@@ -1705,11 +1711,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     </a>
                   </div>
 
-                  <div className="space-y-2 rounded-2xl border border-[#d7d7c3] bg-white/85 p-4">
+                  <div className="space-y-2 rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                     <p className="text-sm font-semibold text-[var(--ink-900)]">Preguntas rápidas antes de pagar</p>
                     <div className="space-y-2">
                       {SHOPPING_FAQ_ITEMS.map((faq) => (
-                        <details key={faq.question} className="rounded-xl border border-[#dbdcc9] bg-white px-3 py-2 text-sm">
+                        <details key={faq.question} className="rounded-xl border px-3 py-2 text-sm" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-skeleton-base)" }}>
                           <summary className="cursor-pointer font-medium text-[var(--ink-900)]">{faq.question}</summary>
                           <p className="pt-2 text-[var(--ink-700)]">{faq.answer}</p>
                         </details>
@@ -1718,7 +1724,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   </div>
 
                   {cartRecoveryLinks ? (
-                    <div className="space-y-3 rounded-2xl border border-[#d7d7c3] bg-white/85 p-4">
+                    <div className="space-y-3 rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                       <p className="text-sm font-semibold text-[var(--ink-900)]">Recupera tu carrito cuando quieras</p>
                       <p className="text-sm text-[var(--ink-700)]">Si pausas la compra, guárdalo y retómalo después desde tu enlace.</p>
                       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
@@ -2304,12 +2310,32 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                             ))
                           : null}
                           {isSoldOut ? (
-                            <Button
-                              className="h-12 w-full bg-[#c3cfb0] text-white"
-                              disabled
-                            >
-                              <ShoppingCartIcon className="h-5 w-5" /> Agotado
-                            </Button>
+                            <div className="space-y-1.5">
+                              <Button
+                                className="h-12 w-full opacity-50"
+                                style={{ background: "var(--shop-card-border)", color: "var(--ink-900)" }}
+                                disabled
+                              >
+                                <ShoppingCartIcon className="h-5 w-5" /> Agotado temporalmente
+                              </Button>
+                              {activeUniverse === "animals" ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); activateUniverse("multiverse"); }}
+                                  className="w-full rounded-full py-1.5 text-xs font-medium text-[var(--ink-600)] transition hover:text-[var(--ink-900)] hover:bg-black/[0.04]"
+                                >
+                                  ¿Ver Multiverse? →
+                                </button>
+                              ) : (
+                                <button
+                                  type="button"
+                                  onClick={(e) => { e.stopPropagation(); activateUniverse("animals"); }}
+                                  className="w-full rounded-full py-1.5 text-xs font-medium text-[var(--ink-600)] transition hover:text-[var(--ink-900)] hover:bg-black/[0.04]"
+                                >
+                                  ¿Ver Animals? →
+                                </button>
+                              )}
+                            </div>
                           ) : (
                             <div
                               className="flex items-center gap-2"
