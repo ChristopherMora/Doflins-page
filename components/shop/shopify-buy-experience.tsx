@@ -1241,9 +1241,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       <span>Total estimado</span>
                       <strong className="text-[var(--ink-900)]">{totals.total}</strong>
                     </p>
-                    <p className="pt-1 text-xs text-[var(--ink-600)]">
-                      Sin cargos sorpresa: envío e impuestos finales se confirman según tu dirección en checkout.
-                    </p>
                   </div>
 
                   <div className="flex gap-2">
