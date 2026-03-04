@@ -2006,278 +2006,263 @@ export function RevealExperience(): React.JSX.Element {
           }
         }}
       >
-        <DialogContent className="w-[min(96vw,980px)] gap-0 overflow-hidden p-0">
+        <DialogContent className="w-[min(96vw,960px)] gap-0 overflow-hidden p-0">
           {selectedDoflin ? (
             <>
-              {/* Prev / Next navigation */}
+              {/* Prev / Next */}
               {activeCatalogCards.length > 1 ? (
-                <div className="absolute left-0 right-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-2 md:px-3 pointer-events-none">
-                  <button
-                    type="button"
-                    aria-label="Doflin anterior"
-                    disabled={selectedDoflinIndexInCatalog <= 0}
-                    onClick={() => {
-                      const prev = activeCatalogCards[selectedDoflinIndexInCatalog - 1];
-                      if (prev) setSelectedDoflin(prev);
-                    }}
-                    className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-lg ring-1 ring-black/10 transition hover:bg-white disabled:opacity-30"
-                  >
+                <div className="pointer-events-none absolute left-0 right-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-2 md:px-3">
+                  <button type="button" aria-label="Doflin anterior" disabled={selectedDoflinIndexInCatalog <= 0}
+                    onClick={() => { const prev = activeCatalogCards[selectedDoflinIndexInCatalog - 1]; if (prev) setSelectedDoflin(prev); }}
+                    className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-lg ring-1 ring-black/10 transition hover:bg-white disabled:opacity-30">
                     <ChevronLeftIcon className="h-5 w-5 text-[var(--ink-900)]" />
                   </button>
-                  <button
-                    type="button"
-                    aria-label="Doflin siguiente"
-                    disabled={selectedDoflinIndexInCatalog >= activeCatalogCards.length - 1}
-                    onClick={() => {
-                      const next = activeCatalogCards[selectedDoflinIndexInCatalog + 1];
-                      if (next) setSelectedDoflin(next);
-                    }}
-                    className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-lg ring-1 ring-black/10 transition hover:bg-white disabled:opacity-30"
-                  >
+                  <button type="button" aria-label="Doflin siguiente" disabled={selectedDoflinIndexInCatalog >= activeCatalogCards.length - 1}
+                    onClick={() => { const next = activeCatalogCards[selectedDoflinIndexInCatalog + 1]; if (next) setSelectedDoflin(next); }}
+                    className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-lg ring-1 ring-black/10 transition hover:bg-white disabled:opacity-30">
                     <ChevronRightIcon className="h-5 w-5 text-[var(--ink-900)]" />
                   </button>
                 </div>
               ) : null}
-            <div className={`grid gap-0 ${selectedDoflinHas3DModel ? "md:grid-cols-[1.1fr_0.9fr]" : "md:grid-cols-[1fr_1fr]"}`}>
-              <div
-                className={`relative min-h-[320px] p-4 sm:p-5 ${
-                  selectedDoflinHas3DModel
-                    ? "bg-[linear-gradient(145deg,rgba(255,255,255,0.96),rgba(239,241,255,0.92))]"
-                    : "bg-[linear-gradient(145deg,rgba(255,255,255,0.98),rgba(243,246,230,0.95))]"
-                }`}
-              >
-                {selectedDoflinHas3DModel ? (
-                  <model-viewer
-                    src={selectedDoflinModelConfig?.modelUrl ?? ""}
-                    alt={selectedDoflin.name}
-                    poster={selectedDoflin.imageUrl}
-                    orientation={selectedDoflinModelConfig?.orientation}
-                    camera-orbit={selectedDoflinModelConfig?.cameraOrbit ?? "0deg 60deg auto"}
-                    field-of-view={selectedDoflinModelConfig?.fieldOfView ?? "28deg"}
-                    shadow-intensity="0.7"
-                    exposure="1.2"
-                    camera-controls
-                    auto-rotate
-                    interaction-prompt="none"
-                    className="h-[360px] w-full"
-                    style={{ background: "transparent", display: "block" }}
-                  />
-                ) : (
-                  <div>
-                    <div className="relative flex h-[332px] w-full items-center justify-center overflow-hidden rounded-3xl border border-[#dcd2af] bg-[radial-gradient(circle_at_18%_12%,rgba(255,255,255,0.98),rgba(247,242,221,0.92)_58%,rgba(236,228,197,0.92))] p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_14px_30px_rgba(89,90,52,0.2)]">
-                      <div className="pointer-events-none absolute inset-x-10 bottom-6 h-6 rounded-full bg-black/14 blur-md" />
-                      <div className="relative z-10 h-full max-h-[286px] w-[286px] overflow-hidden rounded-2xl drop-shadow-[0_18px_30px_rgba(42,45,21,0.22)]">
-                        <Image
-                          src={selectedDoflinImageSrc}
-                          alt={selectedDoflin.name}
-                          width={780}
-                          height={780}
-                          className="h-full w-full object-cover"
-                          onError={() => {
-                            setBrokenModalImageIds((previous) => {
-                              if (previous.includes(selectedDoflin.id)) {
-                                return previous;
-                              }
 
-                              return [...previous, selectedDoflin.id];
-                            });
+              <div className="flex flex-col">
+                {/* ─── TOP ROW: left image + right info ─── */}
+                <div className={`grid gap-0 ${selectedDoflinHas3DModel ? "md:grid-cols-[1.1fr_0.9fr]" : "md:grid-cols-[1fr_1fr]"}`}>
+
+                  {/* LEFT — image panel */}
+                  <div className={`relative flex min-h-[380px] items-center justify-center overflow-hidden ${
+                    selectedPurchaseUniverse === "multiverse"
+                      ? "bg-[linear-gradient(145deg,#0f0c29,#302b63,#24243e)]"
+                      : "bg-[linear-gradient(145deg,#0a1a0a,#1a3a1a,#2d5a2d)]"
+                  }`}>
+                    {/* Decorative glow orb */}
+                    <div className={`pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[80px] opacity-40 ${
+                      selectedPurchaseUniverse === "multiverse" ? "bg-indigo-500" : "bg-emerald-400"
+                    }`} />
+
+                    {/* Universe label */}
+                    <span className="absolute left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md ring-1 ring-white/20">
+                      {selectedPurchaseUniverse === "multiverse" ? "⚡ Multiverse" : "🌿 Animals"}
+                    </span>
+
+                    {selectedDoflinHas3DModel ? (
+                      <model-viewer
+                        src={selectedDoflinModelConfig?.modelUrl ?? ""}
+                        alt={selectedDoflin.name}
+                        poster={selectedDoflin.imageUrl}
+                        orientation={selectedDoflinModelConfig?.orientation}
+                        camera-orbit={selectedDoflinModelConfig?.cameraOrbit ?? "0deg 60deg auto"}
+                        field-of-view={selectedDoflinModelConfig?.fieldOfView ?? "28deg"}
+                        shadow-intensity="0.7" exposure="1.2"
+                        camera-controls auto-rotate interaction-prompt="none"
+                        className="relative z-10 h-[380px] w-full"
+                        style={{ background: "transparent", display: "block" }}
+                      />
+                    ) : (
+                      <div className="relative z-10 flex flex-col items-center gap-4 p-8">
+                        {/* Figure card */}
+                        <div className="relative flex h-[280px] w-[220px] items-center justify-center overflow-hidden rounded-[2rem] shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_32px_64px_rgba(0,0,0,0.5)]">
+                          {/* inner glow border */}
+                          <div className="pointer-events-none absolute inset-0 rounded-[2rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]" />
+                          <div className="pointer-events-none absolute inset-x-12 bottom-4 h-6 rounded-full bg-black/40 blur-xl" />
+                          <Image
+                            src={selectedDoflinImageSrc}
+                            alt={selectedDoflin.name}
+                            width={780} height={780}
+                            className="h-full w-full object-cover"
+                            onError={() => {
+                              setBrokenModalImageIds((previous) => {
+                                if (previous.includes(selectedDoflin.id)) return previous;
+                                return [...previous, selectedDoflin.id];
+                              });
+                            }}
+                            unoptimized
+                          />
+                        </div>
+                        {/* Rarity pill */}
+                        {selectedDoflinRarityConfig ? (
+                          <span
+                            className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold shadow-[0_4px_16px_rgba(0,0,0,0.3)] backdrop-blur-sm"
+                            style={{ backgroundColor: selectedDoflinRarityConfig.softColor, color: selectedDoflinRarityConfig.color }}
+                          >
+                            {selectedDoflinRarityConfig.probability}% · {selectedDoflinRarityConfig.label}
+                          </span>
+                        ) : null}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* RIGHT — info panel */}
+                  <div className="flex max-h-[65vh] flex-col overflow-hidden bg-white md:max-h-none">
+                    {/* Scrollable body */}
+                    <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-6">
+                      {/* Header */}
+                      <div className="flex items-start justify-between gap-3 pr-6">
+                        <div>
+                          <p className="mb-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--ink-400)]">
+                            Serie {selectedDoflin.series} · #{String(selectedDoflin.collectionNumber).padStart(2, "0")}
+                          </p>
+                          <h2 className="font-title text-2xl font-bold leading-tight text-[var(--ink-900)]">
+                            {selectedDoflin.name}
+                          </h2>
+                          <p className="mt-0.5 text-sm text-[var(--ink-500)]">{selectedDoflin.baseModel}</p>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-1">
+                          <button type="button" aria-label="Compartir" onClick={() => void handleShareDoflin()}
+                            className="rounded-full p-2 text-[var(--ink-400)] transition hover:bg-black/[0.06] hover:text-[var(--ink-800)]">
+                            <ShareIcon className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Badges */}
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${
+                          selectedDoflinIsOriginal ? "bg-[#eaf5d8] text-[#2f5b1f] ring-1 ring-[#c6dba0]" : "bg-[#e9efff] text-[#2f448f] ring-1 ring-[#c9d6ff]"
+                        }`}>
+                          {selectedDoflinIsOriginal ? "Animal original" : "Variante"}
+                        </span>
+                        {selectedDoflinRarityConfig ? (
+                          <span
+                            className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold"
+                            style={{ backgroundColor: selectedDoflinRarityConfig.softColor, color: selectedDoflinRarityConfig.color }}
+                          >
+                            {selectedDoflinRarityConfig.label}
+                          </span>
+                        ) : null}
+                        {selectedDoflinRarityConfig ? (
+                          <span className="inline-flex items-center rounded-full bg-[var(--surface-100)] px-3 py-1 text-[11px] font-semibold text-[var(--ink-600)] ring-1 ring-black/[0.07]">
+                            {selectedDoflinRarityConfig.probability}% drop rate
+                          </span>
+                        ) : null}
+                      </div>
+
+                      {/* Fun fact */}
+                      {selectedDoflin.funFact ? (
+                        <div className="rounded-2xl bg-[var(--surface-100)] p-4 ring-1 ring-black/[0.06]">
+                          <div className="mb-1.5 flex items-center gap-1.5">
+                            <SparklesIcon className="h-3.5 w-3.5 text-[var(--brand-accent)]" />
+                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink-500)]">Dato curioso</p>
+                          </div>
+                          <p className="text-sm leading-relaxed text-[var(--ink-700)]">{selectedDoflin.funFact}</p>
+                        </div>
+                      ) : null}
+
+                      {/* Collection status */}
+                      <div className={`flex items-center justify-between gap-3 rounded-2xl p-4 ring-1 ring-black/[0.06] ${
+                        isAuthenticatedViewer && selectedDoflinIsOwned
+                          ? "bg-[#eaf5d8]"
+                          : "bg-[var(--surface-100)]"
+                      }`}>
+                        <div className="flex items-center gap-3">
+                          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                            isAuthenticatedViewer && selectedDoflinIsOwned ? "bg-[var(--brand-primary)]" : "bg-white ring-1 ring-black/10"
+                          }`}>
+                            <CheckCircleIcon className={`h-5 w-5 ${isAuthenticatedViewer && selectedDoflinIsOwned ? "text-white" : "text-[var(--ink-300)]"}`} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-[var(--ink-600)]">Tu colección</p>
+                            <p className="text-sm font-semibold text-[var(--ink-900)]">
+                              {isAuthenticatedViewer
+                                ? selectedDoflinIsOwned ? "Ya la tienes ✓" : "No la tienes aún"
+                                : "Crea cuenta gratis"}
+                            </p>
+                          </div>
+                        </div>
+                        <Button
+                          size="sm"
+                          className={`shrink-0 ${isAuthenticatedViewer && !selectedDoflinIsOwned ? activeTheme.primaryButton : ""}`}
+                          variant={!isAuthenticatedViewer ? "secondary" : selectedDoflinIsOwned ? "secondary" : "primary"}
+                          onClick={() => {
+                            if (!isAuthenticatedViewer) { requestAuthForProgress(); return; }
+                            if (selectedDoflinIsOwned) { clearOwnedMark(selectedDoflin.id); } else { markAsOwned(selectedDoflin.id); }
                           }}
-                          unoptimized
-                        />
+                        >
+                          {!isAuthenticatedViewer ? "Entrar" : selectedDoflinIsOwned ? "Quitar" : "Marcar"}
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* Sticky buy footer */}
+                    <div className="shrink-0 border-t border-black/[0.07] bg-white p-4">
+                      <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink-400)]">Comprar sobres</p>
+                      <div className="flex gap-2">
+                        <Button asChild className={`flex-1 ${activeTheme.primaryButton}`}>
+                          <a href={selectedShopUrl} onClick={() => handlePurchaseIntent({ source: "modal_buy", packSize: 15, doflinId: selectedDoflin.id })}>
+                            <ShoppingCartIcon className="h-4 w-4 shrink-0" />
+                            <span className="flex flex-col items-start leading-tight">
+                              <span className="font-bold">Sobre ×15</span>
+                              <span className="text-[10px] opacity-75">Más chances</span>
+                            </span>
+                            <span className="ml-auto shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide">MEJOR</span>
+                          </a>
+                        </Button>
+                        <Button asChild variant="secondary" className="w-[72px] shrink-0 flex-col gap-0 px-3 py-2 h-auto">
+                          <a href={selectedShopUrl} onClick={() => handlePurchaseIntent({ source: "modal_buy", packSize: 5, doflinId: selectedDoflin.id })}>
+                            <span className="text-sm font-bold">×5</span>
+                            <span className="text-[10px] opacity-60">Probar</span>
+                          </a>
+                        </Button>
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
+                </div>{/* end top grid */}
 
-              <div className="flex flex-col gap-4 overflow-y-auto p-5 sm:p-6 max-h-[65vh] md:max-h-none">
-                <DialogHeader>
-                  <DialogTitle className="flex items-center justify-between gap-2 pr-6">
-                    <span>{selectedDoflin.name}</span>
-                    <button
-                      type="button"
-                      aria-label="Compartir Doflin"
-                      onClick={() => void handleShareDoflin()}
-                      className="shrink-0 rounded-full p-1.5 text-[var(--ink-600)] transition hover:bg-black/[0.06] hover:text-[var(--ink-900)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
-                    >
-                      <ShareIcon className="h-4 w-4" />
-                    </button>
-                  </DialogTitle>
-                  <DialogDescription>
-                    {selectedDoflin.baseModel} · {variantLabel(selectedDoflin.variantName)} · Serie {selectedDoflin.series} · #
-                    {String(selectedDoflin.collectionNumber).padStart(2, "0")}
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge
-                    className={
-                      selectedDoflinIsOriginal
-                        ? "bg-[#eaf5d8] text-[#2f5b1f] ring-1 ring-[#c6dba0]"
-                        : "bg-[#e9efff] text-[#2f448f] ring-1 ring-[#c9d6ff]"
-                    }
-                  >
-                    {selectedDoflinIsOriginal ? "Animal original" : "Variante"}
-                  </Badge>
-                  <Badge className="bg-white text-[var(--ink-700)] ring-1 ring-black/10">{variantLabel(selectedDoflin.variantName)}</Badge>
-                  {selectedDoflinGroupStats && selectedDoflinGroupStats.total > 1 ? (
-                    <Badge className="bg-white text-[var(--ink-700)] ring-1 ring-black/10">
-                      {selectedDoflinGroupStats.total} versiones de {selectedDoflin.baseModel}
-                    </Badge>
-                  ) : null}
-                  <RarityPill rarity={selectedDoflin.rarity} />
-                  {selectedDoflinRarityConfig ? (
-                    <Badge className={activeConfig.badgeClass}>
-                      {selectedDoflinRarityConfig.probability}% {selectedDoflinRarityConfig.label.toLowerCase()}
-                    </Badge>
-                  ) : null}
-                </div>
-                {selectedDoflin.funFact ? (
-                  <div className={`rounded-2xl p-3.5 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.07)] ${activeTheme.panelCard}`}>
-                    <div className="flex items-center gap-1.5">
-                      <SparklesIcon className="h-3.5 w-3.5 shrink-0 text-[var(--brand-accent)]" />
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink-600)]">Dato curioso</p>
-                    </div>
-                    <p className="mt-1.5 text-sm leading-relaxed text-[var(--ink-800)]">{selectedDoflin.funFact}</p>
-                  </div>
-                ) : null}
+                {/* ─── VARIANTS STRIP ─── */}
                 {selectedDoflinVariants.length > 1 ? (
-                  <div className={`rounded-2xl p-3 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] ${activeTheme.panelCard}`}>
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">
-                      Variantes de {selectedDoflin.baseModel}
+                  <div className="border-t border-black/[0.06] bg-[var(--surface-50,#f9f9f9)] px-6 py-4">
+                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-400)]">
+                      {selectedDoflinGroupStats?.total ?? selectedDoflinVariants.length} variantes · {selectedDoflin.baseModel}
                     </p>
-                    <div className="mt-2.5 grid grid-cols-3 gap-2 sm:grid-cols-4">
+                    <div className="flex gap-3 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
                       {selectedDoflinVariants.map((variant) => {
                         const isCurrent = variant.id === selectedDoflin.id;
-                        const variantCatalogRarity = toCatalogRarity(variant.rarity);
-                        const variantRarityConfig = CATALOG_RARITY_CONFIG[variantCatalogRarity];
-
+                        const vRarity = toCatalogRarity(variant.rarity);
+                        const vConfig = CATALOG_RARITY_CONFIG[vRarity];
                         return (
                           <button
                             key={variant.id}
                             type="button"
                             onClick={() => setSelectedDoflin(variant)}
-                            className={`group flex flex-col items-center gap-1.5 rounded-xl p-1.5 text-center transition ${
+                            className={`group relative flex shrink-0 flex-col overflow-hidden rounded-xl bg-white transition-all duration-150 ${
                               isCurrent
-                                ? "bg-[#edf7df] shadow-[inset_0_0_0_1.5px_#b9d598]"
-                                : "bg-white/60 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] hover:bg-white hover:shadow-[inset_0_0_0_1.5px_rgba(0,0,0,0.14)]"
+                                ? "shadow-[0_0_0_2.5px_var(--brand-primary),0_6px_20px_rgba(0,0,0,0.14)]"
+                                : "shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.05)] hover:-translate-y-0.5 hover:shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.10)]"
                             }`}
+                            style={{ width: 96 }}
                           >
-                            <div className="relative aspect-square w-full overflow-hidden rounded-lg">
+                            {/* Rarity accent bar on top */}
+                            <div className="h-1 w-full" style={{ backgroundColor: vConfig.color }} />
+                            {/* Image */}
+                            <div className={`relative h-[80px] w-full overflow-hidden`} style={{ backgroundColor: vConfig.softColor }}>
                               <Image
                                 src={variant.imageUrl || FALLBACK_DOFLIN_IMAGE}
-                                alt={variant.name}
-                                fill
-                                className="object-cover transition duration-200 group-hover:scale-[1.04]"
+                                alt={variant.name} fill
+                                className="object-cover transition duration-200 group-hover:scale-[1.06]"
                                 unoptimized
                               />
+                              {isCurrent ? (
+                                <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full shadow-sm" style={{ backgroundColor: "var(--brand-primary)" }}>
+                                  <CheckCircleIcon className="h-3.5 w-3.5 text-white" />
+                                </div>
+                              ) : null}
                             </div>
-                            <p className="w-full truncate text-[11px] font-semibold leading-tight text-[var(--ink-900)]">
-                              {variantLabel(variant.variantName)}
-                            </p>
-                            <span
-                              className="rounded-full px-1.5 py-0.5 text-[10px] font-semibold leading-none"
-                              style={{
-                                backgroundColor: variantRarityConfig.softColor,
-                                color: variantRarityConfig.color,
-                              }}
-                            >
-                              {variantRarityConfig.label}
-                            </span>
+                            {/* Label */}
+                            <div className="flex flex-col gap-0.5 px-2 py-2">
+                              <p className="truncate text-left text-[11px] font-semibold text-[var(--ink-900)]">
+                                {variantLabel(variant.variantName)}
+                              </p>
+                              <span className="text-[9px] font-bold" style={{ color: vConfig.color }}>
+                                {vConfig.label}
+                              </span>
+                            </div>
                           </button>
                         );
                       })}
                     </div>
                   </div>
                 ) : null}
-                <div className={`rounded-2xl p-4 shadow-[inset_0_0_0_1px_rgba(0,0,0,0.08)] ${activeTheme.panelCard}`}>
-                  <div className="flex items-center gap-1.5">
-                    <CheckCircleIcon
-                      className={`h-4 w-4 shrink-0 transition-colors ${
-                        isAuthenticatedViewer && selectedDoflinIsOwned
-                          ? "text-[var(--brand-primary)]"
-                          : "text-[var(--ink-400)]"
-                      }`}
-                    />
-                    <p className="text-xs font-semibold text-[var(--ink-700)]">Tu colección</p>
-                  </div>
-                  <p className="mt-1.5 text-sm font-semibold text-[var(--ink-900)]">
-                    {isAuthenticatedViewer
-                      ? selectedDoflinIsOwned
-                        ? "Ya la tienes guardada"
-                        : "Todavía no la tienes marcada"
-                      : "Guarda tu progreso con una cuenta gratuita"}
-                  </p>
-                  <Button
-                    size="sm"
-                    className={`mt-3 w-full ${
-                      isAuthenticatedViewer && !selectedDoflinIsOwned ? activeTheme.primaryButton : ""
-                    }`}
-                    variant={
-                      !isAuthenticatedViewer
-                        ? "secondary"
-                        : selectedDoflinIsOwned
-                          ? "secondary"
-                          : "primary"
-                    }
-                    onClick={() => {
-                      if (!isAuthenticatedViewer) {
-                        requestAuthForProgress();
-                        return;
-                      }
-                      if (selectedDoflinIsOwned) {
-                        clearOwnedMark(selectedDoflin.id);
-                      } else {
-                        markAsOwned(selectedDoflin.id);
-                      }
-                    }}
-                  >
-                    {!isAuthenticatedViewer
-                      ? "Crear cuenta gratis"
-                      : selectedDoflinIsOwned
-                        ? "Quitar de mi colección"
-                        : "Marcar como conseguida"}
-                  </Button>
-                </div>
-                <div className="space-y-2.5 border-t border-black/[0.06] pt-4">
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-500)]">Comprar sobres</p>
-                  <Button asChild className={`w-full ${activeTheme.primaryButton}`}>
-                    <a
-                      href={selectedShopUrl}
-                      onClick={() =>
-                        handlePurchaseIntent({
-                          source: "modal_buy",
-                          packSize: 15,
-                          doflinId: selectedDoflin.id,
-                        })
-                      }
-                    >
-                      <ShoppingCartIcon className="h-5 w-5" />
-                      <span className="flex flex-col items-start leading-tight">
-                        <span>Sobre x15</span>
-                        <span className="text-xs font-medium opacity-80">Más chances de conseguirla</span>
-                      </span>
-                    </a>
-                  </Button>
-                  <Button asChild variant="secondary" className="w-full">
-                    <a
-                      href={selectedShopUrl}
-                      onClick={() =>
-                        handlePurchaseIntent({
-                          source: "modal_buy",
-                          packSize: 5,
-                          doflinId: selectedDoflin.id,
-                        })
-                      }
-                    >
-                      <span className="flex flex-col items-start leading-tight">
-                        <span>Sobre x5</span>
-                        <span className="text-xs font-medium opacity-70">Para probar suerte</span>
-                      </span>
-                    </a>
-                  </Button>
-                </div>
-              </div>
-            </div>
+              </div>{/* end flex-col */}
             </>
           ) : null}
         </DialogContent>

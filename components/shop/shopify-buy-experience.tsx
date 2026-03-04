@@ -1456,15 +1456,22 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         }}
       >
         <CardContent className="space-y-5 p-6 sm:p-8">
-          {/* ── Fila 1: título + carrito ── */}
+          {/* ── Fila 1: carrito (sin título/copy redundante con el hero) ── */}
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="font-title text-3xl leading-tight text-[var(--ink-900)] sm:text-4xl">
-                Compra tus packs DOFLINS
-              </h3>
-              <p className="mt-1 max-w-xl text-sm text-[var(--ink-600)]">
-                Elige tu pack, agrégalo al carrito y paga de forma segura.
-              </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                className="h-11 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]"
+                disabled={stickyCtaDisabled}
+                onClick={addRecommendedPack}
+              >
+                <ShoppingCartIcon className="h-4 w-4" />
+                {stickyVariant ? `${quickBuyLabel} · ${formatMoney(stickyVariant.price)}` : quickBuyLabel}
+              </Button>
+              <Button asChild variant="secondary" className="h-11">
+                <Link href={activeCatalogHref}>
+                  <Squares2X2Icon className="h-4 w-4" /> Ver catálogo oficial
+                </Link>
+              </Button>
             </div>
 
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
@@ -1790,34 +1797,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
           </div>
 
-          {/* ── Fila 2: CTAs ── */}
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              className="h-11 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]"
-              disabled={stickyCtaDisabled}
-              onClick={addRecommendedPack}
-            >
-              <ShoppingCartIcon className="h-4 w-4" />
-              {stickyVariant ? `${quickBuyLabel} · ${formatMoney(stickyVariant.price)}` : quickBuyLabel}
-            </Button>
-            <Button asChild variant="secondary" className="h-11">
-              <Link href={activeCatalogHref}>
-                <Squares2X2Icon className="h-4 w-4" /> Ver catálogo oficial
-              </Link>
-            </Button>
-          </div>
-
-          {/* ── Tira inferior: pasos + promo + trust ── */}
+          {/* ── Tira: promo + trust (sin pasos duplicados del hero) ── */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--shop-chip-ring)] pt-4 text-xs">
-            {/* Steps */}
-            <div className="flex items-center gap-1.5 font-medium text-[var(--ink-600)]">
-              <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">1 · Universo</span>
-              <span className="text-[var(--ink-400)]">→</span>
-              <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">2 · Bolsa</span>
-              <span className="text-[var(--ink-400)]">→</span>
-              <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">3 · Shopify</span>
-            </div>
-
             {/* Promo */}
             {FREE_GIFT_PROMO_LABEL || FREE_GIFT_MIN_SUBTOTAL ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">

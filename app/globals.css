@@ -192,8 +192,30 @@ html {
   filter: brightness(0.98) saturate(1.05);
 }
 
-.home-hero-stats {
+/* Step flow row */
+.home-hero-steps {
   color: var(--home-stats-text) !important;
+}
+
+.home-hero-step-num {
+  font-weight: 700;
+  color: var(--home-pill-icon);
+}
+
+.home-hero-step-arrow {
+  opacity: 0.38;
+  color: var(--home-stats-text);
+  font-size: 0.85rem;
+  @media (max-width: 480px) { display: none; }
+}
+
+/* Trust/social proof row — subtle separator from CTAs */
+.home-hero-trust {
+  color: var(--home-stats-text) !important;
+  border-top: 1px solid var(--home-pill-border);
+  padding-top: 0.75rem !important;
+  width: 100%;
+  justify-content: center;
 }
 
 .home-hero-pill {

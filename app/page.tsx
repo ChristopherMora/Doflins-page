@@ -4,6 +4,7 @@ import {
   CheckCircleIcon,
   FireIcon,
   ShoppingCartIcon,
+  ShieldCheckIcon,
   Squares2X2Icon,
 } from "@heroicons/react/24/solid";
 
@@ -14,6 +15,7 @@ import { UniverseCards } from "@/components/home/universe-cards";
 import { HomeUniverseSync } from "@/components/home/home-universe-sync";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { LazySection } from "@/components/ui/lazy-section";
 import { LiveFigureCount } from "@/components/ui/live-figure-count";
 
 export const metadata: Metadata = {
@@ -31,12 +33,12 @@ export default function Home(): React.JSX.Element {
       <SiteHeader />
       <HomeUniverseSync />
       <div className="home-page-shell">
-        <main className="home-main mx-auto flex min-h-screen w-full max-w-7xl items-start px-4 py-8 pb-28 sm:px-8 sm:py-10 sm:pb-10">
-          <div className="w-full space-y-6">
+        <main className="home-main mx-auto flex min-h-screen w-full max-w-7xl items-start px-4 py-4 pb-28 sm:px-8 sm:py-5 sm:pb-10">
+          <div className="w-full space-y-3">
 
             {/* ── Hero ── */}
             <Card className="home-hero-card w-full overflow-hidden border">
-              <CardContent className="space-y-5 p-8 text-center sm:p-12">
+              <CardContent className="space-y-2 p-4 text-center sm:p-6">
                 {/* live badge */}
                 <div className="home-hero-live inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-xs font-semibold">
                   <span
@@ -46,11 +48,11 @@ export default function Home(): React.JSX.Element {
                   Colección en línea · Animals &amp; Multiverse
                 </div>
 
-                <h1 className="home-hero-title font-title text-4xl leading-tight sm:text-6xl">
-                  Colecciona.<br className="hidden sm:block" />{" "}Explora. Completa.
+                <h1 className="home-hero-title font-title text-4xl leading-tight sm:text-5xl">
+                  Colecciona. Explora. Completa.
                 </h1>
-                <p className="home-hero-copy mx-auto max-w-2xl text-base sm:text-xl">
-                  Dos universos, cientos de figuras con rareza oficial. Empieza o completa tu colección DOFLINS.
+                <p className="home-hero-copy mx-auto max-w-xl text-sm sm:text-base">
+                  Dos universos, cientos de figuras con rareza oficial.
                 </p>
 
                 <div className="flex flex-wrap items-center justify-center gap-2">
@@ -66,22 +68,25 @@ export default function Home(): React.JSX.Element {
                   </Button>
                 </div>
 
-                <div className="home-hero-stats flex flex-wrap items-center justify-center gap-2 text-xs">
+                {/* Flujo de pasos */}
+                <div className="home-hero-steps flex flex-wrap items-center justify-center gap-1.5 text-xs">
                   <span className="home-hero-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 ring-1">
-                    1. Elige universo
+                    <span className="home-hero-step-num">①</span> Elige universo
                   </span>
+                  <span className="home-hero-step-arrow">→</span>
                   <span className="home-hero-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 ring-1">
-                    2. Agrega tu bolsa
+                    <span className="home-hero-step-num">②</span> Agrega tu bolsa
                   </span>
+                  <span className="home-hero-step-arrow">→</span>
                   <span className="home-hero-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 ring-1">
-                    3. Finaliza en Shopify
+                    <span className="home-hero-step-num">③</span> Finaliza en Shopify
                   </span>
                 </div>
 
-                {/* mini stats */}
-                <div className="home-hero-stats flex flex-wrap items-center justify-center gap-3 pt-1 text-xs">
+                {/* Trust badges */}
+                <div className="home-hero-trust flex flex-wrap items-center justify-center gap-2 text-xs">
                   <span className="home-hero-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 ring-1">
-                    <CheckCircleIcon className="home-hero-pill-icon h-3.5 w-3.5" /> Pago seguro Shopify
+                    <ShieldCheckIcon className="home-hero-pill-icon h-3.5 w-3.5" /> Pago seguro Shopify
                   </span>
                   <span className="home-hero-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 ring-1">
                     <FireIcon className="h-3.5 w-3.5 text-orange-500" /> Rarezas: Común → Legendaria
@@ -94,10 +99,14 @@ export default function Home(): React.JSX.Element {
               </CardContent>
             </Card>
 
-            {/* ── Universo cards (client — broadcasts universe on action click) ── */}
-            <UniverseCards />
+            {/* ── Universo cards ── */}
+            <LazySection>
+              <UniverseCards />
+            </LazySection>
 
-            <ShopifyBuyExperience />
+            <LazySection>
+              <ShopifyBuyExperience />
+            </LazySection>
           </div>
         </main>
       </div>
