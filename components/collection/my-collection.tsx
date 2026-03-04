@@ -165,21 +165,33 @@ export function MyCollection() {
           />
         )}
 
-        <div className="text-center space-y-4 py-12">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-[#eef5df]">
-            <SparklesIcon className="h-10 w-10 text-[#4e6f2a]" />
+        {/* Back */}
+        <div>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm font-medium text-[var(--ink-500)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]"
+          >
+            <ChevronLeftIcon className="h-4 w-4" /> Volver
+          </Link>
+        </div>
+
+        <div className="flex flex-col items-center gap-5 py-10 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-[#eef5df]">
+            <LockClosedIcon className="h-7 w-7 text-[#4e6f2a]" />
           </div>
-          <h2 className="font-title text-3xl text-[var(--ink-900)]">Mi Colección DOFLINS</h2>
-          <p className="mx-auto max-w-sm text-sm text-[var(--ink-600)]">
-            Rastrea qué figuras has conseguido, cuánto te falta y comparte tu progreso.
-            Inicia sesión para guardar tu avance.
-          </p>
+          <div className="space-y-2">
+            <h2 className="font-title text-2xl font-bold text-[var(--ink-900)]">Tu colección te espera</h2>
+            <p className="mx-auto max-w-xs text-sm text-[var(--ink-500)]">
+              Inicia sesión para ver qué figuras has conseguido, cuánto te falta y compartir tu progreso.
+            </p>
+          </div>
           <button
             onClick={() => setIsAuthModalOpen(true)}
-            className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] px-8 py-3 text-sm font-bold text-white shadow-md hover:opacity-90 transition"
+            className="inline-flex items-center gap-2 rounded-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] px-7 py-2.5 text-sm font-bold text-white shadow-md transition hover:opacity-90 active:scale-95"
           >
-            <SparklesIcon className="h-4 w-4" /> Inicia sesión gratis
+            <SparklesIcon className="h-4 w-4" /> Iniciar sesión gratis
           </button>
+          <p className="text-xs text-[var(--ink-400)]">Gratis · Solo con Google · Sin contraseña</p>
         </div>
       </div>
     );

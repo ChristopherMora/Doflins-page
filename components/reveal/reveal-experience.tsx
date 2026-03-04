@@ -12,8 +12,7 @@ import {
   ChevronRightIcon,
   CubeIcon,
   FireIcon,
-  FunnelIcon,
-  GlobeAltIcon,
+    GlobeAltIcon,
   InformationCircleIcon,
   MagnifyingGlassIcon,
   MapIcon,
@@ -412,6 +411,7 @@ export function RevealExperience(): React.JSX.Element {
   const [selectedDoflin, setSelectedDoflin] = useState<CollectionItemDTO | null>(null);
   const [ownedIds, setOwnedIds] = useState<number[]>([]);
   const [brokenModalImageIds, setBrokenModalImageIds] = useState<number[]>([]);
+  const [brokenVariantImageIds, setBrokenVariantImageIds] = useState<Set<number>>(new Set());
   const [collection, setCollection] = useState<CollectionItemDTO[]>([]);
   const [isLoadingCollection, setIsLoadingCollection] = useState(true);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(initialQuery);
@@ -1211,68 +1211,73 @@ export function RevealExperience(): React.JSX.Element {
                   <span className="sr-only">Abrir menú</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="bg-[var(--surface-100)]">
-                <SheetHeader>
-                  <SheetTitle>DOFLINS</SheetTitle>
-                  <SheetDescription>Navegación rápida</SheetDescription>
-                </SheetHeader>
-                <div className="space-y-2">
-                  <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("catalogo")}>
-                      <SparklesIcon className="h-4 w-4" /> Catálogo
-                    </Button>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Link href="/#compras" className="w-full">
-                      <Button variant="secondary" className="w-full justify-start">
-                        <ShoppingCartIcon className="h-4 w-4" /> Tienda
-                      </Button>
-                    </Link>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => scrollToSection("plataforma")}>
-                      <RectangleStackIcon className="h-4 w-4" /> Colección
-                    </Button>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => switchUniverse("animals", "menu", "universo-activo")}>
-                      <CubeIcon className="h-4 w-4" /> Animals
-                    </Button>
-                  </SheetClose>
-                  <SheetClose asChild>
-                    <Button variant="secondary" className="w-full justify-start" onClick={() => switchUniverse("multiverse", "menu", "universo-activo")}>
-                      <BoltIcon className="h-4 w-4" /> Multiverse
-                    </Button>
-                  </SheetClose>
-                  <div className="!mt-4 border-t border-black/10 pt-2">
-                    {isAuthenticatedViewer ? (
-                      <>
-                        {viewerEmail ? (
-                          <p className="mb-2 truncate px-3 text-xs text-[var(--ink-600)]">{viewerEmail}</p>
-                        ) : null}
-                        <SheetClose asChild>
-                          <Button variant="ghost" className="w-full justify-start" onClick={() => void handleUserLogout()}>
-                            Cerrar sesión
-                          </Button>
-                        </SheetClose>
-                      </>
-                    ) : (
-                      <SheetClose asChild>
-                        <Button variant="secondary" className="w-full justify-start" onClick={() => void handleUserLogin()}>
-                          Iniciar sesión
-                        </Button>
-                      </SheetClose>
-                    )}
-                    {isAdminViewer ? (
-                      <SheetClose asChild>
-                        <Link href="/admin/doflins">
-                          <Button variant="ghost" className="w-full justify-start">
-                            <ShieldCheckIcon className="h-4 w-4" /> Admin
-                          </Button>
+              <SheetContent side="right" className="flex w-72 flex-col gap-0 bg-[var(--background)] p-0">
+                {/* Header */}
+                <div className="border-b border-black/[0.07] px-5 py-5">
+                  <SheetTitle className="font-title text-xl font-extrabold tracking-tight text-[var(--ink-900)]">DOFLINS</SheetTitle>
+                  <SheetDescription className="mt-0.5 text-xs text-[var(--ink-400)]">Navegación rápida</SheetDescription>
+                </div>
+
+                {/* Nav items */}
+                <nav className="flex flex-col gap-0.5 px-3 py-3">
+                  {[
+                    { icon: SparklesIcon, label: "Catálogo", onClick: () => scrollToSection("catalogo") },
+                    { icon: ShoppingCartIcon, label: "Tienda", href: "/#compras" },
+                    { icon: RectangleStackIcon, label: "Colección", onClick: () => scrollToSection("plataforma") },
+                  ].map(({ icon: Icon, label, onClick, href }) => (
+                    <SheetClose asChild key={label}>
+                      {href ? (
+                        <Link href={href} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-700)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)] active:scale-[0.98]">
+                          <Icon className="h-4 w-4 shrink-0 text-[var(--ink-400)]" />{label}
                         </Link>
+                      ) : (
+                        <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-700)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)] active:scale-[0.98]">
+                          <Icon className="h-4 w-4 shrink-0 text-[var(--ink-400)]" />{label}
+                        </button>
+                      )}
+                    </SheetClose>
+                  ))}
+
+                  <p className="mt-2 px-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--ink-400)]">Universo</p>
+                  {[
+                    { icon: CubeIcon, label: "Animals", emoji: "🌿", onClick: () => switchUniverse("animals", "menu", "universo-activo") },
+                    { icon: BoltIcon, label: "Multiverse", emoji: "⚡", onClick: () => switchUniverse("multiverse", "menu", "universo-activo") },
+                  ].map(({ icon: Icon, label, emoji, onClick }) => (
+                    <SheetClose asChild key={label}>
+                      <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-700)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)] active:scale-[0.98]">
+                        <span className="text-base leading-none">{emoji}</span>{label}
+                      </button>
+                    </SheetClose>
+                  ))}
+                </nav>
+
+                {/* Auth footer */}
+                <div className="mt-auto border-t border-black/[0.07] px-3 py-3">
+                  {isAuthenticatedViewer ? (
+                    <>
+                      {viewerEmail ? (
+                        <p className="mb-1.5 truncate px-3 text-[11px] text-[var(--ink-400)]">{viewerEmail}</p>
+                      ) : null}
+                      <SheetClose asChild>
+                        <button type="button" onClick={() => void handleUserLogout()} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-600)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]">
+                          Cerrar sesión
+                        </button>
                       </SheetClose>
-                    ) : null}
-                  </div>
+                    </>
+                  ) : (
+                    <SheetClose asChild>
+                      <button type="button" onClick={() => void handleUserLogin()} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-700)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]">
+                        Iniciar sesión
+                      </button>
+                    </SheetClose>
+                  )}
+                  {isAdminViewer ? (
+                    <SheetClose asChild>
+                      <Link href="/admin/doflins" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-600)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]">
+                        <ShieldCheckIcon className="h-4 w-4 shrink-0 text-[var(--ink-400)]" /> Admin
+                      </Link>
+                    </SheetClose>
+                  ) : null}
                 </div>
               </SheetContent>
             </Sheet>
@@ -1478,51 +1483,53 @@ export function RevealExperience(): React.JSX.Element {
           </div>
         </div>
 
-        <Card className={`mb-4 ${activeTheme.panelCard}`}>
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <p className="text-sm text-[var(--ink-700)]">
-              Estás explorando <span className="font-semibold text-[var(--ink-900)]">{activeConfig.label}</span>. Comprar desde aquí abre packs del
-              mismo universo.
-            </p>
-            <Button asChild size="sm" className={activeTheme.primaryButton}>
-              <a
-                href={shopUrl}
-                onClick={() => handlePurchaseIntent({ source: "catalog_universe_buy", packSize: 15 })}
-              >
-                <ShoppingCartIcon className="h-4 w-4" /> Comprar {activeConfig.label} x15
-              </a>
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="mb-3 flex items-center justify-between gap-3 px-1">
+          <p className="text-xs text-[var(--ink-500)]">
+            {filteredCollection.length > 0 ? <><span className="font-semibold text-[var(--ink-700)]">{filteredCollection.length}</span> figuras en {activeConfig.label}</> : null}
+          </p>
+          <Button asChild size="sm" variant="secondary" className="shrink-0">
+            <a href={shopUrl} onClick={() => handlePurchaseIntent({ source: "catalog_universe_buy", packSize: 15 })}>
+              <ShoppingCartIcon className="h-3.5 w-3.5" /> Comprar x15
+            </a>
+          </Button>
+        </div>
 
         <Card className={`sticky top-0 z-20 backdrop-blur-sm ${activeTheme.panelCard}`}>
-          <CardContent className="space-y-5 p-5">
-            <div className="flex flex-wrap gap-2" role="tablist" aria-label="Universo">
-              <Button
-                role="tab"
-                aria-selected={activeUniverse === "animals"}
-                size="sm"
-                className={activeUniverse === "animals" ? activeTheme.primaryButton : undefined}
-                variant={activeUniverse === "animals" ? "primary" : "secondary"}
-                onClick={() => switchUniverse("animals", "catalog_toggle")}
-              >
-                Mostrar Animals
-              </Button>
-              <Button
-                role="tab"
-                aria-selected={activeUniverse === "multiverse"}
-                size="sm"
-                className={activeUniverse === "multiverse" ? activeTheme.primaryButton : undefined}
-                variant={activeUniverse === "multiverse" ? "primary" : "secondary"}
-                onClick={() => switchUniverse("multiverse", "catalog_toggle")}
-              >
-                Mostrar Multiverse
-              </Button>
-            </div>
-
-            <div className="grid gap-3 lg:grid-cols-[1fr_auto] lg:items-center">
-              <div className="relative">
-                <MagnifyingGlassIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-600)]" />
+          <CardContent className="space-y-3 p-3 sm:p-4">
+            {/* Universe tabs + search in one row on lg */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              {/* Universe segmented control */}
+              <div className="flex shrink-0 overflow-hidden rounded-full border border-black/[0.08] bg-black/[0.04] p-0.5">
+                <button
+                  role="tab"
+                  aria-selected={activeUniverse === "animals"}
+                  type="button"
+                  onClick={() => switchUniverse("animals", "catalog_toggle")}
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
+                    activeUniverse === "animals"
+                      ? `${activeTheme.primaryButton} text-white shadow-sm`
+                      : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"
+                  }`}
+                >
+                  🌿 Animals
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={activeUniverse === "multiverse"}
+                  type="button"
+                  onClick={() => switchUniverse("multiverse", "catalog_toggle")}
+                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
+                    activeUniverse === "multiverse"
+                      ? `${activeTheme.primaryButton} text-white shadow-sm`
+                      : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"
+                  }`}
+                >
+                  ⚡ Multiverse
+                </button>
+              </div>
+              {/* Search */}
+              <div className="relative flex-1">
+                <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-400)]" />
                 <Input
                   value={searchQuery}
                   onChange={(event) => {
@@ -1530,29 +1537,27 @@ export function RevealExperience(): React.JSX.Element {
                     setSearchQuery(nextQuery);
                     setVisiblePages(1);
                   }}
-                  placeholder="Buscar por nombre, serie o número"
-                  className="pl-10 pr-8"
+                  placeholder="Buscar…"
+                  className="pl-9 pr-8"
                 />
                 {searchQuery ? (
                   <button
                     type="button"
                     aria-label="Limpiar búsqueda"
                     onClick={() => { setSearchQuery(""); setDebouncedSearchQuery(""); setVisiblePages(1); }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-[var(--ink-600)] transition hover:text-[var(--ink-900)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full p-0.5 text-[var(--ink-400)] transition hover:text-[var(--ink-900)]"
                   >
                     <XMarkIcon className="h-4 w-4" />
                   </button>
                 ) : null}
               </div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-[var(--ink-600)]">
-                <FunnelIcon className="h-4 w-4" /> Rareza
-              </div>
             </div>
 
+            {/* Rarity pills */}
             <div
               role="tablist"
               aria-label="Filtro de rareza"
-              className="-mx-1 flex flex-nowrap gap-1.5 overflow-x-auto px-1 pb-1 sm:flex-wrap sm:overflow-visible"
+              className="-mx-1 flex flex-nowrap gap-1.5 overflow-x-auto px-1 pb-0.5 sm:flex-wrap sm:overflow-visible"
             >
               {RARITY_FILTER_OPTIONS.map((option) => {
                 const isActive = rarityFilter === option.value;
@@ -2006,38 +2011,39 @@ export function RevealExperience(): React.JSX.Element {
           }
         }}
       >
-        <DialogContent className="w-[min(96vw,960px)] gap-0 overflow-hidden p-0">
+        <DialogContent className="w-[min(96vw,960px)] max-h-[92svh] gap-0 overflow-y-auto p-0 md:overflow-hidden">
           {selectedDoflin ? (
             <>
-              {/* Prev / Next */}
-              {activeCatalogCards.length > 1 ? (
-                <div className="pointer-events-none absolute left-0 right-0 top-1/2 z-50 flex -translate-y-1/2 items-center justify-between px-2 md:px-3">
-                  <button type="button" aria-label="Doflin anterior" disabled={selectedDoflinIndexInCatalog <= 0}
-                    onClick={() => { const prev = activeCatalogCards[selectedDoflinIndexInCatalog - 1]; if (prev) setSelectedDoflin(prev); }}
-                    className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-lg ring-1 ring-black/10 transition hover:bg-white disabled:opacity-30">
-                    <ChevronLeftIcon className="h-5 w-5 text-[var(--ink-900)]" />
-                  </button>
-                  <button type="button" aria-label="Doflin siguiente" disabled={selectedDoflinIndexInCatalog >= activeCatalogCards.length - 1}
-                    onClick={() => { const next = activeCatalogCards[selectedDoflinIndexInCatalog + 1]; if (next) setSelectedDoflin(next); }}
-                    className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full bg-white/90 shadow-lg ring-1 ring-black/10 transition hover:bg-white disabled:opacity-30">
-                    <ChevronRightIcon className="h-5 w-5 text-[var(--ink-900)]" />
-                  </button>
-                </div>
-              ) : null}
-
               <div className="flex flex-col">
                 {/* ─── TOP ROW: left image + right info ─── */}
                 <div className={`grid gap-0 ${selectedDoflinHas3DModel ? "md:grid-cols-[1.1fr_0.9fr]" : "md:grid-cols-[1fr_1fr]"}`}>
 
                   {/* LEFT — image panel */}
-                  <div className={`relative flex min-h-[380px] items-center justify-center overflow-hidden ${
+                  <div className={`relative flex min-h-[260px] items-center justify-center overflow-hidden md:min-h-[400px] ${
                     selectedPurchaseUniverse === "multiverse"
-                      ? "bg-[linear-gradient(145deg,#0f0c29,#302b63,#24243e)]"
-                      : "bg-[linear-gradient(145deg,#0a1a0a,#1a3a1a,#2d5a2d)]"
+                      ? "bg-[linear-gradient(145deg,#111028,#1e1c48,#262450)]"
+                      : "bg-[linear-gradient(145deg,#101410,#182018,#1e2a1e)]"
                   }`}>
+                    {/* Prev / Next — sólo sobre el panel imagen */}
+                    {activeCatalogCards.length > 1 ? (
+                      <>
+                        <button type="button" aria-label="Doflin anterior"
+                          disabled={selectedDoflinIndexInCatalog <= 0}
+                          onClick={() => { const prev = activeCatalogCards[selectedDoflinIndexInCatalog - 1]; if (prev) setSelectedDoflin(prev); }}
+                          className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/30 disabled:opacity-20 active:scale-95">
+                          <ChevronLeftIcon className="h-4 w-4" />
+                        </button>
+                        <button type="button" aria-label="Doflin siguiente"
+                          disabled={selectedDoflinIndexInCatalog >= activeCatalogCards.length - 1}
+                          onClick={() => { const next = activeCatalogCards[selectedDoflinIndexInCatalog + 1]; if (next) setSelectedDoflin(next); }}
+                          className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/30 disabled:opacity-20 active:scale-95">
+                          <ChevronRightIcon className="h-4 w-4" />
+                        </button>
+                      </>
+                    ) : null}
                     {/* Decorative glow orb */}
-                    <div className={`pointer-events-none absolute left-1/2 top-1/2 h-72 w-72 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[80px] opacity-40 ${
-                      selectedPurchaseUniverse === "multiverse" ? "bg-indigo-500" : "bg-emerald-400"
+                    <div className={`pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] opacity-25 ${
+                      selectedPurchaseUniverse === "multiverse" ? "bg-indigo-400" : "bg-emerald-600"
                     }`} />
 
                     {/* Universe label */}
@@ -2055,16 +2061,15 @@ export function RevealExperience(): React.JSX.Element {
                         field-of-view={selectedDoflinModelConfig?.fieldOfView ?? "28deg"}
                         shadow-intensity="0.7" exposure="1.2"
                         camera-controls auto-rotate interaction-prompt="none"
-                        className="relative z-10 h-[380px] w-full"
+                        className="relative z-10 h-[260px] w-full md:h-[400px]"
                         style={{ background: "transparent", display: "block" }}
                       />
                     ) : (
-                      <div className="relative z-10 flex flex-col items-center gap-4 p-8">
+                      <div className="relative z-10 flex flex-col items-center gap-3 p-5 md:gap-4 md:p-8">
                         {/* Figure card */}
-                        <div className="relative flex h-[280px] w-[220px] items-center justify-center overflow-hidden rounded-[2rem] shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_32px_64px_rgba(0,0,0,0.5)]">
-                          {/* inner glow border */}
-                          <div className="pointer-events-none absolute inset-0 rounded-[2rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)]" />
-                          <div className="pointer-events-none absolute inset-x-12 bottom-4 h-6 rounded-full bg-black/40 blur-xl" />
+                        <div className="relative flex h-[200px] w-[160px] items-center justify-center overflow-hidden rounded-[1.5rem] shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_24px_48px_rgba(0,0,0,0.45)] md:h-[260px] md:w-[205px] md:rounded-[2rem]">
+                          <div className="pointer-events-none absolute inset-0 rounded-[1.5rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] md:rounded-[2rem]" />
+                          <div className="pointer-events-none absolute inset-x-10 bottom-3 h-5 rounded-full bg-black/40 blur-xl" />
                           <Image
                             src={selectedDoflinImageSrc}
                             alt={selectedDoflin.name}
@@ -2093,9 +2098,9 @@ export function RevealExperience(): React.JSX.Element {
                   </div>
 
                   {/* RIGHT — info panel */}
-                  <div className="flex max-h-[65vh] flex-col overflow-hidden bg-white md:max-h-none">
+                  <div className="flex flex-col bg-white md:max-h-[92svh] md:overflow-hidden">
                     {/* Scrollable body */}
-                    <div className="flex flex-1 flex-col gap-4 overflow-y-auto p-6">
+                    <div className="flex flex-1 flex-col gap-4 p-5 md:overflow-y-auto md:p-6">
                       {/* Header */}
                       <div className="flex items-start justify-between gap-3 pr-6">
                         <div>
@@ -2233,14 +2238,35 @@ export function RevealExperience(): React.JSX.Element {
                           >
                             {/* Rarity accent bar on top */}
                             <div className="h-1 w-full" style={{ backgroundColor: vConfig.color }} />
-                            {/* Image */}
-                            <div className={`relative h-[80px] w-full overflow-hidden`} style={{ backgroundColor: vConfig.softColor }}>
-                              <Image
-                                src={variant.imageUrl || FALLBACK_DOFLIN_IMAGE}
-                                alt={variant.name} fill
-                                className="object-cover transition duration-200 group-hover:scale-[1.06]"
-                                unoptimized
-                              />
+                            {/* Image or placeholder */}
+                            <div className="relative h-[80px] w-full overflow-hidden" style={{ backgroundColor: vConfig.softColor }}>
+                              {brokenVariantImageIds.has(variant.id) || !variant.imageUrl ? (
+                                <div className="flex h-full w-full flex-col items-center justify-center gap-1 opacity-55">
+                                  <svg viewBox="0 0 32 32" className="h-9 w-9" fill="none" style={{ color: vConfig.color }}>
+                                    {/* Hoja con nervadura */}
+                                    <path d="M16 28 C16 28 5 22 5 13 C5 7 10 3 16 3 C22 3 27 7 27 13 C27 22 16 28 16 28Z" fill="currentColor" opacity="0.18"/>
+                                    <path d="M16 28 C16 28 5 22 5 13 C5 7 10 3 16 3 C22 3 27 7 27 13 C27 22 16 28 16 28Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+                                    <path d="M16 28 L16 6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.7"/>
+                                    <path d="M16 14 C12 11 9 11 7 12" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                    <path d="M16 14 C20 11 23 11 25 12" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                    <path d="M16 19 C13 17 10 17 8 18" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                    <path d="M16 19 C19 17 22 17 24 18" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                  </svg>
+                                </div>
+                              ) : (
+                                <Image
+                                  src={variant.imageUrl}
+                                  alt={variant.name}
+                                  fill
+                                  className="object-cover transition duration-200 group-hover:scale-[1.06]"
+                                  unoptimized
+                                  onError={() => setBrokenVariantImageIds((prev) => {
+                                    const next = new Set(prev);
+                                    next.add(variant.id);
+                                    return next;
+                                  })}
+                                />
+                              )}
                               {isCurrent ? (
                                 <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full shadow-sm" style={{ backgroundColor: "var(--brand-primary)" }}>
                                   <CheckCircleIcon className="h-3.5 w-3.5 text-white" />
@@ -2294,32 +2320,40 @@ export function RevealExperience(): React.JSX.Element {
         </DialogContent>
       </Dialog>
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/10 bg-[var(--surface-100)]/95 px-4 py-3 backdrop-blur md:hidden">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-2">
-          <div className="flex gap-2">
-            {BUY_PACK_OPTIONS.map((pack) => (
-              <Button
-                key={pack.packSize}
-                size="sm"
-                variant={selectedPackSize === pack.packSize ? "primary" : "secondary"}
-                className={selectedPackSize === pack.packSize ? activeTheme.primaryButton : "flex-1"}
-                onClick={() => setSelectedPackSize(pack.packSize)}
-              >
-                x{pack.packSize}
-              </Button>
-            ))}
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.08] bg-[var(--background)]/95 px-3 pb-[calc(env(safe-area-inset-bottom)+6px)] pt-2.5 backdrop-blur-md md:hidden">
+        <div className="mx-auto flex w-full max-w-lg items-center gap-2">
+          {/* Pack size chips */}
+          <div className="flex shrink-0 gap-1">
+            {BUY_PACK_OPTIONS.map((pack) => {
+              const isSelected = selectedPackSize === pack.packSize;
+              return (
+                <button
+                  key={pack.packSize}
+                  type="button"
+                  onClick={() => setSelectedPackSize(pack.packSize)}
+                  className={`relative flex h-9 min-w-[48px] items-center justify-center rounded-full px-3 text-xs font-bold transition-all active:scale-95 ${
+                    isSelected
+                      ? `${activeTheme.primaryButton} text-white shadow-sm`
+                      : "bg-black/[0.06] text-[var(--ink-700)] hover:bg-black/[0.1]"
+                  }`}
+                >
+                  ×{pack.packSize}
+                  {pack.packSize === 15 && !isSelected ? (
+                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[var(--brand-primary)]" />
+                  ) : null}
+                </button>
+              );
+            })}
           </div>
-          <Button asChild className={`h-11 w-full ${activeTheme.primaryButton}`}>
+
+          {/* Buy CTA */}
+          <Button asChild className={`h-10 flex-1 ${activeTheme.primaryButton}`}>
             <a
               href={shopUrl}
-              onClick={() =>
-                handlePurchaseIntent({
-                  source: "sticky_mobile_buy",
-                  packSize: selectedPackSize,
-                })
-              }
+              onClick={() => handlePurchaseIntent({ source: "sticky_mobile_buy", packSize: selectedPackSize })}
             >
-              <ShoppingCartIcon className="h-5 w-5" /> Comprar {activeConfig.label} x{selectedPackSize}
+              <ShoppingCartIcon className="h-4 w-4 shrink-0" />
+              <span className="truncate">Comprar ×{selectedPackSize}</span>
             </a>
           </Button>
         </div>

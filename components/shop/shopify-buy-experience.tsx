@@ -147,6 +147,12 @@ const DROP_TIER_PROBABILITY: Record<DropTier, number> = {
   epic: 15,
   legendary: 5,
 };
+const DROP_TIER_COLORS: Record<DropTier, string> = {
+  common: "#7a8070",
+  special: "#4a7a8a",
+  epic: "#a06040",
+  legendary: "#a07830",
+};
 
 interface ShopVisualTheme {
   shellClassName: "ink-light" | "ink-light-blue";
@@ -556,6 +562,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const [productsError, setProductsError] = useState<string | null>(null);
   const [productsErrorCode, setProductsErrorCode] = useState<string | null>(null);
   const [gridAnimKey, setGridAnimKey] = useState(0);
+  const [brokenShowcaseIds, setBrokenShowcaseIds] = useState<Set<number>>(new Set());
   const [giftNote, setGiftNote] = useState("");
   const [shopSearch, setShopSearch] = useState("");
   const [mutatingLineIds, setMutatingLineIds] = useState<Set<string>>(new Set());
@@ -2430,17 +2437,26 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       return (
                         <article key={`catalog-showcase-${activeUniverse}-${item.id}`} className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                           <div className="relative aspect-square bg-[var(--shop-image-panel-bg)]">
-                            {item.imageUrl ? (
+                            {item.imageUrl && !brokenShowcaseIds.has(item.id) ? (
                               <Image
                                 src={item.imageUrl}
                                 alt={item.name}
                                 fill
                                 className="object-cover"
                                 unoptimized
+                                onError={() => setBrokenShowcaseIds(prev => new Set(prev).add(item.id))}
                               />
                             ) : (
-                              <div className="grid h-full w-full place-items-center text-xs text-[var(--ink-600)]">
-                                <PhotoIcon className="h-5 w-5" />
+                              <div className="flex h-full w-full flex-col items-center justify-center gap-1 opacity-55">
+                                <svg viewBox="0 0 32 32" className="h-9 w-9" fill="none" style={{ color: DROP_TIER_COLORS[tier] }}>
+                                  <path d="M16 28 C16 28 5 22 5 13 C5 7 10 3 16 3 C22 3 27 7 27 13 C27 22 16 28 16 28Z" fill="currentColor" opacity="0.18"/>
+                                  <path d="M16 28 C16 28 5 22 5 13 C5 7 10 3 16 3 C22 3 27 7 27 13 C27 22 16 28 16 28Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+                                  <path d="M16 28 L16 6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.7"/>
+                                  <path d="M16 14 C12 11 9 11 7 12" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                  <path d="M16 14 C20 11 23 11 25 12" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                  <path d="M16 19 C13 17 10 17 8 18" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                  <path d="M16 19 C19 17 22 17 24 18" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                </svg>
                               </div>
                             )}
                           </div>
