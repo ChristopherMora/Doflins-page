@@ -1387,55 +1387,16 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           boxShadow: "var(--shop-shell-shadow)",
         }}
       >
-        <CardContent className="space-y-6 p-6 sm:p-8">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="space-y-3">
-              <Badge className="w-fit bg-[var(--shop-chip-bg)] text-[var(--ink-900)] ring-1 ring-[var(--shop-chip-ring)]">
-                <ShoppingCartIcon className="h-4 w-4" /> Pago 100% seguro
-              </Badge>
-              <h3 className="font-title text-3xl leading-tight text-[var(--ink-900)] sm:text-4xl">Compra tus packs DOFLINS</h3>
-              <p className="max-w-2xl text-sm text-[var(--ink-700)] sm:text-base">
-                Elige tu pack, agrégalo al carrito y paga de forma segura. Nunca guardamos tu tarjeta.
+        <CardContent className="space-y-5 p-6 sm:p-8">
+          {/* ── Fila 1: título + carrito ── */}
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="font-title text-3xl leading-tight text-[var(--ink-900)] sm:text-4xl">
+                Compra tus packs DOFLINS
+              </h3>
+              <p className="mt-1 max-w-xl text-sm text-[var(--ink-600)]">
+                Elige tu pack, agrégalo al carrito y paga de forma segura.
               </p>
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  className="h-11 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]"
-                  disabled={stickyCtaDisabled}
-                  onClick={addRecommendedPack}
-                >
-                  <ShoppingCartIcon className="h-4 w-4" />
-                  {stickyVariant ? `${quickBuyLabel} · ${formatMoney(stickyVariant.price)}` : quickBuyLabel}
-                </Button>
-                <Button asChild variant="secondary" className="h-11">
-                  <Link href={activeCatalogHref}>
-                    <Squares2X2Icon className="h-4 w-4" /> Ver catálogo oficial
-                  </Link>
-                </Button>
-              </div>
-              <div className="flex items-center gap-1.5 text-xs font-medium text-[var(--ink-600)]">
-                <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">1 · Universo</span>
-                <span className="text-[var(--ink-400)]">→</span>
-                <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">2 · Tu bolsa</span>
-                <span className="text-[var(--ink-400)]">→</span>
-                <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">3 · Shopify</span>
-              </div>
-              {FREE_GIFT_PROMO_LABEL || FREE_GIFT_MIN_SUBTOTAL ? (
-                <p className="inline-flex w-fit items-center gap-2 rounded-full bg-[var(--shop-chip-bg)] px-3 py-1 text-xs font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
-                  {FREE_GIFT_PROMO_LABEL || `Regalo gratis en compras desde ${formatCurrencyAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, pricingCurrencyCode)}`}
-                  {promoTimeLeft ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--shop-promo-timer-bg)] px-2 py-0.5 text-[var(--shop-promo-timer-text)]">
-                      <ClockIcon className="h-3 w-3" />
-                      {promoTimeLeft}
-                    </span>
-                  ) : null}
-                </p>
-              ) : null}
-              <div className="flex flex-wrap items-center gap-2 text-xs">
-                <WatchingBadge universe={activeUniverse} />
-                <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
-                  <LockClosedIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from)]" /> Pago seguro Shopify
-                </span>
-              </div>
             </div>
 
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
@@ -1742,6 +1703,55 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
             {/* ── Embedded Shopify Checkout ── */}
 
+          </div>
+
+          {/* ── Fila 2: CTAs ── */}
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              className="h-11 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]"
+              disabled={stickyCtaDisabled}
+              onClick={addRecommendedPack}
+            >
+              <ShoppingCartIcon className="h-4 w-4" />
+              {stickyVariant ? `${quickBuyLabel} · ${formatMoney(stickyVariant.price)}` : quickBuyLabel}
+            </Button>
+            <Button asChild variant="secondary" className="h-11">
+              <Link href={activeCatalogHref}>
+                <Squares2X2Icon className="h-4 w-4" /> Ver catálogo oficial
+              </Link>
+            </Button>
+          </div>
+
+          {/* ── Tira inferior: pasos + promo + trust ── */}
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--shop-chip-ring)] pt-4 text-xs">
+            {/* Steps */}
+            <div className="flex items-center gap-1.5 font-medium text-[var(--ink-600)]">
+              <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">1 · Universo</span>
+              <span className="text-[var(--ink-400)]">→</span>
+              <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">2 · Bolsa</span>
+              <span className="text-[var(--ink-400)]">→</span>
+              <span className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">3 · Shopify</span>
+            </div>
+
+            {/* Promo */}
+            {FREE_GIFT_PROMO_LABEL || FREE_GIFT_MIN_SUBTOTAL ? (
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
+                🎁 {FREE_GIFT_PROMO_LABEL || `Regalo gratis desde ${formatCurrencyAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, pricingCurrencyCode)}`}
+                {promoTimeLeft ? (
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shop-promo-timer-bg)] px-1.5 py-0.5 text-[var(--shop-promo-timer-text)]">
+                    <ClockIcon className="h-3 w-3" />{promoTimeLeft}
+                  </span>
+                ) : null}
+              </span>
+            ) : null}
+
+            {/* Trust */}
+            <div className="flex items-center gap-2 ml-auto">
+              <WatchingBadge universe={activeUniverse} />
+              <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
+                <LockClosedIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from)]" /> Pago seguro
+              </span>
+            </div>
           </div>
 
           {/* ── Universe selector ── */}
