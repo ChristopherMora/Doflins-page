@@ -811,27 +811,30 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   );
 
   const removeLine = useCallback(async (lineId: string) => {
-    setIsMutatingCart(true);
     setFeedbackMessage(null);
+    // Capture previous state and apply optimistic update in one step
+    let previousCart: ShopCart | null = null;
+    setCart((prev) => {
+      previousCart = prev;
+      if (!prev) return prev;
+      return { ...prev, lines: prev.lines.filter((l) => l.id !== lineId) };
+    });
     try {
       const response = await fetch("/api/cart/lines/remove", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          lineIds: [lineId],
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lineIds: [lineId] }),
       });
       const payload = await parseApiResponse<CartResponse>(response);
       if (!payload.cart) {
         throw new Error("No se pudo actualizar el carrito.");
       }
+      // Confirm with server response (updates totals, discounts, etc.)
       setCart(payload.cart);
     } catch (error) {
+      // Revert optimistic update
+      setCart(previousCart);
       setFeedbackMessage(error instanceof Error ? error.message : "No se pudo eliminar el item.");
-    } finally {
-      setIsMutatingCart(false);
     }
   }, []);
 
