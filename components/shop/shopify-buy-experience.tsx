@@ -86,7 +86,7 @@ const LIVE_REFRESH_MS_ENV = Number(process.env.NEXT_PUBLIC_SHOPIFY_LIVE_REFRESH_
 const LIVE_REFRESH_MS =
   Number.isFinite(LIVE_REFRESH_MS_ENV) && LIVE_REFRESH_MS_ENV >= 5_000 ? LIVE_REFRESH_MS_ENV : DEFAULT_LIVE_REFRESH_MS;
 const FREE_GIFT_PROMO_LABEL = process.env.NEXT_PUBLIC_FREE_GIFT_PROMO_LABEL?.trim() ?? "";
-const FREE_GIFT_MIN_SUBTOTAL_ENV = Number(process.env.NEXT_PUBLIC_FREE_GIFT_MIN_SUBTOTAL ?? 1200);
+const FREE_GIFT_MIN_SUBTOTAL_ENV = Number(process.env.NEXT_PUBLIC_FREE_GIFT_MIN_SUBTOTAL ?? 450);
 const FREE_GIFT_MIN_SUBTOTAL =
   Number.isFinite(FREE_GIFT_MIN_SUBTOTAL_ENV) && FREE_GIFT_MIN_SUBTOTAL_ENV > 0 ? FREE_GIFT_MIN_SUBTOTAL_ENV : null;
 const LOW_STOCK_THRESHOLD = 5;
@@ -1496,7 +1496,16 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     const isFreeLine = Number(line.pricePerUnit.amount) <= 0;
 
                     return (
-                      <article key={line.id} className="animate-catalog-fadein rounded-2xl border border-[#d7d7c3] bg-white/85 p-3">
+                      <article key={line.id} className={`animate-catalog-fadein rounded-2xl border p-3 ${
+                        isFreeLine
+                          ? "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)]"
+                          : "border-[#d7d7c3] bg-white/85"
+                      }`}>
+                        {isFreeLine ? (
+                          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[var(--shop-chip-text)]">
+                            <span>🎁</span> Regalo gratis — se agrega automáticamente al checkout
+                          </div>
+                        ) : null}
                         <div className="flex items-start justify-between gap-3">
                           <div className="flex items-start gap-3">
                             {line.imageUrl ? (
@@ -1520,7 +1529,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                                 ) : null}
                               </div>
                               <p className="text-xs text-[var(--ink-700)]">{line.variantTitle}</p>
-                              <p className="mt-1 text-sm text-[var(--ink-700)]">{formatMoney(line.lineTotal)}</p>
+                              <p className="mt-1 text-sm text-[var(--ink-700)]">{isFreeLine ? "$0.00" : formatMoney(line.lineTotal)}</p>
                               {(() => {
                                 const avail = getLineQtyAvailable(line.merchandiseId);
                                 return avail !== null && avail > 0 && avail <= 5 ? (
@@ -1531,16 +1540,21 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                               })()}
                             </div>
                           </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 px-2"
-                            disabled={isMutatingCart}
-                            onClick={() => void removeLine(line.id)}
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </Button>
+                          {!isFreeLine ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2"
+                              disabled={isMutatingCart}
+                              onClick={() => void removeLine(line.id)}
+                            >
+                              <TrashIcon className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <LockClosedIcon className="h-4 w-4 shrink-0 text-[var(--shop-chip-text)] opacity-60" />
+                          )}
                         </div>
+                        {!isFreeLine ? (
                         <div className="mt-2 flex items-center gap-2">
                           <Button
                             variant="secondary"
@@ -1562,6 +1576,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                             <PlusIcon className="h-4 w-4" />
                           </Button>
                         </div>
+                        ) : null}
                       </article>
                     );
                   })}

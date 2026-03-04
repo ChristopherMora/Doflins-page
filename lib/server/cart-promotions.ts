@@ -10,7 +10,7 @@ interface FreeGiftConfig {
 
 const DEFAULT_FREE_GIFT_QUANTITY = 1;
 const DEFAULT_MIN_PAID_ITEMS = 1;
-const DEFAULT_MIN_PAID_SUBTOTAL = 1200;
+const DEFAULT_MIN_PAID_SUBTOTAL = 450;
 
 function normalizeVariantId(value: string | undefined): string | null {
   const raw = value?.trim();
