@@ -29,11 +29,10 @@ import {
   Squares2X2Icon,
   TruckIcon,
   TrashIcon,
-  XMarkIcon,
 } from "@heroicons/react/24/solid";
 
 import type { ShopCart, ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
-import { broadcastUniverse } from "@/lib/universe-store";
+import { broadcastUniverse, onUniverseChange, type Universe } from "@/lib/universe-store";
 import { Badge } from "@/components/ui/badge";
 import { WatchingBadge } from "@/components/ui/watching-badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +47,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import type { CollectionItemDTO, Rarity } from "@/lib/types/doflin";
 
 interface ProductsResponse {
   status: "ok";
@@ -65,6 +65,11 @@ interface CartResponse {
 interface CheckoutResponse {
   status: "ok";
   checkoutUrl: string;
+}
+
+interface CollectionResponse {
+  status: "ok";
+  collection: CollectionItemDTO[];
 }
 
 type ApiError = Error & {
@@ -127,6 +132,109 @@ const TRUST_PROMISES = [
     icon: ClockIcon,
   },
 ] as const;
+type DropTier = "common" | "special" | "epic" | "legendary";
+
+const DROP_TIER_ORDER: DropTier[] = ["common", "special", "epic", "legendary"];
+const DROP_TIER_LABELS: Record<DropTier, string> = {
+  common: "Común",
+  special: "Especial",
+  epic: "Épica",
+  legendary: "Legendaria",
+};
+const DROP_TIER_PROBABILITY: Record<DropTier, number> = {
+  common: 50,
+  special: 30,
+  epic: 15,
+  legendary: 5,
+};
+
+interface ShopVisualTheme {
+  shellClassName: "ink-light" | "ink-light-blue";
+  shellBackground: string;
+  shellBorder: string;
+  shellShadow: string;
+  primaryFrom: string;
+  primaryTo: string;
+  chipBg: string;
+  chipText: string;
+  chipRing: string;
+  promoTimerBg: string;
+  promoTimerText: string;
+  supportChipHoverBg: string;
+  supportChipHoverBorder: string;
+  imagePanelBg: string;
+  imageOverlay: string;
+  imageFilter: string;
+  imageShadow: string;
+  addedBadgeBg: string;
+  modalUniverseBadgeBg: string;
+}
+
+const SHOP_VISUAL_THEMES: Record<Universe, ShopVisualTheme> = {
+  neutral: {
+    shellClassName: "ink-light",
+    shellBackground: "linear-gradient(145deg,#fffdf6,#eff5f1)",
+    shellBorder: "#d3d8ca",
+    shellShadow: "0 18px 38px rgba(58,74,66,0.18)",
+    primaryFrom: "#2f6f67",
+    primaryTo: "#429084",
+    chipBg: "#e2f2ed",
+    chipText: "#24564f",
+    chipRing: "#acd4cb",
+    promoTimerBg: "#cde9e1",
+    promoTimerText: "#1f5048",
+    supportChipHoverBg: "#ecf7f3",
+    supportChipHoverBorder: "#9ecbbf",
+    imagePanelBg: "linear-gradient(140deg,#eef6f2,#e2ede8)",
+    imageOverlay: "linear-gradient(180deg,rgba(42,77,71,0.04),rgba(38,72,68,0.2))",
+    imageFilter: "saturate(1.02) contrast(1.05)",
+    imageShadow: "0 14px 30px rgba(38,63,58,0.2)",
+    addedBadgeBg: "#2f6f67",
+    modalUniverseBadgeBg: "#2f6f67",
+  },
+  animals: {
+    shellClassName: "ink-light",
+    shellBackground: "linear-gradient(145deg,#fffbf0,#edf6e2)",
+    shellBorder: "#d7ce9f",
+    shellShadow: "0 18px 36px rgba(86,98,51,0.17)",
+    primaryFrom: "#4f7f2d",
+    primaryTo: "#76ab46",
+    chipBg: "#e7f5d6",
+    chipText: "#2f6020",
+    chipRing: "#bdd99a",
+    promoTimerBg: "#d0edb8",
+    promoTimerText: "#1f5412",
+    supportChipHoverBg: "#eef8df",
+    supportChipHoverBorder: "#afd586",
+    imagePanelBg: "linear-gradient(140deg,#f3f6e7,#e2ecd6)",
+    imageOverlay: "linear-gradient(180deg,rgba(50,85,30,0.03),rgba(45,79,27,0.16))",
+    imageFilter: "none",
+    imageShadow: "0 14px 30px rgba(35,43,22,0.19)",
+    addedBadgeBg: "#4f7f2d",
+    modalUniverseBadgeBg: "#4f7f2d",
+  },
+  multiverse: {
+    shellClassName: "ink-light-blue",
+    shellBackground: "linear-gradient(145deg,#f3f6ff,#e4ecff)",
+    shellBorder: "#c4d0f7",
+    shellShadow: "0 18px 38px rgba(60,80,163,0.22)",
+    primaryFrom: "#4360d2",
+    primaryTo: "#6f8bff",
+    chipBg: "#e3ebff",
+    chipText: "#2a3f97",
+    chipRing: "#b7c9fb",
+    promoTimerBg: "#d2dffe",
+    promoTimerText: "#1f3386",
+    supportChipHoverBg: "#eaf0ff",
+    supportChipHoverBorder: "#afc3f8",
+    imagePanelBg: "linear-gradient(140deg,#e8efff,#d9e4fe)",
+    imageOverlay: "linear-gradient(180deg,rgba(61,81,176,0.03),rgba(36,54,134,0.3))",
+    imageFilter: "saturate(1.23) hue-rotate(10deg) contrast(1.09) brightness(0.95)",
+    imageShadow: "0 14px 30px rgba(30,43,102,0.28)",
+    addedBadgeBg: "#4360d2",
+    modalUniverseBadgeBg: "#4360d2",
+  },
+};
 
 interface CartSnapshotLine {
   merchandiseId: string;
@@ -311,6 +419,39 @@ function getProductDescription(product: ShopProduct, universe: UniverseFilter): 
   return "Pack oficial del universo Multiverse con estética futurista y variantes especiales.";
 }
 
+function toUniverseFromSeries(series: string): UniverseFilter | null {
+  const normalized = series.trim().toLowerCase();
+  if (normalized.includes("animal")) {
+    return "animals";
+  }
+  if (normalized.includes("multiverse")) {
+    return "multiverse";
+  }
+  return null;
+}
+
+function toDropTier(rarity: Rarity): DropTier {
+  if (rarity === "COMMON") {
+    return "common";
+  }
+  if (rarity === "RARE") {
+    return "special";
+  }
+  if (rarity === "EPIC") {
+    return "epic";
+  }
+  return "legendary";
+}
+
+function formatCollectionPreviewName(item: CollectionItemDTO): string {
+  const base = item.baseModel.trim().replace(/^doflin\s+/i, "");
+  const variant = item.variantName.trim();
+  if (!variant || /^original$/i.test(variant)) {
+    return base;
+  }
+  return `${base} ${variant}`.trim();
+}
+
 function LazyCard({ children, skeleton }: { children: React.ReactNode; skeleton: React.ReactNode }): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
   const [visible, setVisible] = useState(false);
@@ -329,22 +470,39 @@ function LazyCard({ children, skeleton }: { children: React.ReactNode; skeleton:
 
 export function ShopifyBuyExperience(): React.JSX.Element {
   const [activeUniverse, setActiveUniverse] = useState<UniverseFilter>("animals");
+  const [visualUniverse, setVisualUniverse] = useState<Universe>("neutral");
 
-  // Pre-filtrar universo desde ?universe= en la URL (e.g. venido del reveal)
+  // Pre-filtrar universo desde ?universe= y escuchar cambios globales de universo
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const u = params.get("universe");
     if (u === "animals" || u === "multiverse") {
       setActiveUniverse(u);
+      setVisualUniverse(u);
+    } else {
+      setVisualUniverse("neutral");
     }
+
+    return onUniverseChange((nextUniverse) => {
+      setVisualUniverse(nextUniverse);
+      if (nextUniverse === "animals" || nextUniverse === "multiverse") {
+        setActiveUniverse(nextUniverse);
+        setGridAnimKey((current) => current + 1);
+        setShopSearch("");
+      }
+    });
   }, []);
 
-  // Broadcast universe changes so the site header and other components can react
+  // Broadcast visual universe so header/home stay in sync
   useEffect(() => {
-    broadcastUniverse(activeUniverse);
-  }, [activeUniverse]);
+    broadcastUniverse(visualUniverse);
+  }, [visualUniverse]);
 
   const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [collectionByUniverse, setCollectionByUniverse] = useState<Record<UniverseFilter, CollectionItemDTO[]>>({
+    animals: [],
+    multiverse: [],
+  });
   const [cart, setCart] = useState<ShopCart | null>(null);
   const [liveNewProducts, setLiveNewProducts] = useState<Record<UniverseFilter, string[]>>({
     animals: [],
@@ -373,6 +531,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const [showWishlistOnly, setShowWishlistOnly] = useState(false);
   const [isFabHovered, setIsFabHovered] = useState(false);
   const [showCartQR, setShowCartQR] = useState(false);
+  const [isLoadingCollectionPreview, setIsLoadingCollectionPreview] = useState(true);
   const knownProductIdsRef = useRef<Record<UniverseFilter, Set<string>>>({
     animals: new Set(),
     multiverse: new Set(),
@@ -380,6 +539,54 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const prevStockRef = useRef<Map<string, boolean>>(new Map());
   const liveRefreshInFlightRef = useRef(false);
   const snapshotRecoveryAttemptedRef = useRef(false);
+  const comprasSectionRef = useRef<HTMLElement | null>(null);
+
+  // Keep Home neutral at top, but once user enters shop section switch to an active purchase theme.
+  useEffect(() => {
+    const section = comprasSectionRef.current;
+    if (!section) {
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setVisualUniverse((previous) => (previous === "neutral" ? activeUniverse : previous));
+        }
+      },
+      { threshold: 0.18, rootMargin: "-8% 0px -55% 0px" },
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [activeUniverse]);
+
+  const visualTheme = SHOP_VISUAL_THEMES[visualUniverse];
+  const imageFilterStyle = useMemo(() => ({ filter: "var(--shop-image-filter)" } as React.CSSProperties), []);
+  const universeThemeVars = useMemo(
+    () =>
+      ({
+        "--shop-shell-bg": visualTheme.shellBackground,
+        "--shop-shell-border": visualTheme.shellBorder,
+        "--shop-shell-shadow": visualTheme.shellShadow,
+        "--shop-primary-from": visualTheme.primaryFrom,
+        "--shop-primary-to": visualTheme.primaryTo,
+        "--shop-chip-bg": visualTheme.chipBg,
+        "--shop-chip-text": visualTheme.chipText,
+        "--shop-chip-ring": visualTheme.chipRing,
+        "--shop-promo-timer-bg": visualTheme.promoTimerBg,
+        "--shop-promo-timer-text": visualTheme.promoTimerText,
+        "--shop-support-hover-bg": visualTheme.supportChipHoverBg,
+        "--shop-support-hover-border": visualTheme.supportChipHoverBorder,
+        "--shop-image-panel-bg": visualTheme.imagePanelBg,
+        "--shop-image-overlay": visualTheme.imageOverlay,
+        "--shop-image-filter": visualTheme.imageFilter,
+        "--shop-image-shadow": visualTheme.imageShadow,
+        "--shop-added-badge-bg": visualTheme.addedBadgeBg,
+        "--shop-modal-universe-badge-bg": visualTheme.modalUniverseBadgeBg,
+      }) as React.CSSProperties,
+    [visualTheme],
+  );
 
   const getProductQty = useCallback((productId: string): number => quantityByProduct[productId] ?? 1, [quantityByProduct]);
   const setProductQty = useCallback((productId: string, qty: number) => {
@@ -566,6 +773,59 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   useEffect(() => {
     void loadCart();
   }, [loadCart]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadCollectionPreview = async () => {
+      setIsLoadingCollectionPreview(true);
+      try {
+        const response = await fetch("/api/collection", {
+          method: "GET",
+          cache: "no-store",
+        });
+        const payload = await parseApiResponse<CollectionResponse>(response);
+        if (cancelled) {
+          return;
+        }
+
+        const grouped: Record<UniverseFilter, CollectionItemDTO[]> = {
+          animals: [],
+          multiverse: [],
+        };
+
+        for (const item of payload.collection) {
+          if (!item.active) {
+            continue;
+          }
+          const universe = toUniverseFromSeries(item.series);
+          if (!universe) {
+            continue;
+          }
+          grouped[universe].push(item);
+        }
+
+        setCollectionByUniverse(grouped);
+      } catch {
+        if (!cancelled) {
+          setCollectionByUniverse({
+            animals: [],
+            multiverse: [],
+          });
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingCollectionPreview(false);
+        }
+      }
+    };
+
+    void loadCollectionPreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Restore wishlist from localStorage on mount
   useEffect(() => {
@@ -975,6 +1235,14 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
   const stickyVariant = stickyProduct ? getSelectedVariant(stickyProduct) : null;
   const stickyCtaDisabled = isMutatingCart || !stickyProduct || !stickyVariant?.availableForSale;
+  const activeCatalogHref = `/reveal?universe=${activeUniverse}`;
+  const quickBuyLabel = stickyProduct ? `Comprar ${stickyProduct.title}` : "Comprar pack recomendado";
+  const addRecommendedPack = useCallback(() => {
+    if (!stickyProduct) {
+      return;
+    }
+    void addToCart(stickyProduct, 1);
+  }, [addToCart, stickyProduct]);
 
   const cartRecoveryLinks = useMemo(() => {
     if (!cart?.checkoutUrl) {
@@ -1049,6 +1317,48 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       (p) => p.title.toLowerCase().includes(q) || p.shortDescription.toLowerCase().includes(q),
     );
   }, [sortedProducts, shopSearch, showWishlistOnly, wishlist]);
+  const activeCollectionPreviewNames = useMemo(() => {
+    const sortedItems = [...collectionByUniverse[activeUniverse]].sort((a, b) => {
+      const tierA = DROP_TIER_ORDER.indexOf(toDropTier(a.rarity));
+      const tierB = DROP_TIER_ORDER.indexOf(toDropTier(b.rarity));
+      if (tierA !== tierB) {
+        return tierA - tierB;
+      }
+      return a.collectionNumber - b.collectionNumber;
+    });
+
+    const seen = new Set<string>();
+    const names: string[] = [];
+    for (const item of sortedItems) {
+      const next = formatCollectionPreviewName(item);
+      if (!next || seen.has(next)) {
+        continue;
+      }
+      seen.add(next);
+      names.push(next);
+    }
+    return names;
+  }, [activeUniverse, collectionByUniverse]);
+  const activeCollectionPreviewHead = useMemo(
+    () => activeCollectionPreviewNames.slice(0, 10),
+    [activeCollectionPreviewNames],
+  );
+  const activeCollectionPreviewRemaining = Math.max(0, activeCollectionPreviewNames.length - activeCollectionPreviewHead.length);
+  const activeCollectionShowcaseItems = useMemo(() => {
+    const sortedItems = [...collectionByUniverse[activeUniverse]].sort((a, b) => {
+      const tierA = DROP_TIER_ORDER.indexOf(toDropTier(a.rarity));
+      const tierB = DROP_TIER_ORDER.indexOf(toDropTier(b.rarity));
+      if (tierA !== tierB) {
+        return tierA - tierB;
+      }
+      return a.collectionNumber - b.collectionNumber;
+    });
+    return sortedItems.slice(0, 12);
+  }, [activeUniverse, collectionByUniverse]);
+  const activeCollectionShowcaseRemaining = Math.max(
+    0,
+    collectionByUniverse[activeUniverse].length - activeCollectionShowcaseItems.length,
+  );
 
   const productsCountLabel = `${products.length} pack${products.length === 1 ? "" : "s"}`;
   const selectedModalVariant = selectedProduct ? getSelectedVariant(selectedProduct) : null;
@@ -1060,25 +1370,64 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       forceRealtime: true,
     });
   }, [activeUniverse, loadProducts]);
+  const activateUniverse = useCallback((nextUniverse: UniverseFilter) => {
+    setActiveUniverse(nextUniverse);
+    setVisualUniverse(nextUniverse);
+    setGridAnimKey((current) => current + 1);
+    setShopSearch("");
+  }, []);
 
   return (
-    <section id="compras" className="space-y-5 pb-28 lg:pb-6">
-      <Card className="ink-light border border-[#d9cfa8] bg-[linear-gradient(145deg,#fffaf0,#f2f6e8)] shadow-[0_18px_36px_rgba(86,98,51,0.16)]">
+    <section id="compras" ref={comprasSectionRef} className="space-y-5 pb-28 lg:pb-6" style={universeThemeVars}>
+      <Card
+        className={`${visualTheme.shellClassName} border`}
+        style={{
+          borderColor: "var(--shop-shell-border)",
+          background: "var(--shop-shell-bg)",
+          boxShadow: "var(--shop-shell-shadow)",
+        }}
+      >
         <CardContent className="space-y-6 p-6 sm:p-8">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="space-y-3">
-              <Badge className="w-fit bg-[#e8efd8] text-[var(--ink-900)]">
+              <Badge className="w-fit bg-[var(--shop-chip-bg)] text-[var(--ink-900)] ring-1 ring-[var(--shop-chip-ring)]">
                 <ShoppingCartIcon className="h-4 w-4" /> Pago 100% seguro
               </Badge>
               <h3 className="font-title text-3xl leading-tight text-[var(--ink-900)] sm:text-4xl">Compra tus packs DOFLINS</h3>
               <p className="max-w-2xl text-sm text-[var(--ink-700)] sm:text-base">
                 Elige tu pack, agrégalo al carrito y paga de forma segura. Nunca guardamos tu tarjeta.
               </p>
+              <div className="flex flex-wrap items-center gap-2">
+                <Button
+                  className="h-11 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]"
+                  disabled={stickyCtaDisabled}
+                  onClick={addRecommendedPack}
+                >
+                  <ShoppingCartIcon className="h-4 w-4" />
+                  {stickyVariant ? `${quickBuyLabel} · ${formatMoney(stickyVariant.price)}` : quickBuyLabel}
+                </Button>
+                <Button asChild variant="secondary" className="h-11">
+                  <Link href={activeCatalogHref}>
+                    <Squares2X2Icon className="h-4 w-4" /> Ver catálogo oficial
+                  </Link>
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-2 text-xs font-semibold text-[var(--ink-700)]">
+                <span className="inline-flex items-center rounded-full border border-[var(--shop-chip-ring)] bg-white/85 px-3 py-1">
+                  1. Elige universo
+                </span>
+                <span className="inline-flex items-center rounded-full border border-[var(--shop-chip-ring)] bg-white/85 px-3 py-1">
+                  2. Agrega tu bolsa
+                </span>
+                <span className="inline-flex items-center rounded-full border border-[var(--shop-chip-ring)] bg-white/85 px-3 py-1">
+                  3. Finaliza en Shopify
+                </span>
+              </div>
               {FREE_GIFT_PROMO_LABEL || FREE_GIFT_MIN_SUBTOTAL ? (
-                <p className="inline-flex w-fit items-center gap-2 rounded-full bg-[#e8f5d8] px-3 py-1 text-xs font-semibold text-[#2f5c1f] ring-1 ring-[#bfd89b]">
+                <p className="inline-flex w-fit items-center gap-2 rounded-full bg-[var(--shop-chip-bg)] px-3 py-1 text-xs font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
                   {FREE_GIFT_PROMO_LABEL || `Regalo gratis en compras desde ${formatCurrencyAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, pricingCurrencyCode)}`}
                   {promoTimeLeft ? (
-                    <span className="inline-flex items-center gap-1 rounded-full bg-[#d0edb8] px-2 py-0.5 text-[#1e4f12]">
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[var(--shop-promo-timer-bg)] px-2 py-0.5 text-[var(--shop-promo-timer-text)]">
                       <ClockIcon className="h-3 w-3" />
                       {promoTimeLeft}
                     </span>
@@ -1087,10 +1436,10 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               ) : null}
               <div className="flex flex-wrap gap-2 text-xs">
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
-                  <CheckCircleIcon className="h-4 w-4 text-[var(--brand-primary)]" /> {productsCountLabel}
+                  <CheckCircleIcon className="h-4 w-4 text-[var(--shop-primary-from)]" /> {productsCountLabel}
                 </span>
                 <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-3 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
-                  <ClockIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Tu carrito se guarda solo
+                  <ClockIcon className="h-4 w-4 text-[var(--shop-primary-from)]" /> Tu carrito se guarda solo
                 </span>
                 <WatchingBadge universe={activeUniverse} />
               </div>
@@ -1098,7 +1447,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
             <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
               <SheetTrigger asChild>
-                <Button className="h-12 shrink-0 bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] px-6">
+                <Button className="h-12 shrink-0 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] px-6">
                   <ShoppingCartIcon className="h-5 w-5" /> Carrito ({cartItemCount})
                 </Button>
               </SheetTrigger>
@@ -1165,7 +1514,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                               <div className="flex items-center gap-2">
                                 <p className="font-semibold text-[var(--ink-900)]">{line.productTitle}</p>
                                 {isFreeLine ? (
-                                  <span className="rounded-full bg-[#e8f5d8] px-2 py-0.5 text-xs font-bold uppercase tracking-[0.08em] text-[#2f5c1f] ring-1 ring-[#bfd89b]">
+                                  <span className="rounded-full bg-[var(--shop-chip-bg)] px-2 py-0.5 text-xs font-bold uppercase tracking-[0.08em] text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
                                     Gratis
                                   </span>
                                 ) : null}
@@ -1226,7 +1575,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       </p>
                       <div className="h-2.5 overflow-hidden rounded-full bg-[#d9e7c2]">
                         <div
-                          className="h-full rounded-full bg-[linear-gradient(90deg,#4e6f2a,#6d8a3a)] transition-all duration-500"
+                          className="h-full rounded-full bg-[linear-gradient(90deg,var(--shop-primary-from),var(--shop-primary-to))] transition-all duration-500"
                           style={{ width: `${freeGiftProgress.percent}%` }}
                         />
                       </div>
@@ -1278,7 +1627,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       value={giftNote}
                       onChange={(event) => setGiftNote(event.target.value)}
                       placeholder="Ej: ¡Feliz cumpleaños! Esta figura es especial para ti."
-                      className="w-full resize-none rounded-xl border border-[#d8d2b4] bg-white/90 px-3 py-2.5 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-500)] outline-none focus:ring-1 focus:ring-[var(--brand-primary)]"
+                      className="w-full resize-none rounded-xl border border-[#d8d2b4] bg-white/90 px-3 py-2.5 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-500)] outline-none focus:ring-1 focus:ring-[var(--shop-primary-from)]"
                       maxLength={280}
                     />
                     {giftNote.length > 0 ? (
@@ -1295,7 +1644,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         return (
                           <div key={promise.title} className="rounded-xl border border-[#d2ddba] bg-white/70 p-3">
                             <p className="flex items-center gap-2 font-medium text-[var(--ink-900)]">
-                              <Icon className="h-4 w-4 text-[var(--brand-primary)]" />
+                              <Icon className="h-4 w-4 text-[var(--shop-primary-from)]" />
                               {promise.title}
                             </p>
                             <p className="mt-1 text-xs text-[var(--ink-700)]">{promise.detail}</p>
@@ -1304,7 +1653,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       })}
                     </div>
                     <p className="flex items-center gap-2 text-sm">
-                      <LockClosedIcon className="h-4 w-4 text-[var(--brand-primary)]" />
+                      <LockClosedIcon className="h-4 w-4 text-[var(--shop-primary-from)]" />
                       No guardamos datos de tarjeta en DOFLINS.
                     </p>
                     <a
@@ -1313,7 +1662,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       rel="noreferrer"
                       target="_blank"
                     >
-                      <ChatBubbleLeftRightIcon className="h-4 w-4 text-[var(--brand-primary)]" />
+                      <ChatBubbleLeftRightIcon className="h-4 w-4 text-[var(--shop-primary-from)]" />
                       Hablar con soporte por WhatsApp
                     </a>
                   </div>
@@ -1358,7 +1707,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     <span>Total estimado</span>
                     <strong className="text-base text-[var(--ink-900)]">{totals.total}</strong>
                   </div>
-                  <Button className="h-12 w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]" disabled={isMutatingCart || !cart?.lines.length} onClick={() => void goToCheckout()}>
+                  <Button className="h-12 w-full bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]" disabled={isMutatingCart || !cart?.lines.length} onClick={() => void goToCheckout()}>
                     {isMutatingCart ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <ShoppingCartIcon className="h-5 w-5" />}
                     Pagar en Shopify
                   </Button>
@@ -1386,7 +1735,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     </div>
                   )}
                   <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-[var(--ink-700)]">
-                    <LockClosedIcon className="h-3.5 w-3.5 text-[var(--brand-primary)]" />
+                    <LockClosedIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from)]" />
                     Pago protegido en Shopify Checkout
                   </p>
                 </div>
@@ -1401,17 +1750,17 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             <div className="inline-flex rounded-full border border-[#d7d2b4] bg-white/75 p-1 shadow-[0_6px_14px_rgba(44,47,23,0.08)]">
               <Button
                 size="sm"
-                className={activeUniverse === "animals" ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]" : "shadow-none"}
-                variant={activeUniverse === "animals" ? "primary" : "ghost"}
-                onClick={() => { setActiveUniverse("animals"); setGridAnimKey((k) => k + 1); setShopSearch(""); }}
+                className={visualUniverse === "animals" ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] text-white" : "shadow-none"}
+                variant={visualUniverse === "animals" ? "primary" : "ghost"}
+                onClick={() => activateUniverse("animals")}
               >
                 <SparklesIcon className="h-4 w-4" /> Animals
               </Button>
               <Button
                 size="sm"
-                className={activeUniverse === "multiverse" ? "bg-[linear-gradient(135deg,#4b5fc0,#687ff1)] text-white" : "shadow-none"}
-                variant={activeUniverse === "multiverse" ? "primary" : "ghost"}
-                onClick={() => { setActiveUniverse("multiverse"); setGridAnimKey((k) => k + 1); setShopSearch(""); }}
+                className={visualUniverse === "multiverse" ? "bg-[linear-gradient(135deg,#4b5fc0,#687ff1)] text-white" : "shadow-none"}
+                variant={visualUniverse === "multiverse" ? "primary" : "ghost"}
+                onClick={() => activateUniverse("multiverse")}
               >
                 <BoltIcon className="h-4 w-4" /> Multiverse
               </Button>
@@ -1458,8 +1807,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       type="button"
                       className={`rounded-full px-3 py-1 font-medium transition ${
                         sortOrder === order
-                          ? "bg-[var(--brand-primary)] text-white shadow-sm"
-                          : "text-[#445538] hover:bg-black/[0.05]"
+                          ? "bg-[var(--shop-primary-from)] text-white shadow-sm"
+                          : "text-[var(--ink-700)] hover:bg-black/[0.05]"
                       }`}
                       onClick={() => setSortOrder(order)}
                     >
@@ -1473,7 +1822,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   type="button"
                   aria-label="Vista grilla"
                   className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
-                    gridView === "grid" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--ink-700)] hover:bg-black/[0.05]"
+                    gridView === "grid" ? "bg-[var(--shop-primary-from)] text-white" : "text-[var(--ink-700)] hover:bg-black/[0.05]"
                   }`}
                   onClick={() => setGridView("grid")}
                 >
@@ -1483,7 +1832,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   type="button"
                   aria-label="Vista lista"
                   className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
-                    gridView === "list" ? "bg-[var(--brand-primary)] text-white" : "text-[var(--ink-700)] hover:bg-black/[0.05]"
+                    gridView === "list" ? "bg-[var(--shop-primary-from)] text-white" : "text-[var(--ink-700)] hover:bg-black/[0.05]"
                   }`}
                   onClick={() => setGridView("list")}
                 >
@@ -1495,31 +1844,43 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
           <div className="space-y-2">
             <div className="flex flex-wrap gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d9e2c3] bg-white/80 px-3 py-1.5 text-xs text-[#445538]">
-                <TruckIcon className="h-3.5 w-3.5 text-[#4e6f2a]" />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--shop-chip-ring)] bg-white/80 px-3 py-1.5 text-xs text-[var(--ink-700)]">
+                <TruckIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from)]" />
                 <span><strong className="font-semibold">Envío nacional</strong> · 2-6 días hábiles</span>
               </span>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d9e2c3] bg-white/80 px-3 py-1.5 text-xs text-[#445538]">
-                <ClockIcon className="h-3.5 w-3.5 text-[#4e6f2a]" />
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--shop-chip-ring)] bg-white/80 px-3 py-1.5 text-xs text-[var(--ink-700)]">
+                <ClockIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from)]" />
                 <span><strong className="font-semibold">Preparación</strong> · 24-48 horas</span>
               </span>
               <a
                 href={SUPPORT_WHATSAPP_URL}
                 rel="noreferrer"
                 target="_blank"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#d9e2c3] bg-white/80 px-3 py-1.5 text-xs font-semibold text-[#2c5e1e] transition hover:bg-[#eef8df] hover:border-[#b5d48a]"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[var(--shop-chip-ring)] bg-white/80 px-3 py-1.5 text-xs font-semibold text-[var(--shop-chip-text)] transition hover:bg-[var(--shop-support-hover-bg)] hover:border-[var(--shop-support-hover-border)]"
               >
                 <ChatBubbleLeftRightIcon className="h-3.5 w-3.5" /> Soporte WhatsApp
               </a>
             </div>
           </div>
 
+          {!isLoadingProducts ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-2xl border border-[#d7d2b4] bg-white/70 px-4 py-3">
+              <div>
+                <p className="text-sm font-semibold text-[var(--ink-900)]">Bolsas disponibles ahora</p>
+                <p className="text-xs text-[var(--ink-700)]">Prioridad: elige bolsa, agrega al carrito y finaliza en Shopify.</p>
+              </div>
+              <p className="text-xs font-semibold uppercase tracking-[0.08em] text-[var(--ink-700)]">
+                {filteredProducts.length} pack{filteredProducts.length === 1 ? "" : "s"} visibles
+              </p>
+            </div>
+          ) : null}
+
           {feedbackMessage ? (
             <p
               aria-live="polite"
               className={`rounded-2xl border px-4 py-2 text-sm ${
                 /agregado|aplicado/i.test(feedbackMessage)
-                  ? "border-[#bed6a6] bg-[#eef8df] text-[#2d5b1e]"
+                  ? "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)] text-[var(--shop-chip-text)]"
                   : "border-[#e7c7c7] bg-[#fff3f3] text-[#7b2e2e]"
               }`}
             >
@@ -1537,7 +1898,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 <Button variant="secondary" size="sm" className="h-10 touch-manipulation" onClick={retryProductsLoad}>
                   <ArrowPathIcon className="h-4 w-4" /> Reintentar
                 </Button>
-                <Button asChild size="sm" className="h-10 bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
+                <Button asChild size="sm" className="h-10 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]">
                   <a href={SUPPORT_WHATSAPP_URL} rel="noreferrer" target="_blank">
                     <ChatBubbleLeftRightIcon className="h-4 w-4" /> Ir a WhatsApp
                   </a>
@@ -1559,6 +1920,40 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     <div className="mt-4 h-4 w-full animate-pulse rounded bg-[#e6e8d3]" />
                     <div className="mt-3 h-12 animate-pulse rounded-full bg-[#d9dec0]" />
                   </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+
+          {!isLoadingProducts && !productsError && !products.length && activeCollectionPreviewNames.length > 0 ? (
+            <div className="space-y-3 rounded-2xl border border-[var(--shop-chip-ring)] bg-white/80 p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-sm font-semibold text-[var(--ink-900)]">
+                  Figuras de {UNIVERSE_LABELS[activeUniverse]} que te pueden tocar
+                </p>
+                <Button asChild size="sm" variant="secondary" className="h-9">
+                  <Link href={activeCatalogHref}>
+                    <Squares2X2Icon className="h-4 w-4" /> Ver catálogo completo
+                  </Link>
+                </Button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {activeCollectionPreviewHead.map((name) => (
+                  <span key={`empty-state-${activeUniverse}-${name}`} className="rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 text-xs font-medium text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
+                    {name}
+                  </span>
+                ))}
+                {activeCollectionPreviewRemaining > 0 ? (
+                  <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[var(--ink-700)] ring-1 ring-black/10">
+                    +{activeCollectionPreviewRemaining} más
+                  </span>
+                ) : null}
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {DROP_TIER_ORDER.map((tier) => (
+                  <span key={`empty-state-tier-${tier}`} className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[var(--ink-700)] ring-1 ring-black/10">
+                    {DROP_TIER_LABELS[tier]} {DROP_TIER_PROBABILITY[tier]}%
+                  </span>
                 ))}
               </div>
             </div>
@@ -1634,7 +2029,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       }
                     }}
                     >
-                    <div className={`relative overflow-hidden bg-[linear-gradient(140deg,#f4f5e8,#e4ecd9)] ${
+                    <div className={`relative overflow-hidden bg-[var(--shop-image-panel-bg)] ${
                         gridView === "list" ? "aspect-square w-32 shrink-0 md:aspect-auto md:h-full" : "aspect-[16/11] w-full"
                       }`}>
                       {isLiveNew || isBestSeller ? (
@@ -1646,7 +2041,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                             </span>
                           ) : null}
                           {isLiveNew ? (
-                            <span className="inline-flex rounded-full bg-[#e8f5d8] px-3 py-1 text-xs font-bold text-[#2f5c1f] ring-1 ring-[#bfd89b]">
+                            <span className="inline-flex rounded-full bg-[var(--shop-chip-bg)] px-3 py-1 text-xs font-bold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
                               Nuevo
                             </span>
                           ) : null}
@@ -1660,6 +2055,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           placeholder="blur"
                           blurDataURL={BLUR_DATA_URL}
                           className="object-cover transition duration-300 group-hover:scale-[1.03]"
+                          style={imageFilterStyle}
                           unoptimized
                         />
                       ) : (
@@ -1668,6 +2064,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           Sin imagen
                         </div>
                       )}
+                      <div className="pointer-events-none absolute inset-0 bg-[var(--shop-image-overlay)]" />
                       <div className="absolute right-3 top-3">
                         <span
                           className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${stockBadge.className} ${
@@ -1680,7 +2077,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       {/* ✓ Agregado badge inline */}
                       {isJustAdded ? (
                         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/20">
-                          <span className="animate-card-pop flex items-center gap-2 rounded-full bg-[#4e6f2a] px-4 py-2 text-sm font-bold text-white shadow-lg">
+                          <span className="animate-card-pop flex items-center gap-2 rounded-full bg-[var(--shop-added-badge-bg)] px-4 py-2 text-sm font-bold text-white shadow-lg">
                             <CheckCircleIcon className="h-5 w-5" /> Agregado al carrito
                           </span>
                         </div>
@@ -1741,9 +2138,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                                 disabled={!variant.availableForSale}
                                 className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
                                   selectedVariant?.id === variant.id
-                                    ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-white"
+                                    ? "border-[var(--shop-primary-from)] bg-[var(--shop-primary-from)] text-white"
                                     : variant.availableForSale
-                                      ? "border-[#d8d2b4] bg-white/90 text-[var(--ink-800)] hover:border-[var(--brand-primary)]"
+                                      ? "border-[#d8d2b4] bg-white/90 text-[var(--ink-800)] hover:border-[var(--shop-primary-from)]"
                                       : "cursor-not-allowed border-[#ddd9d0] bg-[#f5f4ef] text-[var(--ink-500)] line-through"
                                 }`}
                                 onClick={() =>
@@ -1770,10 +2167,10 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         <div className="relative">
                           {confettiByProduct.has(product.id) ?
                             ([
-                              { tx: "-22px", rot: "-28deg", color: "#6d8a3a" },
+                              { tx: "-22px", rot: "-28deg", color: "var(--shop-primary-to)" },
                               { tx: "-8px",  rot: "18deg",  color: "#ffe9b5" },
-                              { tx:  "8px",  rot: "54deg",  color: "#4e6f2a" },
-                              { tx:  "22px", rot: "-52deg", color: "#bfd89b" },
+                              { tx:  "8px",  rot: "54deg",  color: "var(--shop-primary-from)" },
+                              { tx:  "22px", rot: "-52deg", color: "var(--shop-chip-ring)" },
                               { tx:  "0px",  rot: "88deg",  color: "#e6c676" },
                             ] as const).map((dot, i) => (
                               <span
@@ -1825,7 +2222,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                               </div>
                               {/* CTA principal */}
                               <Button
-                                className={`h-12 flex-1 text-base font-bold bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] ${lastAddedProductId === product.id ? "animate-card-pop" : ""}`}
+                                className={`h-12 flex-1 text-base font-bold bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] ${lastAddedProductId === product.id ? "animate-card-pop" : ""}`}
                                 disabled={isMutatingCart}
                                 onClick={(event) => {
                                   event.stopPropagation();
@@ -1881,6 +2278,79 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               })}
             </div>
           ) : null}
+
+          {!isLoadingProducts && !productsError ? (
+            <div className="space-y-3 rounded-3xl border border-[var(--shop-chip-ring)] bg-[linear-gradient(150deg,#ffffff,#f5f8ea)] p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-[var(--ink-900)]">Personajes que te pueden tocar</p>
+                  <p className="text-xs text-[var(--ink-700)]">
+                    Vista rápida del catálogo de {UNIVERSE_LABELS[activeUniverse]} para incentivar tu compra.
+                  </p>
+                </div>
+                <Button asChild variant="secondary" size="sm" className="h-9">
+                  <Link href={activeCatalogHref}>
+                    <Squares2X2Icon className="h-4 w-4" /> Ver catálogo completo
+                  </Link>
+                </Button>
+              </div>
+
+              {isLoadingCollectionPreview ? (
+                <p className="text-sm text-[var(--ink-700)]">Cargando personajes del catálogo...</p>
+              ) : activeCollectionShowcaseItems.length > 0 ? (
+                <>
+                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                    {activeCollectionShowcaseItems.map((item) => {
+                      const tier = toDropTier(item.rarity);
+                      const itemLabel = formatCollectionPreviewName(item);
+                      return (
+                        <article key={`catalog-showcase-${activeUniverse}-${item.id}`} className="overflow-hidden rounded-2xl border border-[#d8d2b4] bg-white/90">
+                          <div className="relative aspect-square bg-[var(--shop-image-panel-bg)]">
+                            {item.imageUrl ? (
+                              <Image
+                                src={item.imageUrl}
+                                alt={item.name}
+                                fill
+                                className="object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <div className="grid h-full w-full place-items-center text-xs text-[var(--ink-600)]">
+                                <PhotoIcon className="h-5 w-5" />
+                              </div>
+                            )}
+                          </div>
+                          <div className="space-y-1 px-2.5 py-2">
+                            <p className="min-h-[2.25rem] text-[11px] font-semibold leading-tight text-[var(--ink-900)]">{itemLabel}</p>
+                            <div className="flex items-center justify-between gap-1">
+                              <span className="rounded-full bg-[var(--shop-chip-bg)] px-2 py-0.5 text-[10px] font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
+                                {DROP_TIER_LABELS[tier]}
+                              </span>
+                              <span className="text-[10px] font-semibold text-[var(--ink-600)]">#{item.collectionNumber}</span>
+                            </div>
+                          </div>
+                        </article>
+                      );
+                    })}
+                  </div>
+                  <div className="flex flex-wrap gap-1.5">
+                    {DROP_TIER_ORDER.map((tier) => (
+                      <span key={`catalog-showcase-tier-${tier}`} className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[var(--ink-700)] ring-1 ring-black/10">
+                        {DROP_TIER_LABELS[tier]} {DROP_TIER_PROBABILITY[tier]}%
+                      </span>
+                    ))}
+                    {activeCollectionShowcaseRemaining > 0 ? (
+                      <span className="rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-[var(--ink-700)] ring-1 ring-black/10">
+                        +{activeCollectionShowcaseRemaining} personajes más en catálogo
+                      </span>
+                    ) : null}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-[var(--ink-700)]">Aún no hay personajes visibles para este universo.</p>
+              )}
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 
@@ -1924,7 +2394,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           <button
             type="button"
             aria-label={`Abrir carrito — ${cartItemCount} item${cartItemCount === 1 ? "" : "s"}`}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] text-white shadow-[0_8px_24px_rgba(50,80,25,0.42)] transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
+            className="flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] text-white shadow-[0_8px_24px_rgba(50,80,25,0.42)] transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-primary-from)]"
             onClick={() => setIsCartOpen(true)}
           >
             <ShoppingCartIcon className="h-6 w-6" />
@@ -1937,7 +2407,10 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
       {stickyProduct && stickyVariant ? (
         <div className="fixed inset-x-0 bottom-14 z-40 px-3 pb-1.5 sm:bottom-0 sm:pb-[calc(env(safe-area-inset-bottom)+0.65rem)] lg:hidden">
-          <div className="ink-light mx-auto w-full max-w-3xl rounded-2xl border border-[#d0c79f] bg-[linear-gradient(160deg,#fffef9,#eef4df)] p-3 shadow-[0_-10px_30px_rgba(51,57,26,0.26)]">
+          <div
+            className={`${visualTheme.shellClassName} mx-auto w-full max-w-3xl rounded-2xl border p-3 shadow-[0_-10px_30px_rgba(51,57,26,0.26)]`}
+            style={{ borderColor: "var(--shop-shell-border)", background: "var(--shop-shell-bg)" }}
+          >
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-3">
                 <div>
@@ -1956,7 +2429,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   </p>
                   <div className="h-2 overflow-hidden rounded-full bg-[#d9e7c2]">
                     <div
-                      className="h-full rounded-full bg-[linear-gradient(90deg,#4e6f2a,#6d8a3a)] transition-all duration-500"
+                      className="h-full rounded-full bg-[linear-gradient(90deg,var(--shop-primary-from),var(--shop-primary-to))] transition-all duration-500"
                       style={{ width: `${freeGiftProgress.percent}%` }}
                     />
                   </div>
@@ -1965,7 +2438,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
               <Button
                 className={`h-11 w-full touch-manipulation ${
-                  stickyVariant.availableForSale ? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]" : "bg-[#c3cfb0] text-white"
+                  stickyVariant.availableForSale ? "bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]" : "bg-[#c3cfb0] text-white"
                 }`}
                 disabled={stickyCtaDisabled}
                 onClick={() => void addToCart(stickyProduct, 1)}
@@ -1990,9 +2463,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           {selectedProduct ? (
             <div className="grid gap-0 md:grid-cols-[1.05fr_0.95fr]">
               {/* LEFT: image panel */}
-              <div className="relative flex min-h-[320px] items-center justify-center bg-[linear-gradient(150deg,#f4f6e8,#e7eddc)] p-4 sm:p-6">
+              <div className="relative flex min-h-[320px] items-center justify-center bg-[var(--shop-image-panel-bg)] p-4 sm:p-6">
                 {selectedProduct.imageUrl ? (
-                  <div className="relative h-[280px] w-full overflow-hidden rounded-2xl shadow-[0_14px_30px_rgba(33,38,22,0.18)] sm:h-[340px]">
+                  <div className="relative h-[280px] w-full overflow-hidden rounded-2xl sm:h-[340px]" style={{ boxShadow: "var(--shop-image-shadow)" }}>
                     <Image
                       src={selectedProduct.imageUrl}
                       alt={selectedProduct.imageAlt ?? selectedProduct.title}
@@ -2000,6 +2473,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       placeholder="blur"
                       blurDataURL={BLUR_DATA_URL}
                       className="object-cover transition duration-300"
+                      style={imageFilterStyle}
                       unoptimized
                     />
                   </div>
@@ -2008,6 +2482,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     <PhotoIcon className="h-7 w-7" /> Sin imagen disponible
                   </div>
                 )}
+                <div className="pointer-events-none absolute inset-0 bg-[var(--shop-image-overlay)]" />
                 <span
                   className={`absolute right-4 top-4 inline-flex rounded-full px-3 py-1 text-xs font-bold ${selectedModalStock.className}`}
                 >
@@ -2027,7 +2502,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   <div className="flex flex-wrap items-center gap-2 text-xs">
                     <Badge
                       className="rounded-full border-0 px-3 py-0.5 font-semibold"
-                      style={{ background: activeUniverse === "animals" ? "#4e6f2a" : "#4a3c8c", color: "#fff" }}
+                      style={{ background: "var(--shop-modal-universe-badge-bg)", color: "#fff" }}
                     >
                       {UNIVERSE_LABELS[activeUniverse]}
                     </Badge>
@@ -2110,7 +2585,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 {/* Sticky footer */}
                 <div className="shrink-0 border-t border-[#d8d2b4] bg-white p-4">
                   <Button
-                    className={`w-full ${selectedModalSoldOut ? "bg-[#b9c8a3] text-white" : "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] text-white hover:opacity-90"}`}
+                    className={`w-full ${selectedModalSoldOut ? "bg-[#b9c8a3] text-white" : "bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] text-white hover:opacity-90"}`}
                     disabled={isMutatingCart || selectedModalSoldOut}
                     onClick={() => {
                       void addToCart(selectedProduct, getProductQty(selectedProduct.id));

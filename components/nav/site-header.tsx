@@ -27,37 +27,62 @@ function useDarkMode(): boolean {
 }
 
 export function SiteHeader(): React.JSX.Element {
-  const [universe, setUniverse] = useState<Universe>("animals");
+  const [universe, setUniverse] = useState<Universe>("neutral");
   const dark = useDarkMode();
 
   useEffect(() => {
-    setUniverse(getStoredUniverse());
-    return onUniverseChange(setUniverse);
+    const timer = window.setTimeout(() => {
+      setUniverse(getStoredUniverse());
+    }, 0);
+    const unsubscribe = onUniverseChange(setUniverse);
+    return () => {
+      window.clearTimeout(timer);
+      unsubscribe();
+    };
   }, []);
 
   const isMultiverse = universe === "multiverse";
+  const isAnimals = universe === "animals";
 
   const headerBg = isMultiverse
-    ? dark ? "rgba(10, 14, 36, 0.92)" : "rgba(238, 241, 255, 0.92)"
-    : dark ? "rgba(24, 30, 18, 0.92)" : "rgba(249, 247, 237, 0.92)";
+    ? dark ? "rgba(10, 14, 36, 0.92)" : "rgba(238, 243, 255, 0.92)"
+    : isAnimals
+      ? dark ? "rgba(17, 27, 14, 0.92)" : "rgba(249, 247, 237, 0.92)"
+      : dark ? "rgba(10, 18, 30, 0.92)" : "rgba(250, 247, 240, 0.92)";
 
   const headerBorder = isMultiverse
-    ? dark ? "rgba(30, 42, 74, 0.8)" : "rgba(197, 208, 255, 0.8)"
-    : dark ? "rgba(42, 61, 30, 0.8)" : "rgba(211, 222, 187, 0.8)";
+    ? dark ? "rgba(44, 61, 104, 0.82)" : "rgba(197, 208, 255, 0.8)"
+    : isAnimals
+      ? dark ? "rgba(58, 89, 36, 0.8)" : "rgba(211, 222, 187, 0.8)"
+      : dark ? "rgba(77, 103, 141, 0.72)" : "rgba(218, 208, 190, 0.82)";
 
   const navColor = isMultiverse
-    ? dark ? "#8fa3e0" : "#2d3f8a"
-    : dark ? "#a4b68e" : "#445538";
+    ? dark ? "#bfcdff" : "#2d3f8a"
+    : isAnimals
+      ? dark ? "#d5e8ba" : "#445538"
+      : dark ? "#deebff" : "#3f4347";
 
-  const hoverBg = isMultiverse ? "rgba(75,95,192,0.10)" : "rgba(78,111,42,0.10)";
-  const hoverColor = isMultiverse ? "#4b5fc0" : "#4e6f2a";
+  const hoverBg = isMultiverse
+    ? dark ? "rgba(97, 122, 232, 0.28)" : "rgba(75, 95, 192, 0.1)"
+    : isAnimals
+      ? dark ? "rgba(121, 183, 78, 0.26)" : "rgba(78, 111, 42, 0.1)"
+      : dark ? "rgba(104, 146, 199, 0.24)" : "rgba(91, 101, 115, 0.12)";
+  const hoverColor = isMultiverse
+    ? dark ? "#f0f4ff" : "#3950ba"
+    : isAnimals
+      ? dark ? "#f0fae2" : "#3e6722"
+      : dark ? "#f4f8ff" : "#3f5b7e";
 
   const ctaGradient = isMultiverse
-    ? "linear-gradient(135deg,#4b5fc0,#687ff1)"
-    : "linear-gradient(135deg,#4e6f2a,#6d8a3a)";
+    ? dark ? "linear-gradient(135deg,#5a73e0,#86a4ff)" : "linear-gradient(135deg,#4b5fc0,#687ff1)"
+    : isAnimals
+      ? dark ? "linear-gradient(135deg,#5d9138,#84b95a)" : "linear-gradient(135deg,#4e6f2a,#6d8a3a)"
+      : dark ? "linear-gradient(135deg,#4b7eb7,#6ea8dc)" : "linear-gradient(135deg,#3a6d99,#5a96c3)";
   const ctaShadow = isMultiverse
-    ? "0 4px 14px rgba(75,95,192,0.35)"
-    : "0 4px 14px rgba(78,111,42,0.35)";
+    ? dark ? "0 8px 20px rgba(70,95,206,0.38)" : "0 4px 14px rgba(75,95,192,0.35)"
+    : isAnimals
+      ? dark ? "0 8px 20px rgba(76,122,41,0.34)" : "0 4px 14px rgba(78,111,42,0.35)"
+      : dark ? "0 8px 20px rgba(57,102,153,0.35)" : "0 4px 14px rgba(58,109,153,0.33)";
 
   const navLinks = [
     { href: "/reveal?universe=animals", Icon: Squares2X2Icon, label: "Catálogo" },
@@ -139,4 +164,3 @@ export function SiteHeader(): React.JSX.Element {
     </header>
   );
 }
-

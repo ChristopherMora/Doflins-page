@@ -118,6 +118,155 @@ html {
   --ink-600: #3d50a0 !important;
 }
 
+/* Home visual system */
+.home-page-shell {
+  --home-shell-bg:
+    radial-gradient(circle at 8% 12%, rgba(90, 129, 197, 0.18), transparent 34%),
+    radial-gradient(circle at 92% 20%, rgba(112, 170, 97, 0.16), transparent 35%),
+    radial-gradient(circle at 52% 88%, rgba(216, 151, 62, 0.14), transparent 35%),
+    linear-gradient(180deg, #f8f3e9 0%, #f0ece2 100%);
+  --home-hero-border: #d5c9b3;
+  --home-hero-bg: linear-gradient(145deg, #fffef9 0%, #f7f1e6 52%, #ece7dc 100%);
+  --home-hero-shadow: 0 24px 56px rgba(88, 74, 48, 0.22);
+  --home-live-border: #d8c8ad;
+  --home-live-bg: rgba(255, 255, 255, 0.86);
+  --home-live-text: #474238;
+  --home-live-dot: #3f6f9f;
+  --home-title-text: #1f2921;
+  --home-copy-text: #455347;
+  --home-primary-bg: linear-gradient(135deg, #2f6c99, #4d8bc4);
+  --home-primary-shadow: 0 14px 30px rgba(50, 103, 157, 0.34);
+  --home-secondary-bg: rgba(255, 255, 255, 0.92);
+  --home-secondary-text: #253342;
+  --home-secondary-border: rgba(57, 84, 120, 0.24);
+  --home-stats-text: #4a4b42;
+  --home-pill-border: #d4c7b2;
+  --home-pill-bg: rgba(255, 255, 255, 0.82);
+  --home-pill-icon: #3f6a9c;
+  min-height: 100dvh;
+  background: var(--home-shell-bg);
+}
+
+.home-main {
+  position: relative;
+}
+
+.home-hero-card {
+  border-color: var(--home-hero-border) !important;
+  background: var(--home-hero-bg) !important;
+  box-shadow: var(--home-hero-shadow) !important;
+}
+
+.home-hero-live {
+  border: 1px solid var(--home-live-border);
+  background: var(--home-live-bg);
+  color: var(--home-live-text) !important;
+}
+
+.home-hero-live-dot {
+  background: var(--home-live-dot);
+}
+
+.home-hero-title {
+  color: var(--home-title-text) !important;
+}
+
+.home-hero-copy {
+  color: var(--home-copy-text) !important;
+}
+
+.home-hero-primary-btn {
+  background: var(--home-primary-bg) !important;
+  color: #fff;
+  box-shadow: var(--home-primary-shadow);
+}
+
+.home-hero-secondary-btn {
+  background: var(--home-secondary-bg) !important;
+  color: var(--home-secondary-text) !important;
+  border-color: var(--home-secondary-border) !important;
+}
+
+.home-hero-secondary-btn:hover {
+  filter: brightness(0.98) saturate(1.05);
+}
+
+.home-hero-stats {
+  color: var(--home-stats-text) !important;
+}
+
+.home-hero-pill {
+  border-color: var(--home-pill-border) !important;
+  background: var(--home-pill-bg) !important;
+}
+
+.home-hero-pill-icon {
+  color: var(--home-pill-icon);
+}
+
+/* Dark-mode palette for Home (applies both with explicit toggle and system dark) */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .home-page-shell {
+    --home-shell-bg:
+      radial-gradient(circle at 7% 12%, rgba(74, 129, 214, 0.3), transparent 36%),
+      radial-gradient(circle at 90% 22%, rgba(52, 162, 120, 0.22), transparent 34%),
+      radial-gradient(circle at 50% 88%, rgba(214, 145, 67, 0.17), transparent 34%),
+      linear-gradient(180deg, #081222 0%, #0d1729 54%, #101728 100%);
+    --home-hero-border: rgba(115, 148, 216, 0.56);
+    --home-hero-bg: linear-gradient(145deg, rgba(14, 25, 44, 0.95), rgba(20, 35, 60, 0.95), rgba(24, 44, 72, 0.94));
+    --home-hero-shadow: 0 30px 60px rgba(2, 8, 22, 0.62);
+    --home-live-border: rgba(129, 165, 235, 0.45);
+    --home-live-bg: rgba(9, 21, 40, 0.76);
+    --home-live-text: #dce8ff;
+    --home-live-dot: #8eb6ff;
+    --home-title-text: #f2f6ff;
+    --home-copy-text: #c7d8f4;
+    --home-primary-bg: linear-gradient(135deg, #4c82d5, #6aa6f2);
+    --home-primary-shadow: 0 14px 30px rgba(74, 124, 212, 0.45);
+    --home-secondary-bg: rgba(11, 24, 44, 0.82);
+    --home-secondary-text: #edf4ff;
+    --home-secondary-border: rgba(124, 159, 224, 0.45);
+    --home-stats-text: #cad9f2;
+    --home-pill-border: rgba(118, 154, 220, 0.44);
+    --home-pill-bg: rgba(9, 21, 40, 0.72);
+    --home-pill-icon: #95b9ff;
+  }
+
+  :root:not([data-theme="light"]) .home-hero-secondary-btn:hover {
+    filter: brightness(1.1);
+  }
+}
+
+[data-theme="dark"] .home-page-shell {
+  --home-shell-bg:
+    radial-gradient(circle at 7% 12%, rgba(74, 129, 214, 0.3), transparent 36%),
+    radial-gradient(circle at 90% 22%, rgba(52, 162, 120, 0.22), transparent 34%),
+    radial-gradient(circle at 50% 88%, rgba(214, 145, 67, 0.17), transparent 34%),
+    linear-gradient(180deg, #081222 0%, #0d1729 54%, #101728 100%);
+  --home-hero-border: rgba(115, 148, 216, 0.56);
+  --home-hero-bg: linear-gradient(145deg, rgba(14, 25, 44, 0.95), rgba(20, 35, 60, 0.95), rgba(24, 44, 72, 0.94));
+  --home-hero-shadow: 0 30px 60px rgba(2, 8, 22, 0.62);
+  --home-live-border: rgba(129, 165, 235, 0.45);
+  --home-live-bg: rgba(9, 21, 40, 0.76);
+  --home-live-text: #dce8ff;
+  --home-live-dot: #8eb6ff;
+  --home-title-text: #f2f6ff;
+  --home-copy-text: #c7d8f4;
+  --home-primary-bg: linear-gradient(135deg, #4c82d5, #6aa6f2);
+  --home-primary-shadow: 0 14px 30px rgba(74, 124, 212, 0.45);
+  --home-secondary-bg: rgba(11, 24, 44, 0.82);
+  --home-secondary-text: #edf4ff;
+  --home-secondary-border: rgba(124, 159, 224, 0.45);
+  --home-stats-text: #cad9f2;
+  --home-pill-border: rgba(118, 154, 220, 0.44);
+  --home-pill-bg: rgba(9, 21, 40, 0.72);
+  --home-pill-icon: #95b9ff;
+}
+
+[data-theme="dark"] .home-hero-secondary-btn:hover {
+  filter: brightness(1.1);
+}
+
 :root {
   --background: #f9f7ed;
   --foreground: #222d1a;

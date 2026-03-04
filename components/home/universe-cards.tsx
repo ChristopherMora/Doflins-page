@@ -6,7 +6,7 @@ import {
   BoltIcon,
   CheckCircleIcon,
   GlobeAltIcon,
-  SparklesIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/solid";
 
 import { broadcastUniverse } from "@/lib/universe-store";
@@ -19,29 +19,28 @@ export function UniverseCards(): React.JSX.Element {
     <div className="grid gap-5 md:grid-cols-2">
       {/* ── Animals ── */}
       <Card
-        className="group relative border border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)] shadow-[0_14px_30px_rgba(85,108,50,0.15)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_22px_40px_rgba(85,108,50,0.22)]"
-        onMouseEnter={() => broadcastUniverse("animals")}
+        className="group relative border border-[#bfd196] bg-[linear-gradient(180deg,#f8ffe7,#e5f4c4)] shadow-[0_16px_34px_rgba(74,114,39,0.2)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_44px_rgba(74,114,39,0.3)]"
       >
         <CardContent className="space-y-5 p-6 sm:p-7">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="w-fit bg-[#e6f2d0] text-[#1f2a1a]">
-              <SparklesIcon className="h-4 w-4" /> Universo Animals
+            <Badge className="w-fit bg-[#dcf0b4] text-[#1b2b13]">
+              <Squares2X2Icon className="h-4 w-4" /> Universo Animals
             </Badge>
           </div>
 
           <div className="space-y-2">
-            <h2 className="font-title text-3xl text-[#1f2a1a] sm:text-4xl">Doflins Animals</h2>
-            <p className="text-sm leading-relaxed text-[#3d5230]">
+            <h2 className="font-title text-3xl text-[#1b2b13] sm:text-4xl">Doflins Animals</h2>
+            <p className="text-sm leading-relaxed text-[#335027]">
               Explora criaturas del universo Animals, revisa rarezas y avanza tu colección oficial.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2 text-xs text-[#3d5230]">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 ring-1 ring-[#dfd5ad]">
-              <CheckCircleIcon className="h-4 w-4 text-[#4e6f2a]" /> Catálogo completo
+          <div className="flex flex-wrap gap-2 text-xs text-[#335027]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/78 px-3 py-1 ring-1 ring-[#cbdaaa]">
+              <CheckCircleIcon className="h-4 w-4 text-[#4a7a20]" /> Catálogo completo
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 ring-1 ring-[#dfd5ad]">
-              <CheckCircleIcon className="h-4 w-4 text-[#4e6f2a]" /> Rarezas naturales
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/78 px-3 py-1 ring-1 ring-[#cbdaaa]">
+              <CheckCircleIcon className="h-4 w-4 text-[#4a7a20]" /> Rarezas naturales
             </span>
           </div>
 
@@ -49,11 +48,11 @@ export function UniverseCards(): React.JSX.Element {
             <Button
               asChild
               size="lg"
-              className="w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] sm:w-auto"
+              className="w-full bg-[linear-gradient(135deg,#4a7a20,#78a93f)] sm:w-auto"
               onClick={() => broadcastUniverse("animals")}
             >
               <Link href="/reveal?universe=animals">
-                <SparklesIcon className="h-5 w-5" /> Entrar a Animals{" "}
+                <Squares2X2Icon className="h-5 w-5" /> Entrar a Animals{" "}
                 <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </Link>
             </Button>
@@ -63,35 +62,34 @@ export function UniverseCards(): React.JSX.Element {
               </Link>
             </Button>
           </div>
-          <p className="text-xs text-[#64785a]">Acceso directo al catálogo oficial de DOFLINS.</p>
+          <p className="text-xs text-[#5b7450]">Acceso directo al catálogo oficial de DOFLINS.</p>
         </CardContent>
       </Card>
 
       {/* ── Multiverse ── */}
       <Card
-        className="group border border-[#c8d3f4] bg-[linear-gradient(180deg,#eef2ff,#e3eaff)] shadow-[0_14px_30px_rgba(72,87,152,0.16)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_22px_40px_rgba(72,87,152,0.26)]"
-        onMouseEnter={() => broadcastUniverse("multiverse")}
+        className="group border border-[#b7c7fb] bg-[linear-gradient(180deg,#edf3ff,#d9e5ff)] shadow-[0_16px_34px_rgba(66,86,174,0.2)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_44px_rgba(66,86,174,0.32)]"
       >
         <CardContent className="space-y-5 p-6 sm:p-7">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge className="w-fit bg-[#dbe4ff] text-[#1f2c67]">
+            <Badge className="w-fit bg-[#d2deff] text-[#1a2b7e]">
               <BoltIcon className="h-4 w-4" /> Universo Multiverse
             </Badge>
           </div>
 
           <div className="space-y-2">
-            <h2 className="font-title text-3xl text-[#1c2960] sm:text-4xl">Doflins Multiverse</h2>
-            <p className="text-sm leading-relaxed text-[#2d3f7a]">
+            <h2 className="font-title text-3xl text-[#1a2b7a] sm:text-4xl">Doflins Multiverse</h2>
+            <p className="text-sm leading-relaxed text-[#2f4490]">
               Entra al universo de variantes intensas con estética sci-fi y rarezas de alto impacto.
             </p>
           </div>
 
-          <div className="flex flex-wrap gap-2 text-xs text-[#2d3f7a]">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 ring-1 ring-[#ced7fb]">
-              <CheckCircleIcon className="h-4 w-4 text-[#4b5fc0]" /> Variantes especiales
+          <div className="flex flex-wrap gap-2 text-xs text-[#2f4490]">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/78 px-3 py-1 ring-1 ring-[#c4d0fb]">
+              <CheckCircleIcon className="h-4 w-4 text-[#425fd8]" /> Variantes especiales
             </span>
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-3 py-1 ring-1 ring-[#ced7fb]">
-              <CheckCircleIcon className="h-4 w-4 text-[#4b5fc0]" /> Rarezas altas
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white/78 px-3 py-1 ring-1 ring-[#c4d0fb]">
+              <CheckCircleIcon className="h-4 w-4 text-[#425fd8]" /> Rarezas altas
             </span>
           </div>
 
@@ -99,7 +97,7 @@ export function UniverseCards(): React.JSX.Element {
             <Button
               asChild
               size="lg"
-              className="w-full bg-[linear-gradient(135deg,#4b5fc0,#687ff1)] sm:w-auto"
+              className="w-full bg-[linear-gradient(135deg,#3f58cf,#6f8dff)] sm:w-auto"
               onClick={() => broadcastUniverse("multiverse")}
             >
               <Link href="/reveal?universe=multiverse">
@@ -113,7 +111,7 @@ export function UniverseCards(): React.JSX.Element {
               </Link>
             </Button>
           </div>
-          <p className="text-xs text-[#3d4f8a]">Cambia entre universos dentro del catálogo cuando quieras.</p>
+          <p className="text-xs text-[#3a4f96]">Cambia entre universos dentro del catálogo cuando quieras.</p>
         </CardContent>
       </Card>
     </div>

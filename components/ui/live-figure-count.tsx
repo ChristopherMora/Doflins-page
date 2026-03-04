@@ -1,13 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface CollectionPayload {
   status: "ok";
   collection: { id: number }[];
 }
 
-export function LiveFigureCount(): React.JSX.Element {
+interface LiveFigureCountProps {
+  className?: string;
+  countClassName?: string;
+}
+
+export function LiveFigureCount({ className, countClassName }: LiveFigureCountProps): React.JSX.Element {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -20,8 +26,8 @@ export function LiveFigureCount(): React.JSX.Element {
   if (count === null) return <></>;
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 ring-1 ring-[#cad89e]">
-      <span className="font-bold text-[var(--brand-primary)]">{count}</span> figuras activas
+    <span className={cn("inline-flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 ring-1 ring-[#cad89e]", className)}>
+      <span className={cn("font-bold text-[var(--brand-primary)]", countClassName)}>{count}</span> figuras activas
     </span>
   );
 }

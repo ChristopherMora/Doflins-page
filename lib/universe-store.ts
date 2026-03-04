@@ -1,18 +1,21 @@
 /**
  * Lightweight universe store — communicates the active universe
- * (animals | multiverse) between components via CustomEvents + localStorage.
+ * (neutral | animals | multiverse) between components via CustomEvents + localStorage.
  * Works without any React Context or Zustand.
  */
 
-export type Universe = "animals" | "multiverse";
+export type Universe = "neutral" | "animals" | "multiverse";
 
 const STORAGE_KEY = "doflins_universe";
 const EVENT_NAME = "doflins:universe";
 
 export function getStoredUniverse(): Universe {
-  if (typeof window === "undefined") return "animals";
+  if (typeof window === "undefined") return "neutral";
   const v = localStorage.getItem(STORAGE_KEY);
-  return v === "multiverse" ? "multiverse" : "animals";
+  if (v === "neutral") return "neutral";
+  if (v === "animals") return "animals";
+  if (v === "multiverse") return "multiverse";
+  return "neutral";
 }
 
 export function broadcastUniverse(u: Universe): void {
