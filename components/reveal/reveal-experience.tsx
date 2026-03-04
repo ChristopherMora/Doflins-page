@@ -692,7 +692,7 @@ export function RevealExperience(): React.JSX.Element {
 
   const scrollToSection = useCallback(
     (
-      sectionId: "universos" | "universo-activo" | "rareza" | "catalogo" | "plataforma" | "guia",
+      sectionId: "universo-activo" | "rareza" | "catalogo" | "plataforma" | "guia",
     ) => {
       const target = document.getElementById(sectionId);
       if (!target) {
@@ -1292,8 +1292,8 @@ export function RevealExperience(): React.JSX.Element {
             </p>
 
             <div className="flex flex-wrap gap-3">
-              <Button size="lg" className={`h-12 ${activeTheme.primaryButton}`} onClick={() => scrollToSection("universos")}>
-                <SparklesIcon className="h-5 w-5" /> Explorar universos
+              <Button size="lg" className={`h-12 ${activeTheme.primaryButton}`} onClick={() => scrollToSection("catalogo")}>
+                <SparklesIcon className="h-5 w-5" /> Ver catálogo
               </Button>
               <Button variant="secondary" size="lg" className="h-12" onClick={() => scrollToSection("guia")}>
                 <InformationCircleIcon className="h-5 w-5" /> Cómo coleccionar
@@ -1371,62 +1371,11 @@ export function RevealExperience(): React.JSX.Element {
                   El progreso se guarda en tu cuenta. Si no inicias sesión, no se registra.
                 </p>
               </div>
-
-              <div className={`rounded-2xl p-4 text-sm text-[var(--ink-700)] ${activeTheme.heroStateInfo}`}>
-                <p className="flex items-center gap-2 font-semibold text-[var(--ink-900)]">
-                  <CheckCircleIcon className="h-4 w-4 text-[var(--brand-primary)]" /> Plataforma conectada
-                </p>
-                <p className="mt-1">{activeTheme.qrNarrative}</p>
-              </div>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-6 sm:px-8 lg:px-10" id="universos">
-        <h2 className="mb-5 font-title text-3xl text-[var(--ink-900)]">Universos DOFLINS</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,#f0f5dd,#dceab8,#c9de9f)] shadow-[0_18px_34px_rgba(85,117,54,0.2)]">
-            <CardContent className="space-y-4 p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-700)]">Sección</p>
-              <h3 className="font-title text-3xl text-[var(--ink-900)]">Doflins Animals</h3>
-              <p className="text-[var(--ink-700)]">Fauna con personalidad, colores naturales y look safari/selva.</p>
-              <div className="flex flex-wrap gap-2">
-                <Badge className="bg-white text-[var(--ink-900)]">{collectionCounts.animals} modelos</Badge>
-                <Badge className="bg-white text-[var(--ink-900)]">Explorador / Safari / Salvaje</Badge>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" className={activeTheme.pillButton} onClick={() => switchUniverse("animals", "universe_card", "universo-activo")}>
-                  Activar Animals
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => switchUniverse("animals", "universe_card", "catalogo")}>
-                  Ver catálogo Animals
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="overflow-hidden border-0 bg-[linear-gradient(135deg,#e9efff,#d8e3ff,#c8d4ff)] shadow-[0_18px_34px_rgba(62,88,152,0.24)]">
-            <CardContent className="space-y-4 p-6">
-              <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-700)]">Sección</p>
-              <h3 className="font-title text-3xl text-[var(--ink-900)]">Doflins Multiverse</h3>
-              <p className="text-[var(--ink-700)]">Versiones alternas con estética futurista y rarezas de alto impacto.</p>
-              <div className="flex flex-wrap gap-2">
-                <Badge className="bg-white text-[var(--ink-900)]">{collectionCounts.multiverse} modelos</Badge>
-                <Badge className="bg-white text-[var(--ink-900)]">Portal / Nexo / Omniverse</Badge>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <Button size="sm" className={activeTheme.pillButton} onClick={() => switchUniverse("multiverse", "universe_card", "universo-activo")}>
-                  Activar Multiverse
-                </Button>
-                <Button variant="secondary" size="sm" onClick={() => switchUniverse("multiverse", "universe_card", "catalogo")}>
-                  Ver catálogo Multiverse
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
 
       <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10" id="universo-activo">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -1514,37 +1463,6 @@ export function RevealExperience(): React.JSX.Element {
         </div>
       </section>
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 lg:px-10" id="rareza">
-        <div className="mb-5 flex items-center justify-between gap-3">
-          <h3 className="font-title text-3xl text-[var(--ink-900)]">Sistema de rareza</h3>
-          <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-[var(--ink-700)] ${activeTheme.rarityInfoChip}`}>
-            <FireIcon className="h-4 w-4 text-orange-600" />
-            Quedan {remainingLegendaryCount ?? "--"} legendarias sin descubrir
-          </div>
-        </div>
-
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {CATALOG_RARITY_ORDER.map((rarity) => (
-            <Card key={rarity} className={activeTheme.rarityCard}>
-              <CardContent className="space-y-3 p-5">
-                <div className="flex items-center justify-between">
-                  <h4 className="font-title text-xl text-[var(--ink-900)]">{CATALOG_RARITY_CONFIG[rarity].label}</h4>
-                  <span
-                    className="rounded-full px-2 py-1 text-xs font-bold"
-                    style={{
-                      color: CATALOG_RARITY_CONFIG[rarity].color,
-                      backgroundColor: CATALOG_RARITY_CONFIG[rarity].softColor,
-                    }}
-                  >
-                    {CATALOG_RARITY_CONFIG[rarity].probability}%
-                  </span>
-                </div>
-                <p className="text-sm text-[var(--ink-700)]">{CATALOG_RARITY_CONFIG[rarity].description}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      </section>
 
       <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10" id="catalogo">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
@@ -1836,6 +1754,38 @@ export function RevealExperience(): React.JSX.Element {
             </CardContent>
           </Card>
         ) : null}
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 lg:px-10" id="rareza">
+        <div className="mb-5 flex items-center justify-between gap-3">
+          <h3 className="font-title text-3xl text-[var(--ink-900)]">Sistema de rareza</h3>
+          <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-[var(--ink-700)] ${activeTheme.rarityInfoChip}`}>
+            <FireIcon className="h-4 w-4 text-orange-600" />
+            Quedan {remainingLegendaryCount ?? "--"} legendarias sin descubrir
+          </div>
+        </div>
+
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {CATALOG_RARITY_ORDER.map((rarity) => (
+            <Card key={rarity} className={activeTheme.rarityCard}>
+              <CardContent className="space-y-3 p-5">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-title text-xl text-[var(--ink-900)]">{CATALOG_RARITY_CONFIG[rarity].label}</h4>
+                  <span
+                    className="rounded-full px-2 py-1 text-xs font-bold"
+                    style={{
+                      color: CATALOG_RARITY_CONFIG[rarity].color,
+                      backgroundColor: CATALOG_RARITY_CONFIG[rarity].softColor,
+                    }}
+                  >
+                    {CATALOG_RARITY_CONFIG[rarity].probability}%
+                  </span>
+                </div>
+                <p className="text-sm text-[var(--ink-700)]">{CATALOG_RARITY_CONFIG[rarity].description}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10" id="guia">

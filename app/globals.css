@@ -119,7 +119,7 @@ html {
 }
 
 :root {
-  --background: #f6f2df;
+  --background: #f9f7ed;
   --foreground: #222d1a;
   --surface-100: #fff8e7;
   --surface-200: #e8eed7;
@@ -142,9 +142,9 @@ html {
 body {
   min-height: 100dvh;
   background:
-    radial-gradient(circle at top right, rgba(104, 137, 55, 0.22), transparent 36%),
-    radial-gradient(circle at 16% 11%, rgba(206, 140, 44, 0.16), transparent 30%),
-    radial-gradient(circle at 70% 88%, rgba(129, 153, 71, 0.13), transparent 30%),
+    radial-gradient(circle at top right, rgba(104, 137, 55, 0.12), transparent 36%),
+    radial-gradient(circle at 16% 11%, rgba(206, 140, 44, 0.08), transparent 30%),
+    radial-gradient(circle at 70% 88%, rgba(129, 153, 71, 0.06), transparent 30%),
     var(--background);
   color: var(--foreground);
   font-family: var(--font-body), "Segoe UI", sans-serif;

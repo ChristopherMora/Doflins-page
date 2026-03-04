@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, RectangleStackIcon, ShoppingCartIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { HomeIcon, RectangleStackIcon, ShoppingCartIcon, Squares2X2Icon } from "@heroicons/react/24/solid";
 
 interface BottomNavItem {
   href: string;
@@ -13,7 +13,7 @@ interface BottomNavItem {
 
 const NAV_ITEMS: BottomNavItem[] = [
   { href: "/", label: "Inicio", icon: HomeIcon },
-  { href: "/reveal?universe=animals", label: "Catálogo", icon: SparklesIcon },
+  { href: "/reveal?universe=animals", label: "Catálogo", icon: Squares2X2Icon },
   { href: "#compras", label: "Tienda", icon: ShoppingCartIcon, isAnchor: true },
   { href: "/coleccion", label: "Colección", icon: RectangleStackIcon },
 ];

@@ -1,11 +1,11 @@
 import Link from "next/link";
-import { 
-  GlobeAltIcon, 
-  RectangleStackIcon, 
-  ShoppingCartIcon, 
-  SparklesIcon,
-  QuestionMarkCircleIcon,
+import {
+  GlobeAltIcon,
   InformationCircleIcon,
+  QuestionMarkCircleIcon,
+  RectangleStackIcon,
+  ShoppingCartIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/solid";
 
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
@@ -37,7 +37,7 @@ export function SiteHeader(): React.JSX.Element {
             href="/reveal?universe=animals"
             className="flex items-center gap-1.5 rounded-full px-3 py-1.5 transition hover:bg-[var(--brand-primary)]/10 hover:text-[var(--brand-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
           >
-            <SparklesIcon className="h-4 w-4" />
+            <Squares2X2Icon className="h-4 w-4" />
             Catálogo
           </Link>
           <a
