@@ -23,7 +23,7 @@ export function BottomNav(): React.JSX.Element {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-[#d3debb]/70 bg-[#f6f2df]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--surface-200)] bg-[var(--background)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
       aria-label="Navegación inferior"
     >
       <div className="flex items-center justify-around py-2">

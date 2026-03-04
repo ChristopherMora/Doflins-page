@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 
 function RevealSkeleton(): React.JSX.Element {
   return (
-    <main className="min-h-screen pb-32 bg-[#f6f2df]">
+    <main className="min-h-screen pb-32 bg-[var(--background)]">
       {/* Header skeleton */}
       <div className="sticky top-0 z-40 mx-auto w-full max-w-[84rem] px-4 pt-4 sm:px-6">
         <div className="flex items-center justify-between gap-3 rounded-full border border-[#e2d9b8] bg-[#fff8e7]/90 px-4 py-2.5 shadow-sm">

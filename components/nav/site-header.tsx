@@ -12,7 +12,7 @@ import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 
 export function SiteHeader(): React.JSX.Element {
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-[#d3debb]/60 bg-[#f6f2df]/92 backdrop-blur-md">
+    <header className="sticky top-0 z-40 w-full border-b border-[var(--surface-200)] bg-[var(--background)]/92 backdrop-blur-md">
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-8">
         {/* Logo */}
         <Link
