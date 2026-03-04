@@ -121,6 +121,7 @@ html {
 :root {
   --background: #f9f7ed;
   --foreground: #222d1a;
+  --surface-50: #fffdf5;
   --surface-100: #fff8e7;
   --surface-200: #e8eed7;
   --ink-900: #1f2a1a;
@@ -137,6 +138,20 @@ html {
   --color-foreground: var(--foreground);
   --font-sans: var(--font-body);
   --font-title: var(--font-title);
+
+  /* Ink scale — resolves text-ink-*, border-ink-*, etc. */
+  --color-ink-900: var(--ink-900);
+  --color-ink-800: var(--ink-800);
+  --color-ink-700: var(--ink-700);
+  --color-ink-600: var(--ink-600);
+
+  /* Surface scale — resolves bg-surface-*, border-surface-*, etc. */
+  --color-surface-50: var(--surface-50);
+  --color-surface-100: var(--surface-100);
+  --color-surface-200: var(--surface-200);
+
+  /* Brand — resolves bg-primary, text-primary, bg-primary/*, etc. */
+  --color-primary: var(--brand-primary);
 }
 
 body {
@@ -167,10 +182,7 @@ a {
   :root:not([data-theme="light"]) {
     --background: #181e12;
     --foreground: #e5ecd8;
-    --surface-100: #1e271a;
-    --surface-200: #263120;
-    --ink-900: #e5ecd8;
-    --ink-800: #cad6bb;
+    --surface-50: #151c11;
     --ink-700: #a4b68e;
     --ink-600: #7a9165;
     --brand-primary: #7dba4c;
@@ -195,6 +207,7 @@ a {
 [data-theme="dark"] {
   --background: #181e12;
   --foreground: #e5ecd8;
+  --surface-50: #151c11;
   --surface-100: #1e271a;
   --surface-200: #263120;
   --ink-900: #e5ecd8;
