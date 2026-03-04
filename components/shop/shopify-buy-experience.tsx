@@ -1091,6 +1091,28 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         return;
       }
 
+      // Optimistic update: update qty + recalculate lineTotal immediately
+      let previousCart: ShopCart | null = null;
+      setCart((prev) => {
+        previousCart = prev;
+        if (!prev) return prev;
+        return {
+          ...prev,
+          lines: prev.lines.map((l) => {
+            if (l.id !== lineId) return l;
+            const unitPrice = Number(l.pricePerUnit.amount);
+            const newTotal = Number.isFinite(unitPrice)
+              ? String((unitPrice * quantity).toFixed(2))
+              : l.lineTotal.amount;
+            return {
+              ...l,
+              quantity,
+              lineTotal: { ...l.lineTotal, amount: newTotal },
+            };
+          }),
+        };
+      });
+
       setIsMutatingCart(true);
       setFeedbackMessage(null);
       try {
@@ -1109,6 +1131,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         }
         setCart(payload.cart);
       } catch (error) {
+        setCart(previousCart);
         setFeedbackMessage(error instanceof Error ? error.message : "No se pudo actualizar la cantidad.");
       } finally {
         setIsMutatingCart(false);
