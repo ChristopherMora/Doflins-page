@@ -21,6 +21,7 @@ export function getStoredUniverse(): Universe {
 export function broadcastUniverse(u: Universe): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEY, u);
+  document.documentElement.dataset.universe = u;
   window.dispatchEvent(new CustomEvent<{ universe: Universe }>(EVENT_NAME, { detail: { universe: u } }));
 }
 

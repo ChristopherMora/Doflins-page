@@ -155,6 +155,7 @@ html {
   border-color: var(--home-hero-border) !important;
   background: var(--home-hero-bg) !important;
   box-shadow: var(--home-hero-shadow) !important;
+  transition: background 0.45s ease, box-shadow 0.45s ease, border-color 0.45s ease;
 }
 
 .home-hero-live {
@@ -312,6 +313,7 @@ body {
     var(--background);
   color: var(--foreground);
   font-family: var(--font-body), "Segoe UI", sans-serif;
+  transition: background 0.45s ease;
 }
 
 .font-title {
@@ -397,3 +399,154 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Universe-aware theming  (data-universe written by universe-store.ts)
+   Controls: body background · home shell · hero card · hero CTAs
+───────────────────────────────────────────────────────────── */
+
+/* ── Animals — light ── */
+html[data-universe="animals"] body {
+  background:
+    radial-gradient(circle at top right, rgba(104, 137, 55, 0.16), transparent 36%),
+    radial-gradient(circle at 16% 11%, rgba(200, 140, 44, 0.10), transparent 30%),
+    radial-gradient(circle at 70% 88%, rgba(129, 153, 71, 0.10), transparent 30%),
+    var(--background);
+}
+html[data-universe="animals"] .home-page-shell {
+  --home-shell-bg:
+    radial-gradient(circle at 8% 12%, rgba(110, 160, 60, 0.20), transparent 34%),
+    radial-gradient(circle at 92% 20%, rgba(140, 185, 80, 0.14), transparent 35%),
+    radial-gradient(circle at 52% 88%, rgba(195, 170, 50, 0.11), transparent 35%),
+    linear-gradient(180deg, #f5f8ec 0%, #edf3df 100%);
+  --home-hero-border: #c3d896;
+  --home-hero-bg: linear-gradient(145deg, #f9fcf2 0%, #eff6e2 52%, #e4f0d2 100%);
+  --home-hero-shadow: 0 24px 56px rgba(58, 94, 30, 0.20);
+  --home-live-border: #bdd896;
+  --home-live-bg: rgba(255, 255, 255, 0.88);
+  --home-live-text: #2d4420;
+  --home-live-dot: #4e6f2a;
+  --home-title-text: #1f2a19;
+  --home-copy-text: #3a5228;
+  --home-primary-bg: linear-gradient(135deg, #4e6f2a, #6d8a3a);
+  --home-primary-shadow: 0 14px 30px rgba(78, 111, 42, 0.38);
+  --home-secondary-text: #1f2a19;
+  --home-secondary-border: rgba(78, 111, 42, 0.26);
+  --home-stats-text: #3a5228;
+  --home-pill-border: #c3d896;
+  --home-pill-bg: rgba(255, 255, 255, 0.84);
+  --home-pill-icon: #4e6f2a;
+}
+
+/* ── Animals — dark ── */
+html[data-universe="animals"][data-theme="dark"] .home-page-shell {
+  --home-shell-bg:
+    radial-gradient(circle at 7% 12%, rgba(60, 120, 30, 0.36), transparent 36%),
+    radial-gradient(circle at 90% 22%, rgba(90, 150, 45, 0.24), transparent 34%),
+    radial-gradient(circle at 50% 88%, rgba(155, 120, 35, 0.16), transparent 34%),
+    linear-gradient(180deg, #0f1a0a 0%, #141e0e 54%, #17220f 100%);
+  --home-hero-border: rgba(100, 160, 50, 0.48);
+  --home-hero-bg: linear-gradient(145deg, rgba(15, 25, 10, 0.95), rgba(22, 37, 15, 0.95), rgba(28, 44, 18, 0.94));
+  --home-hero-shadow: 0 30px 60px rgba(2, 12, 2, 0.62);
+  --home-live-border: rgba(110, 170, 65, 0.45);
+  --home-live-bg: rgba(8, 18, 5, 0.76);
+  --home-live-text: #cceaaa;
+  --home-live-dot: #7dbf45;
+  --home-title-text: #d8f0b4;
+  --home-copy-text: #a8c880;
+  --home-primary-bg: linear-gradient(135deg, #5a9030, #7cb848);
+  --home-primary-shadow: 0 14px 30px rgba(90, 144, 48, 0.45);
+  --home-secondary-bg: rgba(8, 18, 5, 0.82);
+  --home-secondary-text: #d8f0b4;
+  --home-secondary-border: rgba(108, 168, 58, 0.46);
+  --home-stats-text: #a8c880;
+  --home-pill-border: rgba(100, 158, 52, 0.44);
+  --home-pill-bg: rgba(8, 18, 5, 0.72);
+  --home-pill-icon: #90d054;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-universe="animals"]:not([data-theme="light"]) .home-page-shell {
+    --home-shell-bg:
+      radial-gradient(circle at 7% 12%, rgba(60, 120, 30, 0.36), transparent 36%),
+      radial-gradient(circle at 90% 22%, rgba(90, 150, 45, 0.24), transparent 34%),
+      radial-gradient(circle at 50% 88%, rgba(155, 120, 35, 0.16), transparent 34%),
+      linear-gradient(180deg, #0f1a0a 0%, #141e0e 54%, #17220f 100%);
+    --home-hero-border: rgba(100, 160, 50, 0.48);
+    --home-hero-bg: linear-gradient(145deg, rgba(15, 25, 10, 0.95), rgba(22, 37, 15, 0.95), rgba(28, 44, 18, 0.94));
+    --home-hero-shadow: 0 30px 60px rgba(2, 12, 2, 0.62);
+    --home-live-dot: #7dbf45;
+    --home-title-text: #d8f0b4;
+    --home-copy-text: #a8c880;
+    --home-primary-bg: linear-gradient(135deg, #5a9030, #7cb848);
+    --home-primary-shadow: 0 14px 30px rgba(90, 144, 48, 0.45);
+    --home-pill-icon: #90d054;
+  }
+}
+
+/* ── Multiverse — light ── */
+html[data-universe="multiverse"] body {
+  background:
+    radial-gradient(circle at top right, rgba(75, 95, 192, 0.13), transparent 36%),
+    radial-gradient(circle at 16% 11%, rgba(100, 120, 220, 0.08), transparent 30%),
+    radial-gradient(circle at 70% 88%, rgba(80, 60, 200, 0.07), transparent 30%),
+    var(--background);
+}
+html[data-universe="multiverse"] .home-page-shell {
+  --home-shell-bg:
+    radial-gradient(circle at 8% 12%, rgba(75, 95, 192, 0.18), transparent 34%),
+    radial-gradient(circle at 92% 20%, rgba(100, 130, 240, 0.13), transparent 35%),
+    radial-gradient(circle at 52% 88%, rgba(80, 55, 180, 0.10), transparent 35%),
+    linear-gradient(180deg, #f3f5fd 0%, #eaedfc 100%);
+  --home-hero-border: #bcc8f6;
+  --home-hero-bg: linear-gradient(145deg, #f6f7ff 0%, #ecefff 52%, #e1e8ff 100%);
+  --home-hero-shadow: 0 24px 56px rgba(56, 78, 178, 0.18);
+  --home-live-border: #b5c2f4;
+  --home-live-bg: rgba(255, 255, 255, 0.88);
+  --home-live-text: #1e2e6e;
+  --home-live-dot: #4b5fc0;
+  --home-title-text: #1c2860;
+  --home-copy-text: #2b3c88;
+  --home-primary-bg: linear-gradient(135deg, #4b5fc0, #687ff1);
+  --home-primary-shadow: 0 14px 30px rgba(75, 95, 192, 0.38);
+  --home-secondary-text: #1c2860;
+  --home-secondary-border: rgba(75, 95, 192, 0.26);
+  --home-stats-text: #2b3c88;
+  --home-pill-border: #bcc8f6;
+  --home-pill-bg: rgba(255, 255, 255, 0.84);
+  --home-pill-icon: #4b5fc0;
+}
+
+/* ── Multiverse — dark ── */
+html[data-universe="multiverse"][data-theme="dark"] .home-page-shell {
+  --home-shell-bg:
+    radial-gradient(circle at 7% 12%, rgba(60, 85, 215, 0.40), transparent 36%),
+    radial-gradient(circle at 90% 22%, rgba(80, 110, 245, 0.26), transparent 34%),
+    radial-gradient(circle at 50% 88%, rgba(50, 40, 195, 0.18), transparent 34%),
+    linear-gradient(180deg, #060c22 0%, #0a1232 54%, #0d1438 100%);
+  --home-hero-border: rgba(100, 130, 232, 0.56);
+  --home-hero-bg: linear-gradient(145deg, rgba(8, 14, 44, 0.96), rgba(12, 22, 58, 0.96), rgba(16, 28, 70, 0.95));
+  --home-hero-shadow: 0 30px 60px rgba(2, 5, 22, 0.65);
+  --home-live-dot: #8094f8;
+  --home-title-text: #dce8ff;
+  --home-copy-text: #a8bef6;
+  --home-primary-bg: linear-gradient(135deg, #5068d4, #7090f8);
+  --home-primary-shadow: 0 14px 30px rgba(80, 104, 212, 0.50);
+  --home-pill-icon: #95b0ff;
+}
+@media (prefers-color-scheme: dark) {
+  html[data-universe="multiverse"]:not([data-theme="light"]) .home-page-shell {
+    --home-shell-bg:
+      radial-gradient(circle at 7% 12%, rgba(60, 85, 215, 0.40), transparent 36%),
+      radial-gradient(circle at 90% 22%, rgba(80, 110, 245, 0.26), transparent 34%),
+      radial-gradient(circle at 50% 88%, rgba(50, 40, 195, 0.18), transparent 34%),
+      linear-gradient(180deg, #060c22 0%, #0a1232 54%, #0d1438 100%);
+    --home-hero-border: rgba(100, 130, 232, 0.56);
+    --home-hero-bg: linear-gradient(145deg, rgba(8, 14, 44, 0.96), rgba(12, 22, 58, 0.96), rgba(16, 28, 70, 0.95));
+    --home-live-dot: #8094f8;
+    --home-title-text: #dce8ff;
+    --home-copy-text: #a8bef6;
+    --home-primary-bg: linear-gradient(135deg, #5068d4, #7090f8);
+    --home-pill-icon: #95b0ff;
+  }
+}
+
