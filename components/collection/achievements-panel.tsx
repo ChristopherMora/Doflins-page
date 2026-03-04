@@ -11,10 +11,13 @@ export function AchievementsPanel({ input }: AchievementsPanelProps) {
   const unlocked = achievements.filter((a) => a.unlocked).length;
 
   return (
-    <section className="bg-white dark:bg-surface-200 rounded-2xl shadow-sm p-5">
+    <section className="rounded-2xl shadow-sm p-5" style={{ background: "var(--surface-100)" }}>
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-bold text-ink-900">Logros</h2>
-        <span className="text-xs text-ink-600 bg-surface-100 rounded-full px-2 py-0.5">
+        <h2 className="text-base font-bold" style={{ color: "var(--ink-900)" }}>Logros</h2>
+        <span
+          className="text-xs rounded-full px-2 py-0.5"
+          style={{ color: "var(--ink-600)", background: "var(--surface-200)" }}
+        >
           {unlocked}/{achievements.length}
         </span>
       </div>
@@ -23,21 +26,36 @@ export function AchievementsPanel({ input }: AchievementsPanelProps) {
         {achievements.map((ach) => (
           <div
             key={ach.id}
-            className={`rounded-xl border p-3 flex flex-col gap-1 transition-all ${
+            className="rounded-xl border p-3 flex flex-col gap-1 transition-all"
+            style={
               ach.unlocked
-                ? "border-primary/40 bg-primary/5"
-                : "border-surface-200 bg-surface-50 opacity-50 grayscale"
-            }`}
+                ? {
+                    borderColor: "color-mix(in srgb, var(--brand-primary) 40%, transparent)",
+                    background: "color-mix(in srgb, var(--brand-primary) 8%, transparent)",
+                  }
+                : {
+                    borderColor: "var(--surface-200)",
+                    background: "var(--surface-100)",
+                    opacity: 0.55,
+                    filter: "grayscale(0.6)",
+                  }
+            }
           >
             <span className="text-2xl leading-none">{ach.emoji}</span>
-            <p className="text-xs font-semibold text-ink-900 leading-tight">
+            <p className="text-xs font-semibold leading-tight" style={{ color: "var(--ink-900)" }}>
               {ach.title}
             </p>
-            <p className="text-xs text-ink-600 leading-snug">
+            <p className="text-xs leading-snug" style={{ color: "var(--ink-700)" }}>
               {ach.description}
             </p>
             {ach.unlocked && (
-              <span className="mt-1 self-start text-xs font-bold uppercase tracking-wide text-primary bg-primary/10 rounded px-1.5 py-0.5">
+              <span
+                className="mt-1 self-start text-xs font-bold uppercase tracking-wide rounded px-1.5 py-0.5"
+                style={{
+                  color: "var(--brand-primary)",
+                  background: "color-mix(in srgb, var(--brand-primary) 12%, transparent)",
+                }}
+              >
                 Desbloqueado
               </span>
             )}

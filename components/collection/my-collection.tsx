@@ -239,7 +239,7 @@ export function MyCollection() {
               </p>
               <p className="font-title text-4xl text-[var(--ink-900)]">
                 {totalOwned}
-                <span className="text-xl text-[var(--ink-500)]">/{totalDoflins}</span>
+                <span className="text-xl text-[var(--ink-600)]">/{totalDoflins}</span>
               </p>
             </div>
             <p className="font-title text-5xl text-[#4e6f2a]">{pct}%</p>
@@ -384,7 +384,7 @@ export function MyCollection() {
                 <p className="text-xs font-semibold leading-tight text-[var(--ink-900)] truncate">
                   {doflin.nombre}
                 </p>
-                <p className="text-xs text-[var(--ink-500)]">#{doflin.numeroColeccion}</p>
+                <p className="text-xs text-[var(--ink-600)]">#{doflin.numeroColeccion}</p>
               </div>
             </button>
           );
@@ -394,7 +394,7 @@ export function MyCollection() {
       {filteredDoflins.length === 0 && (
         <div className="py-12 text-center">
           <XMarkIcon className="mx-auto h-8 w-8 text-[var(--ink-400)]" />
-          <p className="mt-2 text-sm text-[var(--ink-500)]">Sin resultados para este filtro.</p>
+          <p className="mt-2 text-sm text-[var(--ink-600)]">Sin resultados para este filtro.</p>
         </div>
       )}
     </div>
