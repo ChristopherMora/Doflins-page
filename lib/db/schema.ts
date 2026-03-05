@@ -143,6 +143,49 @@ export const userProfiles = mysqlTable(
   ],
 );
 
+export const referralCodes = mysqlTable(
+  "referral_codes",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
+    code: varchar("code", { length: 20 }).notNull(),
+    discountPercent: int("discount_percent").notNull().default(10),
+    shopifyPriceRuleId: varchar("shopify_price_rule_id", { length: 64 }),
+    shopifyDiscountCodeId: varchar("shopify_discount_code_id", { length: 64 }),
+    usesCount: int("uses_count").notNull().default(0),
+    maxUses: int("max_uses"),
+    active: boolean("active").notNull().default(true),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  },
+  (table) => [
+    uniqueIndex("referral_codes_code_unique").on(table.code),
+    uniqueIndex("referral_codes_user_unique").on(table.supabaseUserId),
+    index("referral_codes_active_idx").on(table.active),
+  ],
+);
+
+export const referralUses = mysqlTable(
+  "referral_uses",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    referralCodeId: int("referral_code_id")
+      .notNull()
+      .references(() => referralCodes.id),
+    usedByEmail: varchar("used_by_email", { length: 190 }),
+    shopifyOrderId: varchar("shopify_order_id", { length: 64 }),
+    discountApplied: int("discount_applied").notNull().default(0),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("referral_uses_code_idx").on(table.referralCodeId),
+    index("referral_uses_email_idx").on(table.usedByEmail),
+  ],
+);
+
 export const userCollectionProgress = mysqlTable(
   "user_collection_progress",
   {

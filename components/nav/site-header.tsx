@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowRightStartOnRectangleIcon,
+  GiftIcon,
   GlobeAltIcon,
   HomeIcon,
   InformationCircleIcon,
@@ -244,6 +245,15 @@ export function SiteHeader(): React.JSX.Element {
                     >
                       <ShoppingBagIcon className="h-4 w-4 shrink-0" />
                       Mis pedidos
+                    </Link>
+                    <Link
+                      href="/mi-codigo"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-[#f0f8e0]"
+                      style={{ color: dark ? "#c8e0a8" : "#3a5a18" }}
+                    >
+                      <GiftIcon className="h-4 w-4 shrink-0" />
+                      Código referido
                     </Link>
                     <Link
                       href="/ranking"
