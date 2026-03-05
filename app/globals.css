@@ -155,7 +155,6 @@ html {
   border-color: var(--home-hero-border) !important;
   background: var(--home-hero-bg) !important;
   box-shadow: var(--home-hero-shadow) !important;
-  transition: background 0.45s ease, box-shadow 0.45s ease, border-color 0.45s ease;
 }
 
 .home-hero-live {
@@ -335,7 +334,6 @@ body {
     var(--background);
   color: var(--foreground);
   font-family: var(--font-body), "Segoe UI", sans-serif;
-  transition: background 0.45s ease;
 }
 
 .font-title {
