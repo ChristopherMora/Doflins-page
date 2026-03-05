@@ -8,6 +8,7 @@ import {
   InformationCircleIcon,
   QuestionMarkCircleIcon,
   RectangleStackIcon,
+  ShieldCheckIcon,
   ShoppingCartIcon,
   Squares2X2Icon,
 } from "@heroicons/react/24/solid";
@@ -30,6 +31,7 @@ function useDarkMode(): boolean {
 export function SiteHeader(): React.JSX.Element {
   const [universe, setUniverse] = useState<Universe>("neutral");
   const dark = useDarkMode();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -40,6 +42,13 @@ export function SiteHeader(): React.JSX.Element {
       window.clearTimeout(timer);
       unsubscribe();
     };
+  }, []);
+
+  useEffect(() => {
+    void fetch("/api/auth/admin-status")
+      .then((r) => r.json())
+      .then((d: { isAdmin?: boolean }) => { if (d.isAdmin) setIsAdmin(true); })
+      .catch(() => {});
   }, []);
 
   const isMultiverse = universe === "multiverse";
@@ -152,6 +161,15 @@ export function SiteHeader(): React.JSX.Element {
         {/* Dark mode + CTA */}
         <div className="flex items-center gap-2">
           <DarkModeToggle />
+          {isAdmin ? (
+            <Link
+              href="/admin/doflins"
+              className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-amber-600"
+            >
+              <ShieldCheckIcon className="h-4 w-4" />
+              Admin
+            </Link>
+          ) : null}
           <a
             href="/#compras"
             className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
