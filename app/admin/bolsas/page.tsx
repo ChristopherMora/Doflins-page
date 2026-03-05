@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import {
   CheckCircleIcon,
@@ -146,6 +147,12 @@ export default function AdminBolsasPage() {
 
   return (
     <main className="min-h-screen px-4 py-10 max-w-4xl mx-auto space-y-8">
+      <nav className="flex flex-wrap gap-3 text-sm">
+        <Link href="/admin/doflins" className="text-[var(--ink-600)] hover:underline">← Alta de figuras</Link>
+        <Link href="/admin/bolsas" className="font-semibold text-[#4e6f2a] underline">🎒 Bolsas / QR</Link>
+        <Link href="/admin/dashboard" className="text-[var(--ink-600)] hover:underline">Dashboard →</Link>
+      </nav>
+
       {/* Header */}
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <div>
