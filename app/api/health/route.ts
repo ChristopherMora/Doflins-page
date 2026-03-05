@@ -7,26 +7,25 @@ export const dynamic = "force-dynamic";
 export async function GET(): Promise<NextResponse> {
   const now = new Date().toISOString();
 
+  // En producción solo devolvemos el estado, sin detallar qué componente falló
+  const isProd = process.env.NODE_ENV === "production";
+
   try {
     await pingDb();
 
     return NextResponse.json({
       status: "ok",
-      app: "up",
-      db: "up",
       timestamp: now,
+      ...(isProd ? {} : { app: "up", db: "up" }),
     });
   } catch {
     return NextResponse.json(
       {
         status: "degraded",
-        app: "up",
-        db: "down",
         timestamp: now,
+        ...(isProd ? {} : { app: "up", db: "down" }),
       },
-      {
-        status: 503,
-      },
+      { status: 503 },
     );
   }
 }

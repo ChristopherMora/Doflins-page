@@ -4,11 +4,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { getSupabaseAnonKey, getSupabaseUrl, hasSupabasePublicConfig } from "@/lib/supabase/config";
 
 function sanitizeNextPath(rawValue: string | null): string {
-  if (!rawValue || !rawValue.startsWith("/")) {
+  if (!rawValue) return "/reveal";
+  // Bloquear open redirect: //evil.com empieza con / pero es URL absoluta.
+  // También bloquear /\ que algunos navegadores interpretan como absoluta.
+  const trimmed = rawValue.replace(/^[/\\]+/, "/");
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
     return "/reveal";
   }
-
-  return rawValue;
+  // No permitir rutas admin desde el callback de usuarios
+  if (trimmed.startsWith("/admin")) return "/reveal";
+  return trimmed;
 }
 
 function getBaseUrl(request: NextRequest): string {

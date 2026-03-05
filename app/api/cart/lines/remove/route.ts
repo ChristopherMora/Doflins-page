@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 import { cartLineRemoveBodySchema } from "@/lib/validation/shopify";
-import { getCartIdFromRequest, rateLimitResponse, toApiErrorResponse } from "@/lib/server/shopify-api";
+import { getCartIdFromRequest, checkBodySize, rateLimitResponse, toApiErrorResponse } from "@/lib/server/shopify-api";
 import { syncFreeGiftForCart } from "@/lib/server/cart-promotions";
 import { fetchCartById, removeCartLines } from "@/lib/server/shopify-storefront";
 
@@ -10,9 +10,10 @@ export const runtime = "nodejs";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const limited = rateLimitResponse(request, "cart_lines_remove", 60, 60_000);
-  if (limited) {
-    return limited;
-  }
+  if (limited) return limited;
+
+  const tooBig = checkBodySize(request);
+  if (tooBig) return tooBig;
 
   const cartId = getCartIdFromRequest(request);
   if (!cartId) {

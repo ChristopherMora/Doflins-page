@@ -581,6 +581,14 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const liveRefreshInFlightRef = useRef(false);
   const snapshotRecoveryAttemptedRef = useRef(false);
   const comprasSectionRef = useRef<HTMLElement | null>(null);
+  // Ref siempre actualizado con el cart actual — usado en callbacks con dep array vacío
+  // para evitar el bug de capturar previousCart dentro de un updater de React (no es síncrono)
+  const cartRef = useRef<ShopCart | null>(null);
+
+  // Mantener cartRef siempre sincronizado con el estado cart
+  useEffect(() => {
+    cartRef.current = cart;
+  }, [cart]);
 
   // Keep Home neutral at top, but once user enters shop section switch to an active purchase theme.
   useEffect(() => {
@@ -1095,15 +1103,14 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
   const updateLineQuantity = useCallback(
     async (lineId: string, quantity: number) => {
-      if (quantity <= 0) {
-        return;
-      }
+      if (!Number.isFinite(quantity) || quantity <= 0 || quantity > 99) return;
 
-      // Optimistic update: update qty + recalculate lineTotal immediately
+      // Capturar snapshot ANTES del setState — cartRef está siempre actualizado
+      const previousCart = cartRef.current;
+
+      // Optimistic update: actualizar qty + recalcular lineTotal inmediatamente
       setMutatingLineIds((prev) => { const next = new Set(prev); next.add(lineId); return next; });
-      let previousCart: ShopCart | null = null;
       setCart((prev) => {
-        previousCart = prev;
         if (!prev) return prev;
         return {
           ...prev,
@@ -1113,11 +1120,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             const newTotal = Number.isFinite(unitPrice)
               ? String((unitPrice * quantity).toFixed(2))
               : l.lineTotal.amount;
-            return {
-              ...l,
-              quantity,
-              lineTotal: { ...l.lineTotal, amount: newTotal },
-            };
+            return { ...l, quantity, lineTotal: { ...l.lineTotal, amount: newTotal } };
           }),
         };
       });
@@ -1126,19 +1129,14 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       try {
         const response = await fetch("/api/cart/lines/update", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lines: [{ id: lineId, quantity }],
-          }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ lines: [{ id: lineId, quantity }] }),
         });
         const payload = await parseApiResponse<CartResponse>(response);
-        if (!payload.cart) {
-          throw new Error("No se pudo actualizar el carrito.");
-        }
+        if (!payload.cart) throw new Error("No se pudo actualizar el carrito.");
         setCart(payload.cart);
       } catch (error) {
+        // Revertir al estado real anterior
         setCart(previousCart);
         setFeedbackMessage(error instanceof Error ? error.message : "No se pudo actualizar la cantidad.");
       } finally {
@@ -1149,12 +1147,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   );
 
   const removeLine = useCallback(async (lineId: string) => {
+    // Capturar snapshot ANTES del setState — cartRef está siempre actualizado
+    const previousCart = cartRef.current;
+
     setFeedbackMessage(null);
     setMutatingLineIds((prev) => { const next = new Set(prev); next.add(lineId); return next; });
-    // Capture previous state and apply optimistic update in one step
-    let previousCart: ShopCart | null = null;
+    // Optimistic: quitar la línea visualmente de inmediato
     setCart((prev) => {
-      previousCart = prev;
       if (!prev) return prev;
       return { ...prev, lines: prev.lines.filter((l) => l.id !== lineId) };
     });
@@ -1165,13 +1164,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         body: JSON.stringify({ lineIds: [lineId] }),
       });
       const payload = await parseApiResponse<CartResponse>(response);
-      if (!payload.cart) {
-        throw new Error("No se pudo actualizar el carrito.");
-      }
-      // Confirm with server response (updates totals, discounts, etc.)
+      if (!payload.cart) throw new Error("No se pudo actualizar el carrito.");
+      // Confirmar con respuesta del servidor (actualiza totales, descuentos, etc.)
       setCart(payload.cart);
     } catch (error) {
-      // Revert optimistic update
+      // Revertir al estado real anterior
       setCart(previousCart);
       setFeedbackMessage(error instanceof Error ? error.message : "No se pudo eliminar el item.");
     } finally {
@@ -1493,154 +1490,164 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 </Button>
               </SheetTrigger>
               <SheetContent className="flex h-full w-[min(100vw,460px)] flex-col p-0" side="right">
-                <div className="flex-1 space-y-4 overflow-y-auto p-5 pb-28">
-                  <SheetHeader>
+                <div className="flex-1 space-y-3 overflow-y-auto p-5 pb-28">
+                  <SheetHeader className="space-y-0.5">
                     <SheetTitle>Tu carrito DOFLINS</SheetTitle>
-                    <SheetDescription>Revisa tus packs y procede al pago cuando estés listo.</SheetDescription>
+                    <SheetDescription>
+                      {cartItemCount > 0
+                        ? `${cartItemCount} pack${cartItemCount === 1 ? "" : "s"} · ${totals.total}`
+                        : "Agrega packs y paga en Shopify Checkout"}
+                    </SheetDescription>
                   </SheetHeader>
-                  <p className="text-xs text-[var(--ink-600)]">Guardamos tu carrito en este dispositivo para que no pierdas tu avance.</p>
 
-                  {isLoadingCart ? <p className="text-sm text-[var(--ink-700)]">Cargando carrito...</p> : null}
-
-                  {!isLoadingCart && (!cart || cart.lines.length === 0) ? (
-                    <p className="rounded-2xl border p-4 text-sm text-[var(--ink-700)]" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
-                      Aún no tienes productos en carrito.
-                    </p>
+                  {isLoadingCart ? (
+                    <div className="flex items-center gap-2 text-sm text-[var(--ink-700)]">
+                      <ArrowPathIcon className="h-4 w-4 animate-spin text-[var(--shop-primary-from)]" />
+                      Cargando carrito...
+                    </div>
                   ) : null}
 
-                  {!isLoadingCart ? (
-                    <div className="space-y-2 rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-card-bg)" }}>
-                      <p className="text-sm font-semibold text-[var(--ink-900)]">Tu compra en 3 pasos</p>
-                      <div className="grid grid-cols-3 gap-2">
-                        <div
-                          className={`rounded-xl border px-2 py-2 text-center text-xs ${
-                            hasCartLines ? "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)] text-[var(--shop-chip-text)]" : "border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] text-[var(--ink-700)]"
-                          }`}
-                        >
-                          1. Carrito
-                        </div>
-                        <div
-                          className={`rounded-xl border px-2 py-2 text-center text-xs ${
-                            hasCartLines ? "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)] text-[var(--shop-chip-text)]" : "border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] text-[var(--ink-700)]"
-                          }`}
-                        >
-                          2. Pago
-                        </div>
-                        <div className="rounded-xl border px-2 py-2 text-center text-xs" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
-                          3. Confirmación
-                        </div>
-                      </div>
+                  {!isLoadingCart && (!cart || cart.lines.length === 0) ? (
+                    <div className="rounded-2xl border p-5 text-center" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
+                      <ShoppingCartIcon className="mx-auto mb-2 h-7 w-7 text-[var(--ink-400)]" />
+                      <p className="text-sm font-medium text-[var(--ink-700)]">Tu carrito está vacío</p>
+                      <p className="mt-0.5 text-xs text-[var(--ink-500)]">Elige un pack para comenzar tu colección</p>
+                    </div>
+                  ) : null}
+
+                  {!isLoadingCart && hasCartLines ? (
+                    <div className="flex items-center gap-1 text-[0.7rem] font-medium">
+                      {(["Carrito", "Pago", "Confirmación"] as const).map((step, i) => (
+                        <span key={step} className="flex items-center gap-1">
+                          {i > 0 && <span className="text-[var(--ink-300)] text-sm leading-none">›</span>}
+                          <span className={`rounded-full px-2 py-0.5 ${
+                            i < 2
+                              ? "bg-[var(--shop-chip-bg)] text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]"
+                              : "bg-[var(--shop-control-bg)] text-[var(--ink-400)] ring-1 ring-[var(--shop-control-border)]"
+                          }`}>{i + 1}. {step}</span>
+                        </span>
+                      ))}
                     </div>
                   ) : null}
 
                   {cart?.lines.map((line) => {
                     const isFreeLine = Number(line.pricePerUnit.amount) <= 0;
+                    const isMutating = mutatingLineIds.has(line.id);
 
                     return (
-                      <article key={line.id} className={`animate-catalog-fadein rounded-2xl border p-3 ${
+                      <article key={line.id} className={`rounded-2xl border p-3 transition-opacity ${
+                        isMutating ? "opacity-60" : ""
+                      } ${
                         isFreeLine
                           ? "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)]"
                           : "border-[var(--shop-card-border)] bg-[var(--shop-control-bg)]"
                       }`}>
                         {isFreeLine ? (
-                          <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.08em] text-[var(--shop-chip-text)]">
-                            <span>🎁</span> Regalo gratis — se agrega automáticamente al checkout
-                          </div>
+                          <p className="mb-2 flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--shop-chip-text)]">
+                            🎁 Regalo gratis — se agrega al checkout
+                          </p>
                         ) : null}
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="flex items-start gap-3">
-                            {line.imageUrl ? (
-                              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-skeleton-base)" }}>
-                                <Image
-                                  src={line.imageUrl}
-                                  alt={line.imageAlt ?? line.productTitle}
-                                  fill
-                                  className="object-cover"
-                                  unoptimized
-                                />
+                        <div className="flex items-center gap-3">
+                          {line.imageUrl ? (
+                            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-skeleton-base)" }}>
+                              <Image
+                                src={line.imageUrl}
+                                alt={line.imageAlt ?? line.productTitle}
+                                fill
+                                sizes="56px"
+                                className="object-cover"
+                                unoptimized
+                              />
+                            </div>
+                          ) : null}
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="truncate text-sm font-semibold leading-tight text-[var(--ink-900)]">{line.productTitle}</p>
+                                {line.variantTitle && line.variantTitle !== "Default Title" ? (
+                                  <p className="text-xs text-[var(--ink-500)]">{line.variantTitle}</p>
+                                ) : null}
+                                <p className="mt-0.5">
+                                  {isFreeLine ? (
+                                    <span className="rounded-full bg-[var(--shop-chip-bg)] px-2 py-0.5 text-xs font-bold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">Gratis</span>
+                                  ) : (
+                                    <span className="text-sm font-semibold text-[var(--ink-900)]">{formatMoney(line.lineTotal)}</span>
+                                  )}
+                                </p>
+                                {!isFreeLine && (() => {
+                                  const avail = getLineQtyAvailable(line.merchandiseId);
+                                  return avail !== null && avail > 0 && avail <= 5 ? (
+                                    <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-amber-700">
+                                      <ExclamationTriangleIcon className="h-3 w-3" /> Solo {avail} restantes
+                                    </p>
+                                  ) : null;
+                                })()}
                               </div>
-                            ) : null}
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-semibold text-[var(--ink-900)]">{line.productTitle}</p>
-                                {isFreeLine ? (
-                                  <span className="rounded-full bg-[var(--shop-chip-bg)] px-2 py-0.5 text-xs font-bold uppercase tracking-[0.08em] text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
-                                    Gratis
-                                  </span>
+                              {!isFreeLine ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 shrink-0 p-0 text-[var(--ink-400)] hover:text-red-500"
+                                  disabled={isMutating}
+                                  onClick={() => void removeLine(line.id)}
+                                >
+                                  <TrashIcon className="h-3.5 w-3.5" />
+                                </Button>
+                              ) : (
+                                <LockClosedIcon className="h-4 w-4 shrink-0 text-[var(--shop-chip-text)] opacity-50" />
+                              )}
+                            </div>
+                            {!isFreeLine ? (
+                              <div className="mt-2 flex items-center gap-1.5">
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  disabled={isMutating || line.quantity <= 1}
+                                  onClick={() => void updateLineQuantity(line.id, Math.max(1, line.quantity - 1))}
+                                >
+                                  <MinusIcon className="h-3.5 w-3.5" />
+                                </Button>
+                                <span className="min-w-[1.75rem] text-center text-sm font-bold text-[var(--ink-900)]">{line.quantity}</span>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  disabled={isMutating}
+                                  onClick={() => void updateLineQuantity(line.id, line.quantity + 1)}
+                                >
+                                  <PlusIcon className="h-3.5 w-3.5" />
+                                </Button>
+                                {isMutating ? (
+                                  <ArrowPathIcon className="h-3.5 w-3.5 animate-spin text-[var(--shop-primary-from)]" />
                                 ) : null}
                               </div>
-                              {line.variantTitle && line.variantTitle !== "Default Title" ? (
-                                <p className="text-xs text-[var(--ink-700)]">{line.variantTitle}</p>
-                              ) : null}
-                              <p className="mt-1 text-sm text-[var(--ink-700)]">{isFreeLine ? "$0.00" : formatMoney(line.lineTotal)}</p>
-                              {(() => {
-                                const avail = getLineQtyAvailable(line.merchandiseId);
-                                return avail !== null && avail > 0 && avail <= 5 ? (
-                                  <p className="mt-1 flex items-center gap-1 text-xs font-semibold text-amber-700">
-                                    <ExclamationTriangleIcon className="h-3.5 w-3.5" /> Solo quedan {avail}
-                                  </p>
-                                ) : null;
-                              })()}
-                            </div>
+                            ) : null}
                           </div>
-                          {!isFreeLine ? (
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="h-8 px-2"
-                              disabled={mutatingLineIds.has(line.id)}
-                              onClick={() => void removeLine(line.id)}
-                            >
-                              <TrashIcon className="h-4 w-4" />
-                            </Button>
-                          ) : (
-                            <LockClosedIcon className="h-4 w-4 shrink-0 text-[var(--shop-chip-text)] opacity-60" />
-                          )}
                         </div>
-                        {!isFreeLine ? (
-                        <div className="mt-2 flex items-center gap-2">
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-8 px-2"
-                            disabled={mutatingLineIds.has(line.id) || line.quantity <= 1}
-                            onClick={() => void updateLineQuantity(line.id, Math.max(1, line.quantity - 1))}
-                          >
-                            <MinusIcon className="h-4 w-4" />
-                          </Button>
-                          <span className="min-w-6 text-center text-sm font-semibold text-[var(--ink-900)]">{line.quantity}</span>
-                          <Button
-                            variant="secondary"
-                            size="sm"
-                            className="h-8 px-2"
-                            disabled={mutatingLineIds.has(line.id)}
-                            onClick={() => void updateLineQuantity(line.id, line.quantity + 1)}
-                          >
-                            <PlusIcon className="h-4 w-4" />
-                          </Button>
-                        </div>
-                        ) : null}
                       </article>
                     );
                   })}
 
                   {freeGiftProgress.enabled && cart?.lines.length ? (
-                    <div className="space-y-2 rounded-2xl border p-4 text-sm text-[var(--ink-700)]" style={{ borderColor: "var(--shop-chip-ring)", background: "var(--shop-chip-bg)" }}>
-                      <p className="font-semibold text-[var(--ink-900)]">
-                        {freeGiftProgress.unlocked
-                          ? "🎁 Regalo gratis desbloqueado"
-                          : `Te faltan ${formatCurrencyAmount(freeGiftProgress.remaining, pricingCurrencyCode)} para tu regalo gratis`}
-                      </p>
-                      <div className="h-2.5 overflow-hidden rounded-full" style={{ background: "var(--shop-card-border)" }}>
+                    <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--shop-chip-ring)", background: "var(--shop-chip-bg)" }}>
+                      <div className="h-1.5 w-full" style={{ background: "var(--shop-card-border)" }}>
                         <div
-                          className="h-full rounded-full bg-[linear-gradient(90deg,var(--shop-primary-from),var(--shop-primary-to))] transition-all duration-500"
+                          className="h-full bg-[linear-gradient(90deg,var(--shop-primary-from),var(--shop-primary-to))] transition-all duration-500"
                           style={{ width: `${freeGiftProgress.percent}%` }}
                         />
                       </div>
-                      <p className="text-xs text-[var(--ink-600)]">
-                        Llevas {formatCurrencyAmount(freeGiftProgress.paidSubtotal, pricingCurrencyCode)} de{" "}
-                        {formatCurrencyAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, pricingCurrencyCode)}.
-                      </p>
+                      <div className="px-4 py-3">
+                        <p className="text-sm font-semibold text-[var(--shop-chip-text)]">
+                          {freeGiftProgress.unlocked
+                            ? "🎁 ¡Regalo gratis desbloqueado!"
+                            : `🎁 Faltan ${formatCurrencyAmount(freeGiftProgress.remaining, pricingCurrencyCode)} para tu regalo gratis`}
+                        </p>
+                        <p className="mt-0.5 text-xs text-[var(--ink-600)]">
+                          {formatCurrencyAmount(freeGiftProgress.paidSubtotal, pricingCurrencyCode)} de{" "}
+                          {formatCurrencyAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, pricingCurrencyCode)}
+                        </p>
+                      </div>
                     </div>
                   ) : null}
 
@@ -1760,7 +1767,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   ) : null}
                 </div>
 
-                <div className="border-t border-[#d8d2b3] bg-[linear-gradient(180deg,#fafbea,#f1f6e2)] p-4">
+                <div className="border-t p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                   <div className="mb-2 flex items-center justify-between text-sm text-[var(--ink-700)]">
                     <span>Total estimado</span>
                     <strong className="text-base text-[var(--ink-900)]">{totals.total}</strong>

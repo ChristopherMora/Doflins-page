@@ -11,12 +11,26 @@ interface RateLimitResult {
 
 const buckets = new Map<string, Bucket>();
 
+// Limpiar buckets expirados cada 5 minutos para evitar memory leak
+let lastSweep = Date.now();
+const SWEEP_INTERVAL_MS = 5 * 60_000;
+
+function sweepExpiredBuckets(now: number): void {
+  if (now - lastSweep < SWEEP_INTERVAL_MS) return;
+  lastSweep = now;
+  for (const [key, bucket] of buckets) {
+    if (now >= bucket.resetAt) buckets.delete(key);
+  }
+}
+
 export function checkRateLimit(
   key: string,
   limit = 10,
   windowMs = 60_000,
   now = Date.now(),
 ): RateLimitResult {
+  sweepExpiredBuckets(now);
+
   const bucket = buckets.get(key);
 
   if (!bucket || now >= bucket.resetAt) {

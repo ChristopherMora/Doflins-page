@@ -2,18 +2,22 @@ import { createHash } from "node:crypto";
 
 import type { NextRequest } from "next/server";
 
+// Regex simple para validar IPv4 e IPv6 y evitar que un atacante
+// inyecte un header X-Forwarded-For falso con un valor largo/raro
+const IP_RE = /^[\w:.]{2,45}$/;
+
+function sanitizeIp(raw: string | null | undefined): string | null {
+  if (!raw) return null;
+  const candidate = raw.split(",")[0].trim();
+  return IP_RE.test(candidate) ? candidate : null;
+}
+
 export function getClientIp(request: NextRequest): string {
-  const forwardedFor = request.headers.get("x-forwarded-for");
-  if (forwardedFor) {
-    return forwardedFor.split(",")[0].trim();
-  }
-
-  const realIp = request.headers.get("x-real-ip");
-  if (realIp) {
-    return realIp.trim();
-  }
-
-  return "0.0.0.0";
+  return (
+    sanitizeIp(request.headers.get("x-forwarded-for")) ??
+    sanitizeIp(request.headers.get("x-real-ip")) ??
+    "0.0.0.0"
+  );
 }
 
 export function hashIp(ip: string): string {

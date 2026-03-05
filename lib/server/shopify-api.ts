@@ -7,6 +7,8 @@ import { ShopifyStorefrontError } from "@/lib/server/shopify-storefront";
 
 export const SHOPIFY_CART_COOKIE = "doflins_cart_id";
 const SHOPIFY_CART_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+// Shopify cart IDs son GIDs base64 + tokens URL-safe, máx ~200 chars
+const CART_ID_RE = /^[A-Za-z0-9+/=_:?&%-]{10,250}$/;
 
 export function setCartCookie(response: NextResponse, cartId: string): void {
   response.cookies.set({
@@ -14,8 +16,8 @@ export function setCartCookie(response: NextResponse, cartId: string): void {
     value: cartId,
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
+    sameSite: "strict",
+    path: "/api/cart",
     maxAge: SHOPIFY_CART_COOKIE_MAX_AGE,
   });
 }
@@ -26,14 +28,16 @@ export function clearCartCookie(response: NextResponse): void {
     value: "",
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    path: "/",
+    sameSite: "strict",
+    path: "/api/cart",
     maxAge: 0,
   });
 }
 
 export function getCartIdFromRequest(request: NextRequest): string | null {
-  return request.cookies.get(SHOPIFY_CART_COOKIE)?.value ?? null;
+  const raw = request.cookies.get(SHOPIFY_CART_COOKIE)?.value ?? null;
+  if (!raw || !CART_ID_RE.test(raw)) return null;
+  return raw;
 }
 
 export function rateLimitResponse(
@@ -61,6 +65,24 @@ export function rateLimitResponse(
       },
     },
   );
+}
+
+/**
+ * Rechaza la petición si el body declarado supera el límite (defecto 16KB).
+ * Protege contra DoS de cuerpos grandes antes de parsear JSON.
+ */
+export function checkBodySize(request: NextRequest, maxBytes = 16_384): NextResponse | null {
+  const contentLength = request.headers.get("content-length");
+  if (contentLength !== null) {
+    const bytes = Number(contentLength);
+    if (Number.isFinite(bytes) && bytes > maxBytes) {
+      return NextResponse.json(
+        { status: "error", code: "payload_too_large", message: "Cuerpo de la petición demasiado grande." },
+        { status: 413 },
+      );
+    }
+  }
+  return null;
 }
 
 export function toApiErrorResponse(error: unknown): NextResponse {

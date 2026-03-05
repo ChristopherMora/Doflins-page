@@ -3,16 +3,17 @@ import { NextRequest, NextResponse } from "next/server";
 import { cartLineAddBodySchema } from "@/lib/validation/shopify";
 import { addCartLines, createCart, fetchCartById } from "@/lib/server/shopify-storefront";
 import { syncFreeGiftForCart } from "@/lib/server/cart-promotions";
-import { getCartIdFromRequest, rateLimitResponse, setCartCookie, toApiErrorResponse } from "@/lib/server/shopify-api";
+import { checkBodySize, getCartIdFromRequest, rateLimitResponse, setCartCookie, toApiErrorResponse } from "@/lib/server/shopify-api";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
   const limited = rateLimitResponse(request, "cart_lines_add", 60, 60_000);
-  if (limited) {
-    return limited;
-  }
+  if (limited) return limited;
+
+  const tooBig = checkBodySize(request);
+  if (tooBig) return tooBig;
 
   let payload: unknown;
   try {

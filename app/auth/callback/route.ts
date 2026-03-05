@@ -5,11 +5,15 @@ import { isAdminEmail } from "@/lib/auth-admin";
 import { getSupabaseAnonKey, getSupabaseUrl, hasSupabasePublicConfig } from "@/lib/supabase/config";
 
 function sanitizeNextPath(rawValue: string | null): string {
-  if (!rawValue || !rawValue.startsWith("/")) {
+  if (!rawValue) return "/admin/doflins";
+  // Bloquear open redirect: //evil.com empieza con / pero es URL absoluta.
+  // También bloquear /\ que algunos navegadores interpretan como absoluta.
+  const trimmed = rawValue.replace(/^[/\\]+/, "/");
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//")) {
     return "/admin/doflins";
   }
-
-  return rawValue;
+  // Solo rutas admin permitidas en este callback
+  return trimmed.startsWith("/admin") ? trimmed : "/admin/doflins";
 }
 
 function getBaseUrl(request: NextRequest): string {
