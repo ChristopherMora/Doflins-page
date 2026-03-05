@@ -3,6 +3,8 @@ import { NextRequest } from "next/server";
 
 export const runtime = "edge";
 
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://doflins.dofer.mx";
+
 const RARITY_CONFIG: Record<string, { label: string; color: string; bg: string; glow: string }> = {
   COMMON:    { label: "Común",      color: "#5a6650", bg: "#eef1e8", glow: "#b8c4a8" },
   RARE:      { label: "Raro",       color: "#2e6040", bg: "#e0f3ea", glow: "#90c8a8" },
@@ -17,7 +19,8 @@ export function GET(request: NextRequest): ImageResponse {
 
   const name    = searchParams.get("name")   ?? "Doflin";
   const rarity  = (searchParams.get("rarity") ?? "COMMON").toUpperCase();
-  const image   = searchParams.get("image")  ?? "";
+  const imageRaw = searchParams.get("image") ?? "";
+  const image   = imageRaw.startsWith("/") ? `${BASE_URL}${imageRaw}` : imageRaw;
   const series  = searchParams.get("series") ?? "Animals";
   const number  = searchParams.get("number") ?? "01";
 
