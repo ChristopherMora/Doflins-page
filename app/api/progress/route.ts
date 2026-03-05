@@ -26,7 +26,7 @@ function unauthorizedResponse(message = "Debes iniciar sesión para guardar tu p
 
 async function resolveAuthenticatedUser(
   request: NextRequest,
-): Promise<{ id: string; email: string } | null> {
+): Promise<{ id: string; email: string; displayName: string | null } | null> {
   if (!hasSupabasePublicConfig()) {
     return null;
   }
