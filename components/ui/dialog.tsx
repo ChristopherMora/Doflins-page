@@ -32,13 +32,13 @@ function DialogContent({ className, children, ...props }: React.ComponentProps<t
       <DialogOverlay />
       <DialogPrimitive.Content
         className={cn(
-          "fixed left-1/2 top-1/2 z-50 grid w-[min(92vw,540px)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-3xl border border-black/10 bg-white p-6 shadow-2xl transition-all duration-200",
+          "fixed left-1/2 top-1/2 z-50 grid w-[min(92vw,540px)] -translate-x-1/2 -translate-y-1/2 gap-4 rounded-3xl border border-black/10 bg-[var(--surface-50)] p-6 shadow-2xl transition-all duration-200",
           className,
         )}
         {...props}
       >
         {children}
-        <DialogPrimitive.Close className="absolute right-3 top-3 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 text-[var(--ink-700)] shadow-sm ring-1 ring-black/10 transition hover:bg-white active:scale-95">
+        <DialogPrimitive.Close className="absolute right-3 top-3 z-50 flex h-8 w-8 items-center justify-center rounded-full bg-[var(--surface-100)] text-[var(--ink-700)] shadow-sm ring-1 ring-black/10 transition hover:bg-[var(--surface-200)] active:scale-95">
           <XMarkIcon className="h-4 w-4" />
           <span className="sr-only">Cerrar</span>
         </DialogPrimitive.Close>

@@ -28,7 +28,7 @@ function SheetOverlay({ className, ...props }: React.ComponentProps<typeof Dialo
 }
 
 const sheetVariants = cva(
-  "fixed z-50 bg-white p-6 shadow-2xl transition-transform duration-300 ease-out border-black/10 border",
+  "fixed z-50 bg-[var(--surface-50)] p-6 shadow-2xl transition-transform duration-300 ease-out border-black/10 border",
   {
     variants: {
       side: {
