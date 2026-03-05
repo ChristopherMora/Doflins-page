@@ -3,16 +3,13 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  CheckCircleIcon,
   ShoppingCartIcon,
   SparklesIcon,
-  UserPlusIcon,
 } from "@heroicons/react/24/solid";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { BolsaSaveWidget } from "@/components/bolsa/bolsa-save-widget";
 import { getDb } from "@/lib/db/client";
 import { codigosBolsa, codigosBolsaItems, doflins } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
@@ -190,39 +187,7 @@ export default async function BolsaPage({ params }: BolsaPageProps): Promise<Rea
         </div>
 
         {/* CTA guardar progreso */}
-        <Card className="overflow-hidden border-2 border-[#c5dca0]">
-          <div className="h-1.5 bg-gradient-to-r from-[#4e6f2a] to-[#8ab84a]" />
-          <CardContent className="p-6 space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#eaf5d8]">
-                <CheckCircleIcon className="h-5 w-5 text-[#4e6f2a]" />
-              </div>
-              <div>
-                <p className="font-bold text-[var(--ink-900)]">¿Ya las tienes en tu colección?</p>
-                <p className="text-sm text-[var(--ink-600)] mt-0.5">
-                  Crea una cuenta gratis y marca estas figuras como obtenidas. Lleva el registro de toda tu colección DOFLINS, desbloquea logros y comparte tu progreso.
-                </p>
-              </div>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
-              <Button asChild className="bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
-                <Link href="/coleccion">
-                  <UserPlusIcon className="h-4 w-4" /> Crear cuenta gratis
-                </Link>
-              </Button>
-              <Button asChild variant="secondary">
-                <Link href="/reveal">
-                  <SparklesIcon className="h-4 w-4" /> Ver catálogo completo
-                </Link>
-              </Button>
-            </div>
-
-            <p className="text-[10px] text-[var(--ink-400)]">
-              Gratis · Sin tarjeta · Sincronizado en todos tus dispositivos
-            </p>
-          </CardContent>
-        </Card>
+        <BolsaSaveWidget codigo={codigo.toUpperCase()} doflinCount={items.length} />
 
         {/* CTA comprar más */}
         <div className="mt-4 rounded-2xl bg-[var(--surface-100)] p-4 flex items-center gap-4">
