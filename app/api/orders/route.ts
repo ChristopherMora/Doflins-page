@@ -40,16 +40,62 @@ interface ShopifyOrdersResponse {
   orders: ShopifyOrder[];
 }
 
+// ─── Cache de token (dura 24h) ────────────────────────────────────────────────
+
+let cachedToken: string | null = null;
+let tokenExpiresAt = 0;
+
+async function getAdminToken(): Promise<string> {
+  const domain = process.env.SHOPIFY_STORE_DOMAIN;
+  const clientId = process.env.SHOPIFY_API_CLIENT_ID;
+  const clientSecret = process.env.SHOPIFY_API_CLIENT_SECRET;
+
+  // Fallback: token estático si está configurado (legacy)
+  const staticToken = process.env.SHOPIFY_ADMIN_TOKEN;
+  if (staticToken && !clientId) {
+    return staticToken;
+  }
+
+  if (!domain || !clientId || !clientSecret) {
+    throw new Error("Faltan SHOPIFY_STORE_DOMAIN, SHOPIFY_API_CLIENT_ID o SHOPIFY_API_CLIENT_SECRET");
+  }
+
+  // Reusar token cacheado si no ha expirado (con 5 min de margen)
+  if (cachedToken && Date.now() < tokenExpiresAt - 5 * 60 * 1000) {
+    return cachedToken;
+  }
+
+  const res = await fetch(`https://${domain}/admin/oauth/access_token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "client_credentials",
+      client_id: clientId,
+      client_secret: clientSecret,
+    }),
+  });
+
+  if (!res.ok) {
+    throw new Error(`Error obteniendo token Shopify: ${res.status}`);
+  }
+
+  const data = (await res.json()) as { access_token: string; expires_in: number };
+  cachedToken = data.access_token;
+  tokenExpiresAt = Date.now() + data.expires_in * 1000;
+  return cachedToken;
+}
+
 // ─── Helper: fetch órdenes del Admin API ──────────────────────────────────────
 
 async function fetchOrdersByEmail(email: string): Promise<ShopifyOrder[]> {
   const domain = process.env.SHOPIFY_STORE_DOMAIN;
-  const token = process.env.SHOPIFY_ADMIN_TOKEN;
   const version = process.env.SHOPIFY_API_VERSION ?? "2025-01";
 
-  if (!domain || !token) {
-    throw new Error("SHOPIFY_STORE_DOMAIN o SHOPIFY_ADMIN_TOKEN no configurados");
+  if (!domain) {
+    throw new Error("SHOPIFY_STORE_DOMAIN no configurado");
   }
+
+  const token = await getAdminToken();
 
   const url = new URL(`https://${domain}/admin/api/${version}/orders.json`);
   url.searchParams.set("email", email);
