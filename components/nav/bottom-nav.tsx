@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, RectangleStackIcon, ShoppingCartIcon, Squares2X2Icon } from "@heroicons/react/24/solid";
+import { HomeIcon, RectangleStackIcon, ShoppingCartIcon, Squares2X2Icon, UserIcon } from "@heroicons/react/24/solid";
 
 interface BottomNavItem {
   href: string;
@@ -16,6 +16,7 @@ const NAV_ITEMS: BottomNavItem[] = [
   { href: "/reveal?universe=animals", label: "Catálogo", icon: Squares2X2Icon },
   { href: "/#compras", label: "Tienda", icon: ShoppingCartIcon, isAnchor: true },
   { href: "/coleccion", label: "Colección", icon: RectangleStackIcon },
+  { href: "/coleccion", label: "Cuenta", icon: UserIcon },
 ];
 
 export function BottomNav(): React.JSX.Element {

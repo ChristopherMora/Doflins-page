@@ -383,11 +383,385 @@ function normalizeOwnedIds(raw: unknown): number[] {
   );
 }
 
-export function RevealExperience(): React.JSX.Element {
+function useDarkMode(): boolean {
+  const [dark, setDark] = useState(false);
+  useEffect(() => {
+    const check = () =>
+      setDark(document.documentElement.dataset.theme === "dark");
+    check();
+    const obs = new MutationObserver(check);
+    obs.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["data-theme"],
+    });
+    return () => obs.disconnect();
+  }, []);
+  return dark;
+}
+
+// ─── Subcomponentes extraídos ──────────────────────────────────────────────
+
+interface DoflinModalProps {
+  selectedDoflin: CollectionItemDTO | null;
+  onClose: () => void;
+  catalog: CollectionItemDTO[];
+  catalogIndex: number;
+  onNavigate: (item: CollectionItemDTO) => void;
+  has3DModel: boolean;
+  modelConfig: DoflinModelConfig | undefined;
+  purchaseUniverse: "animals" | "multiverse";
+  rarityConfig: { color: string; softColor: string; label: string; probability: number } | null;
+  isOriginal: boolean;
+  isOwned: boolean;
+  groupStats: { total: number; originals: number; variants: number } | undefined;
+  variants: CollectionItemDTO[];
+  imageSrc: string;
+  shopUrl: string;
+  isAuthenticated: boolean;
+  theme: UniverseTheme;
+  onShare: () => void;
+  onMarkOwned: (id: number) => void;
+  onClearOwned: (id: number) => void;
+  onPurchaseIntent: (opts?: { source?: string; packSize?: PackSize; doflinId?: number }) => void;
+  onRequestAuth: () => void;
+  brokenImageIds: number[];
+  onImageBroken: React.Dispatch<React.SetStateAction<number[]>>;
+  brokenVariantImageIds: Set<number>;
+  onVariantImageBroken: React.Dispatch<React.SetStateAction<Set<number>>>;
+}
+
+function DoflinModal({
+  selectedDoflin,
+  onClose,
+  catalog,
+  catalogIndex,
+  onNavigate,
+  has3DModel,
+  modelConfig,
+  purchaseUniverse,
+  rarityConfig,
+  isOriginal,
+  isOwned,
+  groupStats,
+  variants,
+  imageSrc,
+  shopUrl,
+  isAuthenticated,
+  theme,
+  onShare,
+  onMarkOwned,
+  onClearOwned,
+  onPurchaseIntent,
+  onRequestAuth,
+  brokenImageIds,
+  onImageBroken,
+  brokenVariantImageIds,
+  onVariantImageBroken,
+}: DoflinModalProps): React.JSX.Element {
+  return (
+    <Dialog
+      open={Boolean(selectedDoflin)}
+      onOpenChange={(open) => { if (!open) onClose(); }}
+    >
+      <DialogContent className="w-[min(96vw,960px)] max-h-[92svh] gap-0 overflow-y-auto p-0 md:overflow-hidden">
+        {selectedDoflin ? (
+          <>
+            <div className="flex flex-col">
+              <div className={`grid gap-0 ${has3DModel ? "md:grid-cols-[1.1fr_0.9fr]" : "md:grid-cols-[1fr_1fr]"}`}>
+                {/* LEFT — image panel */}
+                <div className={`relative flex min-h-[260px] items-center justify-center overflow-hidden md:min-h-[400px] ${
+                  purchaseUniverse === "multiverse"
+                    ? "bg-[linear-gradient(145deg,#111028,#1e1c48,#262450)]"
+                    : "bg-[linear-gradient(145deg,#101410,#182018,#1e2a1e)]"
+                }`}>
+                  {catalog.length > 1 ? (
+                    <>
+                      <button type="button" aria-label="Doflin anterior"
+                        disabled={catalogIndex <= 0}
+                        onClick={() => { const prev = catalog[catalogIndex - 1]; if (prev) onNavigate(prev); }}
+                        className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/30 disabled:opacity-20 active:scale-95">
+                        <ChevronLeftIcon className="h-4 w-4" />
+                      </button>
+                      <button type="button" aria-label="Doflin siguiente"
+                        disabled={catalogIndex >= catalog.length - 1}
+                        onClick={() => { const next = catalog[catalogIndex + 1]; if (next) onNavigate(next); }}
+                        className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/30 disabled:opacity-20 active:scale-95">
+                        <ChevronRightIcon className="h-4 w-4" />
+                      </button>
+                    </>
+                  ) : null}
+                  <div className={`pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] opacity-25 ${
+                    purchaseUniverse === "multiverse" ? "bg-indigo-400" : "bg-emerald-600"
+                  }`} />
+                  <span className="absolute left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md ring-1 ring-white/20">
+                    {purchaseUniverse === "multiverse" ? "⚡ Multiverse" : "🌿 Animals"}
+                  </span>
+                  {has3DModel ? (
+                    <model-viewer
+                      src={modelConfig?.modelUrl ?? ""}
+                      alt={selectedDoflin.name}
+                      poster={selectedDoflin.imageUrl}
+                      orientation={modelConfig?.orientation}
+                      camera-orbit={modelConfig?.cameraOrbit ?? "0deg 60deg auto"}
+                      field-of-view={modelConfig?.fieldOfView ?? "28deg"}
+                      shadow-intensity="0.7" exposure="1.2"
+                      camera-controls auto-rotate interaction-prompt="none"
+                      className="relative z-10 h-[260px] w-full md:h-[400px]"
+                      style={{ background: "transparent", display: "block" }}
+                    />
+                  ) : (
+                    <div className="relative z-10 flex flex-col items-center gap-3 p-5 md:gap-4 md:p-8">
+                      <div className="relative flex h-[200px] w-[160px] items-center justify-center overflow-hidden rounded-[1.5rem] shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_24px_48px_rgba(0,0,0,0.45)] md:h-[260px] md:w-[205px] md:rounded-[2rem]">
+                        <div className="pointer-events-none absolute inset-0 rounded-[1.5rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] md:rounded-[2rem]" />
+                        <div className="pointer-events-none absolute inset-x-10 bottom-3 h-5 rounded-full bg-black/40 blur-xl" />
+                        <Image
+                          src={imageSrc}
+                          alt={selectedDoflin.name}
+                          width={780} height={780}
+                          className="h-full w-full object-cover"
+                          onError={() => {
+                            onImageBroken((prev) => {
+                              if (prev.includes(selectedDoflin.id)) return prev;
+                              return [...prev, selectedDoflin.id];
+                            });
+                          }}
+                          unoptimized
+                        />
+                      </div>
+                      {rarityConfig ? (
+                        <span
+                          className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold shadow-[0_4px_16px_rgba(0,0,0,0.3)] backdrop-blur-sm"
+                          style={{ backgroundColor: rarityConfig.softColor, color: rarityConfig.color }}
+                        >
+                          {rarityConfig.probability}% · {rarityConfig.label}
+                        </span>
+                      ) : null}
+                    </div>
+                  )}
+                </div>
+
+                {/* RIGHT — info panel */}
+                <div className="flex flex-col bg-white md:max-h-[92svh] md:overflow-hidden">
+                  <div className="flex flex-1 flex-col gap-4 p-5 md:overflow-y-auto md:p-6">
+                    <div className="flex items-start justify-between gap-3 pr-6">
+                      <div>
+                        <p className="mb-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--ink-400)]">
+                          Serie {selectedDoflin.series} · #{String(selectedDoflin.collectionNumber).padStart(2, "0")}
+                        </p>
+                        <h2 className="font-title text-2xl font-bold leading-tight text-[var(--ink-900)]">
+                          {selectedDoflin.name}
+                        </h2>
+                        <p className="mt-0.5 text-sm text-[var(--ink-500)]">{selectedDoflin.baseModel}</p>
+                      </div>
+                      <div className="flex shrink-0 items-center gap-1">
+                        <button type="button" aria-label="Compartir" onClick={() => void onShare()}
+                          className="rounded-full p-2 text-[var(--ink-400)] transition hover:bg-black/[0.06] hover:text-[var(--ink-800)]">
+                          <ShareIcon className="h-4 w-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1.5">
+                      <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${
+                        isOriginal ? "bg-[#eaf5d8] text-[#2f5b1f] ring-1 ring-[#c6dba0]" : "bg-[#e9efff] text-[#2f448f] ring-1 ring-[#c9d6ff]"
+                      }`}>
+                        {isOriginal ? "Animal original" : "Variante"}
+                      </span>
+                      {rarityConfig ? (
+                        <span className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold"
+                          style={{ backgroundColor: rarityConfig.softColor, color: rarityConfig.color }}>
+                          {rarityConfig.label}
+                        </span>
+                      ) : null}
+                      {rarityConfig ? (
+                        <span className="inline-flex items-center rounded-full bg-[var(--surface-100)] px-3 py-1 text-[11px] font-semibold text-[var(--ink-600)] ring-1 ring-black/[0.07]">
+                          {rarityConfig.probability}% drop rate
+                        </span>
+                      ) : null}
+                    </div>
+
+                    {selectedDoflin.funFact ? (
+                      <div className="rounded-2xl bg-[var(--surface-100)] p-4 ring-1 ring-black/[0.06]">
+                        <div className="mb-1.5 flex items-center gap-1.5">
+                          <SparklesIcon className="h-3.5 w-3.5 text-[var(--brand-accent)]" />
+                          <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink-500)]">Dato curioso</p>
+                        </div>
+                        <p className="text-sm leading-relaxed text-[var(--ink-700)]">{selectedDoflin.funFact}</p>
+                      </div>
+                    ) : null}
+
+                    <div className={`flex items-center justify-between gap-3 rounded-2xl p-4 ring-1 ring-black/[0.06] ${
+                      isAuthenticated && isOwned ? "bg-[#eaf5d8]" : "bg-[var(--surface-100)]"
+                    }`}>
+                      <div className="flex items-center gap-3">
+                        <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
+                          isAuthenticated && isOwned ? "bg-[var(--brand-primary)]" : "bg-white ring-1 ring-black/10"
+                        }`}>
+                          <CheckCircleIcon className={`h-5 w-5 ${isAuthenticated && isOwned ? "text-white" : "text-[var(--ink-300)]"}`} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[var(--ink-600)]">Tu colección</p>
+                          <p className="text-sm font-semibold text-[var(--ink-900)]">
+                            {isAuthenticated
+                              ? isOwned ? "Ya la tienes ✓" : "No la tienes aún"
+                              : "Crea cuenta gratis"}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        className={`shrink-0 ${isAuthenticated && !isOwned ? theme.primaryButton : ""}`}
+                        variant={!isAuthenticated ? "secondary" : isOwned ? "secondary" : "primary"}
+                        onClick={() => {
+                          if (!isAuthenticated) { onRequestAuth(); return; }
+                          if (isOwned) { onClearOwned(selectedDoflin.id); } else { onMarkOwned(selectedDoflin.id); }
+                        }}
+                      >
+                        {!isAuthenticated ? "Entrar" : isOwned ? "Quitar" : "Marcar"}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="shrink-0 border-t border-black/[0.07] bg-white p-4">
+                    <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink-400)]">Comprar sobres</p>
+                    <div className="flex gap-2">
+                      <Button asChild className={`flex-1 ${theme.primaryButton}`}>
+                        <a href={shopUrl} onClick={() => onPurchaseIntent({ source: "modal_buy", packSize: 15, doflinId: selectedDoflin.id })}>
+                          <ShoppingCartIcon className="h-4 w-4 shrink-0" />
+                          <span className="flex flex-col items-start leading-tight">
+                            <span className="font-bold">Sobre ×15</span>
+                            <span className="text-[10px] opacity-75">Más chances</span>
+                          </span>
+                          <span className="ml-auto shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide">MEJOR</span>
+                        </a>
+                      </Button>
+                      <Button asChild variant="secondary" className="w-[72px] shrink-0 flex-col gap-0 px-3 py-2 h-auto">
+                        <a href={shopUrl} onClick={() => onPurchaseIntent({ source: "modal_buy", packSize: 5, doflinId: selectedDoflin.id })}>
+                          <span className="text-sm font-bold">×5</span>
+                          <span className="text-[10px] opacity-60">Probar</span>
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {variants.length > 1 ? (
+                <div className="border-t border-black/[0.06] bg-[var(--surface-50,#f9f9f9)] px-6 py-4">
+                  <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-400)]">
+                    {groupStats?.total ?? variants.length} variantes · {selectedDoflin.baseModel}
+                  </p>
+                  <div className="flex gap-3 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
+                    {variants.map((variant) => {
+                      const isCurrent = variant.id === selectedDoflin.id;
+                      const vRarity = toCatalogRarity(variant.rarity);
+                      const vConfig = CATALOG_RARITY_CONFIG[vRarity];
+                      return (
+                        <button key={variant.id} type="button" onClick={() => onNavigate(variant)}
+                          className={`group relative flex shrink-0 flex-col overflow-hidden rounded-xl bg-white transition-all duration-150 ${
+                            isCurrent
+                              ? "shadow-[0_0_0_2.5px_var(--brand-primary),0_6px_20px_rgba(0,0,0,0.14)]"
+                              : "shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.05)] hover:-translate-y-0.5 hover:shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.10)]"
+                          }`} style={{ width: 96 }}>
+                          <div className="h-1 w-full" style={{ backgroundColor: vConfig.color }} />
+                          <div className="relative h-[80px] w-full overflow-hidden" style={{ backgroundColor: vConfig.softColor }}>
+                            {brokenVariantImageIds.has(variant.id) || !variant.imageUrl ? (
+                              <div className="flex h-full w-full flex-col items-center justify-center gap-1 opacity-55">
+                                <svg viewBox="0 0 32 32" className="h-9 w-9" fill="none" style={{ color: vConfig.color }}>
+                                  <path d="M16 28 C16 28 5 22 5 13 C5 7 10 3 16 3 C22 3 27 7 27 13 C27 22 16 28 16 28Z" fill="currentColor" opacity="0.18"/>
+                                  <path d="M16 28 C16 28 5 22 5 13 C5 7 10 3 16 3 C22 3 27 7 27 13 C27 22 16 28 16 28Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
+                                  <path d="M16 28 L16 6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.7"/>
+                                  <path d="M16 14 C12 11 9 11 7 12" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                  <path d="M16 14 C20 11 23 11 25 12" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                  <path d="M16 19 C13 17 10 17 8 18" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                  <path d="M16 19 C19 17 22 17 24 18" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
+                                </svg>
+                              </div>
+                            ) : (
+                              <Image src={variant.imageUrl} alt={variant.name} fill
+                                className="object-cover transition duration-200 group-hover:scale-[1.06]"
+                                unoptimized
+                                onError={() => onVariantImageBroken((prev) => { const next = new Set(prev); next.add(variant.id); return next; })}
+                              />
+                            )}
+                            {isCurrent ? (
+                              <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full shadow-sm" style={{ backgroundColor: "var(--brand-primary)" }}>
+                                <CheckCircleIcon className="h-3.5 w-3.5 text-white" />
+                              </div>
+                            ) : null}
+                          </div>
+                          <div className="flex flex-col gap-0.5 px-2 py-2">
+                            <p className="truncate text-left text-[11px] font-semibold text-[var(--ink-900)]">
+                              {variantLabel(variant.variantName)}
+                            </p>
+                            <span className="text-[9px] font-bold" style={{ color: vConfig.color }}>
+                              {vConfig.label}
+                            </span>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </>
+        ) : null}
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface AuthPromptDialogProps {
+  isOpen: boolean;
+  isLoading: boolean;
+  theme: UniverseTheme;
+  onClose: () => void;
+  onLogin: () => void;
+}
+
+function AuthPromptDialog({
+  isOpen,
+  isLoading,
+  theme,
+  onClose,
+  onLogin,
+}: AuthPromptDialogProps): React.JSX.Element {
+  return (
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="max-w-md">
+        <DialogHeader>
+          <DialogTitle>Guarda tu progreso con una cuenta</DialogTitle>
+          <DialogDescription>
+            Para guardar tu progreso necesitas una cuenta. Crea tu acceso con Google y sincroniza tus Doflins encontrados.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="flex flex-wrap gap-2">
+          <Button className={theme.primaryButton} disabled={isLoading}
+            onClick={() => { onClose(); void onLogin(); }}>
+            {isLoading ? "Abriendo..." : "Continuar con Google"}
+          </Button>
+          <Button variant="secondary" onClick={onClose}>Ahora no</Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+interface RevealExperienceProps {
+  initialCollection?: CollectionItemDTO[];
+  initialRemaining?: Record<Rarity, number>;
+}
+
+export function RevealExperience({
+  initialCollection,
+  initialRemaining,
+}: RevealExperienceProps): React.JSX.Element {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const loadMoreRef = useRef<HTMLDivElement | null>(null);
+  const dark = useDarkMode();
   const initialUniverse = toUniverse(searchParams.get("universe")) ?? "animals";
   const initialRarityFilter = toRarityFilter(searchParams.get("rarity")) ?? "all";
   const initialQuery = (searchParams.get("q") ?? "").slice(0, 80);
@@ -401,11 +775,11 @@ export function RevealExperience(): React.JSX.Element {
   const [ownedIds, setOwnedIds] = useState<number[]>([]);
   const [brokenModalImageIds, setBrokenModalImageIds] = useState<number[]>([]);
   const [brokenVariantImageIds, setBrokenVariantImageIds] = useState<Set<number>>(new Set());
-  const [collection, setCollection] = useState<CollectionItemDTO[]>([]);
-  const [isLoadingCollection, setIsLoadingCollection] = useState(true);
+  const [collection, setCollection] = useState<CollectionItemDTO[]>(initialCollection ?? []);
+  const [isLoadingCollection, setIsLoadingCollection] = useState(initialCollection == null);
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(initialQuery);
   const [catalogAnimKey, setCatalogAnimKey] = useState(0);
-  const [remaining, setRemaining] = useState<Record<Rarity, number> | null>(null);
+  const [remaining, setRemaining] = useState<Record<Rarity, number> | null>(initialRemaining ?? null);
   const [isAdminViewer, setIsAdminViewer] = useState(false);
   const [isAuthenticatedViewer, setIsAuthenticatedViewer] = useState(false);
   const [viewerEmail, setViewerEmail] = useState<string | null>(null);
@@ -650,22 +1024,52 @@ export function RevealExperience(): React.JSX.Element {
     return map;
   }, [activeCatalogCards]);
 
-  const themeVars =
-    activeUniverse === "animals"
-      ? ({
-          "--background": "#f6f2df",
-          "--foreground": "#222d1a",
-          "--surface-100": "#fff8e7",
-          "--surface-200": "#e8eed7",
-          "--ink-900": "#1f2a1a",
-          "--ink-800": "#2d3c24",
-          "--ink-700": "#445538",
-          "--ink-600": "#64785a",
-          "--brand-primary": "#4e6f2a",
-          "--brand-accent": "#6c8a35",
-          "--brand-sky": "#cc8b33",
-        } as React.CSSProperties)
-      : ({
+  const themeVars = useMemo((): React.CSSProperties => {
+    if (activeUniverse === "animals") {
+      return dark
+        ? {
+            "--background": "#101a0a",
+            "--foreground": "#d8f0b4",
+            "--surface-100": "#182210",
+            "--surface-200": "#1e2e18",
+            "--ink-900": "#e8f4cf",
+            "--ink-800": "#c6dbaa",
+            "--ink-700": "#a8c87e",
+            "--ink-600": "#88aa56",
+            "--brand-primary": "#90d054",
+            "--brand-accent": "#a0e068",
+            "--brand-sky": "#e8b060",
+          } as React.CSSProperties
+        : {
+            "--background": "#f6f2df",
+            "--foreground": "#222d1a",
+            "--surface-100": "#fff8e7",
+            "--surface-200": "#e8eed7",
+            "--ink-900": "#1f2a1a",
+            "--ink-800": "#2d3c24",
+            "--ink-700": "#445538",
+            "--ink-600": "#64785a",
+            "--brand-primary": "#4e6f2a",
+            "--brand-accent": "#6c8a35",
+            "--brand-sky": "#cc8b33",
+          } as React.CSSProperties;
+    }
+    // Multiverse
+    return dark
+      ? {
+          "--background": "#060c22",
+          "--foreground": "#dce8ff",
+          "--surface-100": "#0c1540",
+          "--surface-200": "#121e54",
+          "--ink-900": "#dce8ff",
+          "--ink-800": "#c4d4ff",
+          "--ink-700": "#a0b8f0",
+          "--ink-600": "#7890d0",
+          "--brand-primary": "#8094f8",
+          "--brand-accent": "#a0b4ff",
+          "--brand-sky": "#b4c8ff",
+        } as React.CSSProperties
+      : {
           "--background": "#e9eeff",
           "--foreground": "#141d3c",
           "--surface-100": "#f3f6ff",
@@ -677,7 +1081,8 @@ export function RevealExperience(): React.JSX.Element {
           "--brand-primary": "#4a62b5",
           "--brand-accent": "#6a7fdb",
           "--brand-sky": "#94a6ff",
-        } as React.CSSProperties);
+        } as React.CSSProperties;
+  }, [activeUniverse, dark]);
 
   const scrollToSection = useCallback(
     (
@@ -694,6 +1099,12 @@ export function RevealExperience(): React.JSX.Element {
   );
 
   useEffect(() => {
+    // Si el servidor ya entregó los datos, no hacemos el fetch en cliente
+    if (initialCollection != null && initialRemaining != null) {
+      setIsLoadingCollection(false);
+      return;
+    }
+
     async function loadCatalogData(): Promise<void> {
       try {
         const [collectionResponse, statsResponse] = await Promise.all([
@@ -718,6 +1129,8 @@ export function RevealExperience(): React.JSX.Element {
     }
 
     void loadCatalogData();
+  // initialCollection/initialRemaining son props del servidor (inmutables en runtime)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const loadOwnedProgress = useCallback(async (): Promise<void> => {
@@ -1870,322 +2283,41 @@ export function RevealExperience(): React.JSX.Element {
       </section>
       </LazySection>
 
-      <Dialog
-        open={Boolean(selectedDoflin)}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedDoflin(null);
-          }
-        }}
-      >
-        <DialogContent className="w-[min(96vw,960px)] max-h-[92svh] gap-0 overflow-y-auto p-0 md:overflow-hidden">
-          {selectedDoflin ? (
-            <>
-              <div className="flex flex-col">
-                {/* ─── TOP ROW: left image + right info ─── */}
-                <div className={`grid gap-0 ${selectedDoflinHas3DModel ? "md:grid-cols-[1.1fr_0.9fr]" : "md:grid-cols-[1fr_1fr]"}`}>
-
-                  {/* LEFT — image panel */}
-                  <div className={`relative flex min-h-[260px] items-center justify-center overflow-hidden md:min-h-[400px] ${
-                    selectedPurchaseUniverse === "multiverse"
-                      ? "bg-[linear-gradient(145deg,#111028,#1e1c48,#262450)]"
-                      : "bg-[linear-gradient(145deg,#101410,#182018,#1e2a1e)]"
-                  }`}>
-                    {/* Prev / Next — sólo sobre el panel imagen */}
-                    {activeCatalogCards.length > 1 ? (
-                      <>
-                        <button type="button" aria-label="Doflin anterior"
-                          disabled={selectedDoflinIndexInCatalog <= 0}
-                          onClick={() => { const prev = activeCatalogCards[selectedDoflinIndexInCatalog - 1]; if (prev) setSelectedDoflin(prev); }}
-                          className="absolute left-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/30 disabled:opacity-20 active:scale-95">
-                          <ChevronLeftIcon className="h-4 w-4" />
-                        </button>
-                        <button type="button" aria-label="Doflin siguiente"
-                          disabled={selectedDoflinIndexInCatalog >= activeCatalogCards.length - 1}
-                          onClick={() => { const next = activeCatalogCards[selectedDoflinIndexInCatalog + 1]; if (next) setSelectedDoflin(next); }}
-                          className="absolute right-2 top-1/2 z-20 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm ring-1 ring-white/20 transition hover:bg-white/30 disabled:opacity-20 active:scale-95">
-                          <ChevronRightIcon className="h-4 w-4" />
-                        </button>
-                      </>
-                    ) : null}
-                    {/* Decorative glow orb */}
-                    <div className={`pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] opacity-25 ${
-                      selectedPurchaseUniverse === "multiverse" ? "bg-indigo-400" : "bg-emerald-600"
-                    }`} />
-
-                    {/* Universe label */}
-                    <span className="absolute left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md ring-1 ring-white/20">
-                      {selectedPurchaseUniverse === "multiverse" ? "⚡ Multiverse" : "🌿 Animals"}
-                    </span>
-
-                    {selectedDoflinHas3DModel ? (
-                      <model-viewer
-                        src={selectedDoflinModelConfig?.modelUrl ?? ""}
-                        alt={selectedDoflin.name}
-                        poster={selectedDoflin.imageUrl}
-                        orientation={selectedDoflinModelConfig?.orientation}
-                        camera-orbit={selectedDoflinModelConfig?.cameraOrbit ?? "0deg 60deg auto"}
-                        field-of-view={selectedDoflinModelConfig?.fieldOfView ?? "28deg"}
-                        shadow-intensity="0.7" exposure="1.2"
-                        camera-controls auto-rotate interaction-prompt="none"
-                        className="relative z-10 h-[260px] w-full md:h-[400px]"
-                        style={{ background: "transparent", display: "block" }}
-                      />
-                    ) : (
-                      <div className="relative z-10 flex flex-col items-center gap-3 p-5 md:gap-4 md:p-8">
-                        {/* Figure card */}
-                        <div className="relative flex h-[200px] w-[160px] items-center justify-center overflow-hidden rounded-[1.5rem] shadow-[0_0_0_1px_rgba(255,255,255,0.12),0_24px_48px_rgba(0,0,0,0.45)] md:h-[260px] md:w-[205px] md:rounded-[2rem]">
-                          <div className="pointer-events-none absolute inset-0 rounded-[1.5rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.15)] md:rounded-[2rem]" />
-                          <div className="pointer-events-none absolute inset-x-10 bottom-3 h-5 rounded-full bg-black/40 blur-xl" />
-                          <Image
-                            src={selectedDoflinImageSrc}
-                            alt={selectedDoflin.name}
-                            width={780} height={780}
-                            className="h-full w-full object-cover"
-                            onError={() => {
-                              setBrokenModalImageIds((previous) => {
-                                if (previous.includes(selectedDoflin.id)) return previous;
-                                return [...previous, selectedDoflin.id];
-                              });
-                            }}
-                            unoptimized
-                          />
-                        </div>
-                        {/* Rarity pill */}
-                        {selectedDoflinRarityConfig ? (
-                          <span
-                            className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold shadow-[0_4px_16px_rgba(0,0,0,0.3)] backdrop-blur-sm"
-                            style={{ backgroundColor: selectedDoflinRarityConfig.softColor, color: selectedDoflinRarityConfig.color }}
-                          >
-                            {selectedDoflinRarityConfig.probability}% · {selectedDoflinRarityConfig.label}
-                          </span>
-                        ) : null}
-                      </div>
-                    )}
-                  </div>
-
-                  {/* RIGHT — info panel */}
-                  <div className="flex flex-col bg-white md:max-h-[92svh] md:overflow-hidden">
-                    {/* Scrollable body */}
-                    <div className="flex flex-1 flex-col gap-4 p-5 md:overflow-y-auto md:p-6">
-                      {/* Header */}
-                      <div className="flex items-start justify-between gap-3 pr-6">
-                        <div>
-                          <p className="mb-0.5 text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--ink-400)]">
-                            Serie {selectedDoflin.series} · #{String(selectedDoflin.collectionNumber).padStart(2, "0")}
-                          </p>
-                          <h2 className="font-title text-2xl font-bold leading-tight text-[var(--ink-900)]">
-                            {selectedDoflin.name}
-                          </h2>
-                          <p className="mt-0.5 text-sm text-[var(--ink-500)]">{selectedDoflin.baseModel}</p>
-                        </div>
-                        <div className="flex shrink-0 items-center gap-1">
-                          <button type="button" aria-label="Compartir" onClick={() => void handleShareDoflin()}
-                            className="rounded-full p-2 text-[var(--ink-400)] transition hover:bg-black/[0.06] hover:text-[var(--ink-800)]">
-                            <ShareIcon className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Badges */}
-                      <div className="flex flex-wrap gap-1.5">
-                        <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${
-                          selectedDoflinIsOriginal ? "bg-[#eaf5d8] text-[#2f5b1f] ring-1 ring-[#c6dba0]" : "bg-[#e9efff] text-[#2f448f] ring-1 ring-[#c9d6ff]"
-                        }`}>
-                          {selectedDoflinIsOriginal ? "Animal original" : "Variante"}
-                        </span>
-                        {selectedDoflinRarityConfig ? (
-                          <span
-                            className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold"
-                            style={{ backgroundColor: selectedDoflinRarityConfig.softColor, color: selectedDoflinRarityConfig.color }}
-                          >
-                            {selectedDoflinRarityConfig.label}
-                          </span>
-                        ) : null}
-                        {selectedDoflinRarityConfig ? (
-                          <span className="inline-flex items-center rounded-full bg-[var(--surface-100)] px-3 py-1 text-[11px] font-semibold text-[var(--ink-600)] ring-1 ring-black/[0.07]">
-                            {selectedDoflinRarityConfig.probability}% drop rate
-                          </span>
-                        ) : null}
-                      </div>
-
-                      {/* Fun fact */}
-                      {selectedDoflin.funFact ? (
-                        <div className="rounded-2xl bg-[var(--surface-100)] p-4 ring-1 ring-black/[0.06]">
-                          <div className="mb-1.5 flex items-center gap-1.5">
-                            <SparklesIcon className="h-3.5 w-3.5 text-[var(--brand-accent)]" />
-                            <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink-500)]">Dato curioso</p>
-                          </div>
-                          <p className="text-sm leading-relaxed text-[var(--ink-700)]">{selectedDoflin.funFact}</p>
-                        </div>
-                      ) : null}
-
-                      {/* Collection status */}
-                      <div className={`flex items-center justify-between gap-3 rounded-2xl p-4 ring-1 ring-black/[0.06] ${
-                        isAuthenticatedViewer && selectedDoflinIsOwned
-                          ? "bg-[#eaf5d8]"
-                          : "bg-[var(--surface-100)]"
-                      }`}>
-                        <div className="flex items-center gap-3">
-                          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                            isAuthenticatedViewer && selectedDoflinIsOwned ? "bg-[var(--brand-primary)]" : "bg-white ring-1 ring-black/10"
-                          }`}>
-                            <CheckCircleIcon className={`h-5 w-5 ${isAuthenticatedViewer && selectedDoflinIsOwned ? "text-white" : "text-[var(--ink-300)]"}`} />
-                          </div>
-                          <div>
-                            <p className="text-xs font-bold text-[var(--ink-600)]">Tu colección</p>
-                            <p className="text-sm font-semibold text-[var(--ink-900)]">
-                              {isAuthenticatedViewer
-                                ? selectedDoflinIsOwned ? "Ya la tienes ✓" : "No la tienes aún"
-                                : "Crea cuenta gratis"}
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          size="sm"
-                          className={`shrink-0 ${isAuthenticatedViewer && !selectedDoflinIsOwned ? activeTheme.primaryButton : ""}`}
-                          variant={!isAuthenticatedViewer ? "secondary" : selectedDoflinIsOwned ? "secondary" : "primary"}
-                          onClick={() => {
-                            if (!isAuthenticatedViewer) { requestAuthForProgress(); return; }
-                            if (selectedDoflinIsOwned) { clearOwnedMark(selectedDoflin.id); } else { markAsOwned(selectedDoflin.id); }
-                          }}
-                        >
-                          {!isAuthenticatedViewer ? "Entrar" : selectedDoflinIsOwned ? "Quitar" : "Marcar"}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Sticky buy footer */}
-                    <div className="shrink-0 border-t border-black/[0.07] bg-white p-4">
-                      <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink-400)]">Comprar sobres</p>
-                      <div className="flex gap-2">
-                        <Button asChild className={`flex-1 ${activeTheme.primaryButton}`}>
-                          <a href={selectedShopUrl} onClick={() => handlePurchaseIntent({ source: "modal_buy", packSize: 15, doflinId: selectedDoflin.id })}>
-                            <ShoppingCartIcon className="h-4 w-4 shrink-0" />
-                            <span className="flex flex-col items-start leading-tight">
-                              <span className="font-bold">Sobre ×15</span>
-                              <span className="text-[10px] opacity-75">Más chances</span>
-                            </span>
-                            <span className="ml-auto shrink-0 rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wide">MEJOR</span>
-                          </a>
-                        </Button>
-                        <Button asChild variant="secondary" className="w-[72px] shrink-0 flex-col gap-0 px-3 py-2 h-auto">
-                          <a href={selectedShopUrl} onClick={() => handlePurchaseIntent({ source: "modal_buy", packSize: 5, doflinId: selectedDoflin.id })}>
-                            <span className="text-sm font-bold">×5</span>
-                            <span className="text-[10px] opacity-60">Probar</span>
-                          </a>
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>{/* end top grid */}
-
-                {/* ─── VARIANTS STRIP ─── */}
-                {selectedDoflinVariants.length > 1 ? (
-                  <div className="border-t border-black/[0.06] bg-[var(--surface-50,#f9f9f9)] px-6 py-4">
-                    <p className="mb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[var(--ink-400)]">
-                      {selectedDoflinGroupStats?.total ?? selectedDoflinVariants.length} variantes · {selectedDoflin.baseModel}
-                    </p>
-                    <div className="flex gap-3 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
-                      {selectedDoflinVariants.map((variant) => {
-                        const isCurrent = variant.id === selectedDoflin.id;
-                        const vRarity = toCatalogRarity(variant.rarity);
-                        const vConfig = CATALOG_RARITY_CONFIG[vRarity];
-                        return (
-                          <button
-                            key={variant.id}
-                            type="button"
-                            onClick={() => setSelectedDoflin(variant)}
-                            className={`group relative flex shrink-0 flex-col overflow-hidden rounded-xl bg-white transition-all duration-150 ${
-                              isCurrent
-                                ? "shadow-[0_0_0_2.5px_var(--brand-primary),0_6px_20px_rgba(0,0,0,0.14)]"
-                                : "shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.05)] hover:-translate-y-0.5 hover:shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.10)]"
-                            }`}
-                            style={{ width: 96 }}
-                          >
-                            {/* Rarity accent bar on top */}
-                            <div className="h-1 w-full" style={{ backgroundColor: vConfig.color }} />
-                            {/* Image or placeholder */}
-                            <div className="relative h-[80px] w-full overflow-hidden" style={{ backgroundColor: vConfig.softColor }}>
-                              {brokenVariantImageIds.has(variant.id) || !variant.imageUrl ? (
-                                <div className="flex h-full w-full flex-col items-center justify-center gap-1 opacity-55">
-                                  <svg viewBox="0 0 32 32" className="h-9 w-9" fill="none" style={{ color: vConfig.color }}>
-                                    {/* Hoja con nervadura */}
-                                    <path d="M16 28 C16 28 5 22 5 13 C5 7 10 3 16 3 C22 3 27 7 27 13 C27 22 16 28 16 28Z" fill="currentColor" opacity="0.18"/>
-                                    <path d="M16 28 C16 28 5 22 5 13 C5 7 10 3 16 3 C22 3 27 7 27 13 C27 22 16 28 16 28Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" fill="none"/>
-                                    <path d="M16 28 L16 6" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" opacity="0.7"/>
-                                    <path d="M16 14 C12 11 9 11 7 12" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
-                                    <path d="M16 14 C20 11 23 11 25 12" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
-                                    <path d="M16 19 C13 17 10 17 8 18" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
-                                    <path d="M16 19 C19 17 22 17 24 18" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" opacity="0.5"/>
-                                  </svg>
-                                </div>
-                              ) : (
-                                <Image
-                                  src={variant.imageUrl}
-                                  alt={variant.name}
-                                  fill
-                                  className="object-cover transition duration-200 group-hover:scale-[1.06]"
-                                  unoptimized
-                                  onError={() => setBrokenVariantImageIds((prev) => {
-                                    const next = new Set(prev);
-                                    next.add(variant.id);
-                                    return next;
-                                  })}
-                                />
-                              )}
-                              {isCurrent ? (
-                                <div className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full shadow-sm" style={{ backgroundColor: "var(--brand-primary)" }}>
-                                  <CheckCircleIcon className="h-3.5 w-3.5 text-white" />
-                                </div>
-                              ) : null}
-                            </div>
-                            {/* Label */}
-                            <div className="flex flex-col gap-0.5 px-2 py-2">
-                              <p className="truncate text-left text-[11px] font-semibold text-[var(--ink-900)]">
-                                {variantLabel(variant.variantName)}
-                              </p>
-                              <span className="text-[9px] font-bold" style={{ color: vConfig.color }}>
-                                {vConfig.label}
-                              </span>
-                            </div>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ) : null}
-              </div>{/* end flex-col */}
-            </>
-          ) : null}
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isAuthPromptOpen} onOpenChange={setIsAuthPromptOpen}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Guarda tu progreso con una cuenta</DialogTitle>
-            <DialogDescription>
-              Para guardar tu progreso necesitas una cuenta. Crea tu acceso con Google y sincroniza tus Doflins encontrados.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex flex-wrap gap-2">
-            <Button
-              className={activeTheme.primaryButton}
-              disabled={isAuthActionLoading}
-              onClick={() => {
-                setIsAuthPromptOpen(false);
-                void handleUserLogin();
-              }}
-            >
-              {isAuthActionLoading ? "Abriendo..." : "Continuar con Google"}
-            </Button>
-            <Button variant="secondary" onClick={() => setIsAuthPromptOpen(false)}>
-              Ahora no
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <DoflinModal
+        selectedDoflin={selectedDoflin}
+        onClose={() => setSelectedDoflin(null)}
+        catalog={activeCatalogCards}
+        catalogIndex={selectedDoflinIndexInCatalog}
+        onNavigate={(item) => setSelectedDoflin(item)}
+        has3DModel={selectedDoflinHas3DModel}
+        modelConfig={selectedDoflinModelConfig}
+        purchaseUniverse={selectedPurchaseUniverse}
+        rarityConfig={selectedDoflinRarityConfig}
+        isOriginal={selectedDoflinIsOriginal}
+        isOwned={selectedDoflinIsOwned}
+        groupStats={selectedDoflinGroupStats}
+        variants={selectedDoflinVariants}
+        imageSrc={selectedDoflinImageSrc}
+        shopUrl={selectedShopUrl}
+        isAuthenticated={isAuthenticatedViewer}
+        theme={activeTheme}
+        onShare={() => void handleShareDoflin()}
+        onMarkOwned={markAsOwned}
+        onClearOwned={clearOwnedMark}
+        onPurchaseIntent={handlePurchaseIntent}
+        onRequestAuth={requestAuthForProgress}
+        brokenImageIds={brokenModalImageIds}
+        onImageBroken={setBrokenModalImageIds}
+        brokenVariantImageIds={brokenVariantImageIds}
+        onVariantImageBroken={setBrokenVariantImageIds}
+      />
+      <AuthPromptDialog
+        isOpen={isAuthPromptOpen}
+        isLoading={isAuthActionLoading}
+        theme={activeTheme}
+        onClose={() => setIsAuthPromptOpen(false)}
+        onLogin={() => void handleUserLogin()}
+      />
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.08] bg-[var(--background)]/95 px-3 pb-[calc(env(safe-area-inset-bottom)+6px)] pt-2.5 backdrop-blur-md md:hidden">
         <div className="mx-auto flex w-full max-w-lg items-center gap-2">

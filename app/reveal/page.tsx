@@ -3,6 +3,11 @@ import type { Metadata } from "next";
 
 import { RevealExperience } from "@/components/reveal/reveal-experience";
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { getCollection, getRemainingByRarity } from "@/lib/server/reveal-service";
+import {
+  FALLBACK_COLLECTION,
+  FALLBACK_REMAINING_BY_RARITY,
+} from "@/lib/constants/fallback-catalog";
 
 export const metadata: Metadata = {
   title: "Catálogo Oficial | DOFLINS",
@@ -65,10 +70,35 @@ export default function RevealPage(): React.JSX.Element {
   return (
     <>
       <Suspense fallback={<RevealSkeleton />}>
-        <RevealExperience />
+        <RevealDataFetcher />
       </Suspense>
       <BottomNav />
     </>
+  );
+}
+
+/** Componente de servidor que pre-carga los datos y los pasa como props. */
+async function RevealDataFetcher(): Promise<React.JSX.Element> {
+  const [collectionResult, statsResult] = await Promise.allSettled([
+    getCollection(),
+    getRemainingByRarity(),
+  ]);
+
+  const initialCollection =
+    collectionResult.status === "fulfilled"
+      ? collectionResult.value
+      : FALLBACK_COLLECTION;
+
+  const initialRemaining =
+    statsResult.status === "fulfilled"
+      ? statsResult.value.remaining
+      : FALLBACK_REMAINING_BY_RARITY;
+
+  return (
+    <RevealExperience
+      initialCollection={initialCollection}
+      initialRemaining={initialRemaining}
+    />
   );
 }
 

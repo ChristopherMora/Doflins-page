@@ -12,15 +12,17 @@ import "./globals.css";
 const titleFont = Sora({
   variable: "--font-title",
   subsets: ["latin"],
-  display: "swap",
+  display: "optional", // evita FOUT (sin re-layout si la fuente llega tarde)
   weight: ["600", "700", "800"],
+  preload: true,
 });
 
 const bodyFont = Manrope({
   variable: "--font-body",
   subsets: ["latin"],
-  display: "swap",
+  display: "optional",
   weight: ["400", "500", "600", "700", "800"],
+  preload: true,
 });
 
 const siteUrl = 'https://doflins.dofer.mx';
