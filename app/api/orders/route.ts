@@ -76,7 +76,8 @@ async function getAdminToken(): Promise<string> {
   });
 
   if (!res.ok) {
-    throw new Error(`Error obteniendo token Shopify: ${res.status}`);
+    const body = await res.text().catch(() => "(no body)");
+    throw new Error(`Error obteniendo token Shopify: ${res.status} – ${body}`);
   }
 
   const data = (await res.json()) as { access_token: string; expires_in: number };
@@ -115,7 +116,8 @@ async function fetchOrdersByEmail(email: string): Promise<ShopifyOrder[]> {
   });
 
   if (!res.ok) {
-    throw new Error(`Shopify Admin API error: ${res.status}`);
+    const body = await res.text().catch(() => "(no body)");
+    throw new Error(`Shopify Admin API error: ${res.status} – ${body}`);
   }
 
   const data = (await res.json()) as ShopifyOrdersResponse;
@@ -171,6 +173,7 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ orders: mapped });
   } catch (err) {
     console.error("[orders] Error:", err);
-    return NextResponse.json({ error: "Error al obtener pedidos" }, { status: 500 });
+    const message = err instanceof Error ? err.message : String(err);
+    return NextResponse.json({ error: "Error al obtener pedidos", detail: message }, { status: 500 });
   }
 }
