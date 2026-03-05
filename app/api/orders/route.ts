@@ -173,7 +173,6 @@ export async function GET(request: Request): Promise<NextResponse> {
     return NextResponse.json({ orders: mapped });
   } catch (err) {
     console.error("[orders] Error:", err);
-    const message = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: "Error al obtener pedidos", detail: message }, { status: 500 });
+    return NextResponse.json({ error: "Error al obtener pedidos" }, { status: 500 });
   }
 }
