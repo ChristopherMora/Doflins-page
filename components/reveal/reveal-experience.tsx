@@ -5,18 +5,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
-  Bars3Icon,
   BoltIcon,
   CheckCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   CubeIcon,
   FireIcon,
-    GlobeAltIcon,
+  GlobeAltIcon,
   InformationCircleIcon,
   MagnifyingGlassIcon,
   MapIcon,
-  RectangleStackIcon,
   RocketLaunchIcon,
   ShareIcon,
   ShieldCheckIcon,
@@ -50,15 +48,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import { LazySection } from "@/components/ui/lazy-section";
 
 const FALLBACK_DOFLIN_IMAGE = "/images/placeholders/doflin-placeholder.svg";
@@ -1162,128 +1151,6 @@ export function RevealExperience(): React.JSX.Element {
       <div className={`pointer-events-none absolute inset-0 -z-30 ${activeTheme.pageGlow}`} />
       <div className={`pointer-events-none absolute inset-0 -z-20 ${activeTheme.pageGradient}`} />
 
-      <header className="sticky top-0 z-40 mx-auto w-full max-w-[84rem] px-4 pt-4 sm:px-6 lg:px-8 xl:px-10">
-        <div className={`flex items-center gap-3 rounded-full border px-3 py-2 backdrop-blur ${activeTheme.headerShell}`}>
-          <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-            <Link
-              href="/"
-              className="group flex min-w-0 items-center gap-3 rounded-xl px-1 py-1 transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
-              aria-label="Ir al inicio de DOFLINS"
-            >
-              <div
-                className={`grid h-10 w-10 place-items-center rounded-xl text-sm font-black text-white transition group-hover:scale-[1.02] ${activeTheme.logoGradient}`}
-              >
-                DF
-              </div>
-              <p className="font-title text-xl font-extrabold tracking-tight text-[var(--ink-900)] sm:text-2xl">DOFLINS</p>
-            </Link>
-          </div>
-
-          <nav className="ml-2 hidden items-center gap-5 text-sm font-semibold text-[var(--ink-700)] lg:flex">
-            <button type="button" onClick={() => scrollToSection("catalogo")} className="transition hover:text-[var(--brand-primary)]">
-              Catálogo
-            </button>
-            <Link href="/#compras" className="transition hover:text-[var(--brand-primary)]">
-              Tienda
-            </Link>
-            <button type="button" onClick={() => scrollToSection("plataforma")} className="transition hover:text-[var(--brand-primary)]">
-              Colección
-            </button>
-          </nav>
-
-          <div className="ml-auto flex shrink-0 items-center gap-2">
-            <Button
-              asChild
-              className={`hidden h-11 px-5 text-white hover:brightness-105 sm:inline-flex sm:px-6 ${activeTheme.primaryButton}`}
-            >
-              <a
-                href={shopUrl}
-                onClick={() => handlePurchaseIntent({ source: "header_buy", packSize: 15 })}
-              >
-                Comprar {activeConfig.label}
-              </a>
-            </Button>
-
-            <Sheet>
-              <SheetTrigger asChild>
-                <Button variant="secondary" className="h-10 w-10 rounded-full p-0 2xl:hidden">
-                  <Bars3Icon className="h-5 w-5" />
-                  <span className="sr-only">Abrir menú</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="flex w-72 flex-col gap-0 bg-[var(--background)] p-0">
-                {/* Header */}
-                <div className="border-b border-black/[0.07] px-5 py-5">
-                  <SheetTitle className="font-title text-xl font-extrabold tracking-tight text-[var(--ink-900)]">DOFLINS</SheetTitle>
-                  <SheetDescription className="mt-0.5 text-xs text-[var(--ink-400)]">Navegación rápida</SheetDescription>
-                </div>
-
-                {/* Nav items */}
-                <nav className="flex flex-col gap-0.5 px-3 py-3">
-                  {[
-                    { icon: SparklesIcon, label: "Catálogo", onClick: () => scrollToSection("catalogo") },
-                    { icon: ShoppingCartIcon, label: "Tienda", href: "/#compras" },
-                    { icon: RectangleStackIcon, label: "Colección", onClick: () => scrollToSection("plataforma") },
-                  ].map(({ icon: Icon, label, onClick, href }) => (
-                    <SheetClose asChild key={label}>
-                      {href ? (
-                        <Link href={href} className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-700)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)] active:scale-[0.98]">
-                          <Icon className="h-4 w-4 shrink-0 text-[var(--ink-400)]" />{label}
-                        </Link>
-                      ) : (
-                        <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-700)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)] active:scale-[0.98]">
-                          <Icon className="h-4 w-4 shrink-0 text-[var(--ink-400)]" />{label}
-                        </button>
-                      )}
-                    </SheetClose>
-                  ))}
-
-                  <p className="mt-2 px-3 pb-1 text-[10px] font-bold uppercase tracking-widest text-[var(--ink-400)]">Universo</p>
-                  {[
-                    { icon: CubeIcon, label: "Animals", emoji: "🌿", onClick: () => switchUniverse("animals", "menu", "universo-activo") },
-                    { icon: BoltIcon, label: "Multiverse", emoji: "⚡", onClick: () => switchUniverse("multiverse", "menu", "universo-activo") },
-                  ].map(({ icon: Icon, label, emoji, onClick }) => (
-                    <SheetClose asChild key={label}>
-                      <button type="button" onClick={onClick} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-700)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)] active:scale-[0.98]">
-                        <span className="text-base leading-none">{emoji}</span>{label}
-                      </button>
-                    </SheetClose>
-                  ))}
-                </nav>
-
-                {/* Auth footer */}
-                <div className="mt-auto border-t border-black/[0.07] px-3 py-3">
-                  {isAuthenticatedViewer ? (
-                    <>
-                      {viewerEmail ? (
-                        <p className="mb-1.5 truncate px-3 text-[11px] text-[var(--ink-400)]">{viewerEmail}</p>
-                      ) : null}
-                      <SheetClose asChild>
-                        <button type="button" onClick={() => void handleUserLogout()} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-600)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]">
-                          Cerrar sesión
-                        </button>
-                      </SheetClose>
-                    </>
-                  ) : (
-                    <SheetClose asChild>
-                      <button type="button" onClick={() => void handleUserLogin()} className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-700)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]">
-                        Iniciar sesión
-                      </button>
-                    </SheetClose>
-                  )}
-                  {isAdminViewer ? (
-                    <SheetClose asChild>
-                      <Link href="/admin/doflins" className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-[var(--ink-600)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]">
-                        <ShieldCheckIcon className="h-4 w-4 shrink-0 text-[var(--ink-400)]" /> Admin
-                      </Link>
-                    </SheetClose>
-                  ) : null}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
-        </div>
-      </header>
 
       <section className="mx-auto w-full max-w-6xl px-5 pb-10 pt-10 sm:px-8 lg:px-10">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-end">

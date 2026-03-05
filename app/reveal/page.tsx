@@ -17,17 +17,6 @@ export const metadata: Metadata = {
 function RevealSkeleton(): React.JSX.Element {
   return (
     <main className="min-h-screen pb-32 bg-[var(--background)]">
-      {/* Header skeleton */}
-      <div className="sticky top-0 z-40 mx-auto w-full max-w-[84rem] px-4 pt-4 sm:px-6">
-        <div className="flex items-center justify-between gap-3 rounded-full border border-[#e2d9b8] bg-[#fff8e7]/90 px-4 py-2.5 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 animate-pulse rounded-xl bg-[#d8cfa8]" />
-            <div className="h-5 w-24 animate-pulse rounded-full bg-[#d8cfa8]" />
-          </div>
-          <div className="h-9 w-28 animate-pulse rounded-full bg-[#d8cfa8]" />
-        </div>
-      </div>
-
       {/* Hero skeleton */}
       <div className="mx-auto w-full max-w-6xl px-5 pt-10 pb-8 sm:px-8">
         <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr]">

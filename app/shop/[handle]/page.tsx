@@ -15,7 +15,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BottomNav } from "@/components/nav/bottom-nav";
-import { SiteHeader } from "@/components/nav/site-header";
 import { ProductViewer3D } from "@/components/shop/product-viewer-3d";
 import { resolveProductModelUrl } from "@/lib/shop/product-model";
 import type { ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
@@ -108,7 +107,6 @@ function isBestSellerProduct(product: ShopProduct): boolean {
 function ErrorState({ message }: { message: string }): React.JSX.Element {
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto flex min-h-screen w-full max-w-4xl items-center px-5 py-12 pb-28 sm:px-8 sm:pb-12">
         <Card className="ink-light w-full border border-[#e9c7c7] bg-[#fff5f5]">
           <CardContent className="space-y-4 p-7">
@@ -161,7 +159,6 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
 
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-5 py-8 pb-28 sm:px-8 sm:pb-12">
       <div className="w-full space-y-5">
         <div className="flex flex-wrap items-center gap-2">

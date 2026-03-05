@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { HomeIcon, SparklesIcon } from "@heroicons/react/24/solid";
 
-import { SiteHeader } from "@/components/nav/site-header";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { Button } from "@/components/ui/button";
 
@@ -13,7 +12,6 @@ export const metadata = {
 export default function NotFound(): React.JSX.Element {
   return (
     <>
-      <SiteHeader />
       <main className="flex min-h-[80dvh] flex-col items-center justify-center px-6 pb-28 pt-10 text-center sm:pb-10">
         <div className="space-y-6">
           {/* Ilustración emoji */}

@@ -10,7 +10,6 @@ import {
   GlobeAltIcon,
 } from "@heroicons/react/24/solid";
 
-import { SiteHeader } from "@/components/nav/site-header";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -151,7 +150,6 @@ export default function FAQPage(): React.JSX.Element {
           __html: JSON.stringify(faqSchema),
         }}
       />
-      <SiteHeader />
       <main className="mx-auto min-h-screen w-full max-w-4xl px-4 py-8 pb-28 sm:px-8 sm:pb-12">
         <div className="mb-6">
           <Button asChild variant="ghost" size="sm">

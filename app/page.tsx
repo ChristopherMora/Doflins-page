@@ -10,7 +10,6 @@ import {
 
 import { ShopifyBuyExperience } from "@/components/shop/shopify-buy-experience";
 import { BottomNav } from "@/components/nav/bottom-nav";
-import { SiteHeader } from "@/components/nav/site-header";
 import { UniverseCards } from "@/components/home/universe-cards";
 import { HomeUniverseSync } from "@/components/home/home-universe-sync";
 import { Button } from "@/components/ui/button";
@@ -30,7 +29,6 @@ export const metadata: Metadata = {
 export default function Home(): React.JSX.Element {
   return (
     <>
-      <SiteHeader />
       <HomeUniverseSync />
       <div className="home-page-shell">
         <main className="home-main mx-auto flex min-h-screen w-full max-w-7xl items-start px-4 py-4 pb-28 sm:px-8 sm:py-5 sm:pb-10">

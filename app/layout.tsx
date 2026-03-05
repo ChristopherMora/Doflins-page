@@ -3,6 +3,7 @@ import { Manrope, Sora } from "next/font/google";
 
 import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/gtm";
 import { SiteFooter } from "@/components/nav/site-footer";
+import { SiteHeader } from "@/components/nav/site-header";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { PwaInstallPrompt } from "@/components/ui/pwa-install-prompt";
 import { Toaster } from "@/components/ui/sonner";
@@ -152,6 +153,7 @@ export default function RootLayout({
       <body suppressHydrationWarning className={`${titleFont.variable} ${bodyFont.variable} antialiased`}>
         <GoogleTagManagerNoScript />
         <GoogleTagManager />
+        <SiteHeader />
         {children}
         <SiteFooter />
         <BackToTop />
