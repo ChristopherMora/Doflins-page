@@ -9,6 +9,9 @@ import {
   FALLBACK_REMAINING_BY_RARITY,
 } from "@/lib/constants/fallback-catalog";
 
+// Forzar render dinámico en cada request para leer la DB real (evitar pre-render vacío en build)
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Catálogo Oficial | DOFLINS",
   description: "Explora el catálogo completo de DOFLINS: Animals y Multiverse. Revisa rareza oficial de cada figura, filtra por universo y descubre todos los personajes coleccionables con códigos QR verificados.",
