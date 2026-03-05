@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-import { MyCollection } from "@/components/collection/my-collection";
+import { ColeccionShell } from "@/components/collection/coleccion-shell";
 
 export const metadata: Metadata = {
   title: "Mi Colección",
@@ -17,7 +17,7 @@ export const metadata: Metadata = {
 export default function ColeccionPage(): React.JSX.Element {
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-5 py-8 pb-28 sm:px-8 sm:pb-12">
-      <MyCollection />
+      <ColeccionShell />
     </main>
   );
 }

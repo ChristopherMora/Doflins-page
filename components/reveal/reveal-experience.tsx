@@ -1475,10 +1475,13 @@ export function RevealExperience({
 
   const handleShareDoflin = useCallback(async () => {
     if (!selectedDoflin) return;
-    const url = `${window.location.origin}/reveal?universe=${activeUniverse}&q=${encodeURIComponent(selectedDoflin.name)}`;
+    // Usar la página /carta/[id] que tiene og:image dinámica para WhatsApp/Twitter
+    const url = `${window.location.origin}/carta/${selectedDoflin.id}`;
+    const title = `${selectedDoflin.name} — DOFLINS`;
+    const text = `¡Encontré un ${selectedDoflin.rarity.toLowerCase()} en mi colección DOFLINS! 🐾`;
     try {
       if (typeof navigator.share === "function") {
-        await navigator.share({ title: `${selectedDoflin.name} — DOFLINS`, url });
+        await navigator.share({ title, text, url });
       } else {
         await navigator.clipboard.writeText(url);
         toast.success("Link copiado al portapapeles");
@@ -1486,7 +1489,7 @@ export function RevealExperience({
     } catch {
       // user cancelled share — ignore
     }
-  }, [activeUniverse, selectedDoflin]);
+  }, [selectedDoflin]);
 
   const handlePurchaseIntent = useCallback((options?: {
     source?: string;
