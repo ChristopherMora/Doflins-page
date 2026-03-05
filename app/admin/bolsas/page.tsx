@@ -91,8 +91,28 @@ export default function AdminBolsasPage() {
         setBags(data.bags);
       }
       if (doflinsRes.ok) {
-        const data = (await doflinsRes.json()) as { doflins: DoflinOption[] };
-        setAllDoflins(data.doflins);
+        const data = (await doflinsRes.json()) as {
+          items: {
+            id: number;
+            name: string;
+            baseModel: string;
+            variantName: string;
+            series: string;
+            rarity: string;
+            imageUrl: string;
+          }[];
+        };
+        setAllDoflins(
+          (data.items ?? []).map((d) => ({
+            id: d.id,
+            nombre: d.name,
+            modeloBase: d.baseModel,
+            variante: d.variantName,
+            serie: d.series,
+            rareza: d.rarity,
+            imagenUrl: d.imageUrl,
+          })),
+        );
       }
       setLoadingBags(false);
     })();
