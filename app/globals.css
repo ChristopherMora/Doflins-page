@@ -299,6 +299,9 @@ html {
   --ink-800: #2d3c24;
   --ink-700: #445538;
   --ink-600: #64785a;
+  --ink-500: #8d9e83;
+  --ink-400: #abc0a0;
+  --ink-300: #c5d4bc;
   --brand-primary: #4e6f2a;
   --brand-accent: #6c8a35;
   --brand-sky: #cc8b33;
@@ -334,6 +337,7 @@ body {
     var(--background);
   color: var(--foreground);
   font-family: var(--font-body), "Segoe UI", sans-serif;
+  transition: background-color 0.18s ease, color 0.18s ease;
 }
 
 .font-title {
@@ -354,8 +358,15 @@ a {
     --background: #181e12;
     --foreground: #e5ecd8;
     --surface-50: #151c11;
+    --surface-100: #1e271a;
+    --surface-200: #263120;
+    --ink-900: #e5ecd8;
+    --ink-800: #cad6bb;
     --ink-700: #a4b68e;
     --ink-600: #7a9165;
+    --ink-500: #637955;
+    --ink-400: #4e6042;
+    --ink-300: #3b4c30;
     --brand-primary: #7dba4c;
     --brand-accent: #8dc955;
     --brand-sky: #e0a845;
@@ -385,6 +396,9 @@ a {
   --ink-800: #cad6bb;
   --ink-700: #a4b68e;
   --ink-600: #7a9165;
+  --ink-500: #637955;
+  --ink-400: #4e6042;
+  --ink-300: #3b4c30;
   --brand-primary: #7dba4c;
   --brand-accent: #8dc955;
   --brand-sky: #e0a845;
