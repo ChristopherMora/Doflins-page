@@ -289,6 +289,24 @@ html {
   filter: brightness(1.1);
 }
 
+/* Botones secondary en modo oscuro: superficie oscura en vez de blanco */
+[data-theme="dark"] .btn-secondary {
+  background-color: var(--surface-100);
+}
+[data-theme="dark"] .btn-secondary:hover,
+[data-theme="dark"] .btn-secondary:active {
+  background-color: var(--surface-200);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .btn-secondary {
+    background-color: var(--surface-100);
+  }
+  :root:not([data-theme="light"]) .btn-secondary:hover,
+  :root:not([data-theme="light"]) .btn-secondary:active {
+    background-color: var(--surface-200);
+  }
+}
+
 :root {
   --background: #f9f7ed;
   --foreground: #222d1a;
@@ -305,8 +323,6 @@ html {
   --brand-primary: #4e6f2a;
   --brand-accent: #6c8a35;
   --brand-sky: #cc8b33;
-  --btn-secondary-bg: #ffffff;
-  --btn-secondary-ring: rgba(0, 0, 0, 0.10);
 }
 
 @theme inline {
@@ -372,8 +388,6 @@ a {
     --brand-primary: #7dba4c;
     --brand-accent: #8dc955;
     --brand-sky: #e0a845;
-    --btn-secondary-bg: var(--surface-100);
-    --btn-secondary-ring: rgba(255, 255, 255, 0.12);
   }
 
   :root:not([data-theme="light"]) body {
@@ -406,8 +420,6 @@ a {
   --brand-primary: #7dba4c;
   --brand-accent: #8dc955;
   --brand-sky: #e0a845;
-  --btn-secondary-bg: var(--surface-100);
-  --btn-secondary-ring: rgba(255, 255, 255, 0.12);
 }
 
 [data-theme="dark"] body {
