@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getDb } from "@/lib/db/client";
@@ -54,12 +54,17 @@ export async function POST(
 
   const doflinIds = items.map((i) => i.doflinId);
 
-  // Verificar cuáles ya tiene el usuario para no duplicar
+  // Verificar cuáles ya tiene ESTE USUARIO para no duplicar
+  // IMPORTANTE: filtrar también por supabaseUserId, de lo contrario si otro
+  // usuario ya tiene esos doflins se contarían como "ya tuyos" y no se guardarían.
   const alreadyOwned = await db
     .select({ doflinId: userCollectionProgress.doflinId })
     .from(userCollectionProgress)
     .where(
-      inArray(userCollectionProgress.doflinId, doflinIds),
+      and(
+        eq(userCollectionProgress.supabaseUserId, user.id),
+        inArray(userCollectionProgress.doflinId, doflinIds),
+      ),
     )
     .then((rows) => new Set(rows.map((r) => r.doflinId)));
 
