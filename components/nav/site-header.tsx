@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
+  ArrowRightStartOnRectangleIcon,
   GlobeAltIcon,
   HomeIcon,
   InformationCircleIcon,
@@ -11,9 +12,11 @@ import {
   ShieldCheckIcon,
   ShoppingCartIcon,
   Squares2X2Icon,
+  UserCircleIcon,
 } from "@heroicons/react/24/solid";
 
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
+import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getStoredUniverse, onUniverseChange, type Universe } from "@/lib/universe-store";
 
 function useDarkMode(): boolean {
@@ -32,6 +35,9 @@ export function SiteHeader(): React.JSX.Element {
   const [universe, setUniverse] = useState<Universe>("neutral");
   const dark = useDarkMode();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -47,9 +53,36 @@ export function SiteHeader(): React.JSX.Element {
   useEffect(() => {
     void fetch("/api/auth/admin-status")
       .then((r) => r.json())
-      .then((d: { isAdmin?: boolean }) => { if (d.isAdmin) setIsAdmin(true); })
+      .then((d: { isAdmin?: boolean; isAuthenticated?: boolean; userEmail?: string | null }) => {
+        if (d.isAdmin) setIsAdmin(true);
+        if (d.isAuthenticated) setUserEmail(d.userEmail ?? null);
+      })
       .catch(() => {});
   }, []);
+
+  // Cerrar menú al hacer click fuera
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+
+  const handleSignOut = async () => {
+    const supabase = getSupabaseBrowserClient();
+    await supabase.auth.signOut();
+    setUserEmail(null);
+    setIsAdmin(false);
+    setMenuOpen(false);
+    window.location.href = "/";
+  };
+
+  const initials = userEmail
+    ? userEmail.slice(0, 2).toUpperCase()
+    : null;
 
   const isMultiverse = universe === "multiverse";
   const isAnimals = universe === "animals";
@@ -161,6 +194,8 @@ export function SiteHeader(): React.JSX.Element {
         {/* Dark mode + CTA */}
         <div className="flex items-center gap-2">
           <DarkModeToggle />
+
+          {/* Botón admin */}
           {isAdmin ? (
             <Link
               href="/admin/doflins"
@@ -170,6 +205,49 @@ export function SiteHeader(): React.JSX.Element {
               Admin
             </Link>
           ) : null}
+
+          {/* Avatar de usuario con menú */}
+          {userEmail ? (
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuOpen((v) => !v)}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-black text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2"
+                style={{ background: ctaGradient, boxShadow: ctaShadow }}
+                title={userEmail}
+                aria-label="Menú de usuario"
+              >
+                {initials}
+              </button>
+              {menuOpen ? (
+                <div className="absolute right-0 top-11 z-50 w-56 rounded-2xl border border-[#d8d2b4] bg-white shadow-xl" style={{ background: dark ? "#1a2010" : "white", borderColor: dark ? "#3a4a28" : "#d8d2b4" }}>
+                  <div className="px-4 py-3 border-b" style={{ borderColor: dark ? "#3a4a28" : "#eee" }}>
+                    <p className="text-[11px] font-bold uppercase tracking-wider" style={{ color: dark ? "#9ab870" : "#7a9050" }}>Sesión activa</p>
+                    <p className="mt-0.5 truncate text-sm font-semibold" style={{ color: dark ? "#e0edcc" : "#1a2a0a" }}>{userEmail}</p>
+                  </div>
+                  <div className="p-2">
+                    <Link
+                      href="/coleccion"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-[#f0f8e0]"
+                      style={{ color: dark ? "#c8e0a8" : "#3a5a18" }}
+                    >
+                      <UserCircleIcon className="h-4 w-4 shrink-0" />
+                      Mi Colección
+                    </Link>
+                    <button
+                      onClick={() => void handleSignOut()}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-red-50"
+                      style={{ color: dark ? "#f08080" : "#b83030" }}
+                    >
+                      <ArrowRightStartOnRectangleIcon className="h-4 w-4 shrink-0" />
+                      Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          ) : null}
+
           <a
             href="/#compras"
             className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
