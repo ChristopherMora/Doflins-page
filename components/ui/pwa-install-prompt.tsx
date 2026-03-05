@@ -24,7 +24,7 @@ export function PwaInstallPrompt(): React.JSX.Element | null {
   if (!deferredPrompt || dismissed) return null;
 
   return (
-    <div className="fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-3 right-3 z-50 mx-auto max-w-sm rounded-2xl border border-[#c9da9a] bg-[linear-gradient(135deg,#f5f8e8,#eef4df)] p-4 shadow-[0_12px_28px_rgba(50,80,25,0.26)] lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-xs">
+    <div className="ink-light fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-3 right-3 z-50 mx-auto max-w-sm rounded-2xl border border-[#c9da9a] bg-[linear-gradient(135deg,#f5f8e8,#eef4df)] p-4 shadow-[0_12px_28px_rgba(50,80,25,0.26)] lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-xs">
       <div className="flex items-start gap-3">
         <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[var(--brand-primary)]">
           <ArrowDownTrayIcon className="h-5 w-5 text-white" />

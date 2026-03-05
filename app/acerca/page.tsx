@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import {
   SparklesIcon,
@@ -77,13 +76,13 @@ export default function AboutPage(): React.JSX.Element {
 
         {/* Hero */}
         <div className="mb-10 space-y-4">
-          <Badge className="bg-[#e6f2d0] text-[#1f2a1a]">
+          <Badge className="bg-[#e6f2d0] text-[var(--ink-900)]">
             <UserGroupIcon className="h-4 w-4" /> Acerca de Nosotros
           </Badge>
-          <h1 className="font-title text-4xl leading-tight text-[#1f2a1a] sm:text-6xl">
+          <h1 className="font-title text-4xl leading-tight text-[var(--ink-900)] sm:text-6xl">
             Bienvenido al universo <span className="text-[#4e6f2a]">DOFLINS</span>
           </h1>
-          <p className="text-xl text-[#3d5230]">
+          <p className="text-xl text-[var(--ink-700)]">
             Creamos experiencias de colección únicas con rareza verificada y tecnología QR.
           </p>
         </div>
@@ -95,10 +94,10 @@ export default function AboutPage(): React.JSX.Element {
               <div className="rounded-lg bg-[#e6f2d0] p-2">
                 <SparklesIcon className="h-6 w-6 text-[#4e6f2a]" />
               </div>
-              <h2 className="font-title text-3xl text-[#1f2a1a]">Nuestra Historia</h2>
+              <h2 className="font-title text-3xl text-[var(--ink-900)]">Nuestra Historia</h2>
             </div>
             
-            <div className="space-y-4 text-[#3d5230]">
+            <div className="space-y-4 text-[var(--ink-700)]">
               <p className="leading-relaxed">
                 DOFLINS es creado por <strong>DOFER</strong>, una marca mexicana dedicada al diseño y
                 fabricación de productos innovadores. Nuestro proyecto nació de la pasión por crear
@@ -121,7 +120,7 @@ export default function AboutPage(): React.JSX.Element {
 
         {/* Nuestros Valores */}
         <div className="mb-8">
-          <h2 className="mb-6 font-title text-3xl text-[#1f2a1a]">Nuestros Valores</h2>
+          <h2 className="mb-6 font-title text-3xl text-[var(--ink-900)]">Nuestros Valores</h2>
           <div className="grid gap-5 sm:grid-cols-2">
             {values.map((value) => (
               <Card
@@ -132,8 +131,8 @@ export default function AboutPage(): React.JSX.Element {
                   <div className={`inline-flex rounded-lg ${value.bg} p-3`}>
                     <value.icon className={`h-7 w-7 ${value.color}`} />
                   </div>
-                  <h3 className="font-title text-xl text-[#1f2a1a]">{value.title}</h3>
-                  <p className="text-sm leading-relaxed text-[#3d5230]">{value.description}</p>
+                  <h3 className="font-title text-xl text-[var(--ink-900)]">{value.title}</h3>
+                  <p className="text-sm leading-relaxed text-[var(--ink-700)]">{value.description}</p>
                 </CardContent>
               </Card>
             ))}
@@ -144,9 +143,9 @@ export default function AboutPage(): React.JSX.Element {
         <div className="mb-8 grid gap-6 md:grid-cols-2">
           <Card className="border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)]">
             <CardContent className="space-y-4 p-6">
-              <Badge className="bg-[#e6f2d0] text-[#1f2a1a]">Universo Animals</Badge>
-              <h3 className="font-title text-2xl text-[#1f2a1a]">Animals</h3>
-              <p className="text-sm leading-relaxed text-[#3d5230]">
+              <Badge className="bg-[#e6f2d0] text-[var(--ink-900)]">Universo Animals</Badge>
+              <h3 className="font-title text-2xl text-[var(--ink-900)]">Animals</h3>
+              <p className="text-sm leading-relaxed text-[var(--ink-700)]">
                 Criaturas inspiradas en la naturaleza con diseños únicos. Desde animales terrestres hasta
                 marinos, cada figura captura la esencia y personalidad del reino animal.
               </p>
@@ -161,8 +160,8 @@ export default function AboutPage(): React.JSX.Element {
           <Card className="border-[#d8ca9e] bg-[linear-gradient(180deg,#f3f6fb,#f8f4f6)]">
             <CardContent className="space-y-4 p-6">
               <Badge className="bg-purple-100 text-purple-900">Universo Multiverse</Badge>
-              <h3 className="font-title text-2xl text-[#1f2a1a]">Multiverse</h3>
-              <p className="text-sm leading-relaxed text-[#3d5230]">
+              <h3 className="font-title text-2xl text-[var(--ink-900)]">Multiverse</h3>
+              <p className="text-sm leading-relaxed text-[var(--ink-700)]">
                 Personajes de dimensiones alternativas con poderes y estéticas únicas. Un universo de
                 posibilidades infinitas donde la imaginación no tiene límites.
               </p>
@@ -179,8 +178,8 @@ export default function AboutPage(): React.JSX.Element {
         <Card className="border-[#d3debb] bg-[linear-gradient(135deg,#f5f8e8,#e8f1d2)]">
           <CardContent className="space-y-5 p-8 text-center">
             <GlobeAltIcon className="mx-auto h-14 w-14 text-[#4e6f2a]" />
-            <h2 className="font-title text-3xl text-[#1f2a1a]">Nuestra Misión</h2>
-            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[#3d5230]">
+            <h2 className="font-title text-3xl text-[var(--ink-900)]">Nuestra Misión</h2>
+            <p className="mx-auto max-w-2xl text-lg leading-relaxed text-[var(--ink-700)]">
               Crear la mejor experiencia de colección de figuras en México, combinando calidad, diseño
               único, tecnología y una comunidad apasionada. Cada DOFLIN es una pieza de arte
               coleccionable con historia propia.
@@ -202,7 +201,7 @@ export default function AboutPage(): React.JSX.Element {
 
         {/* Contacto */}
         <div className="mt-8 text-center">
-          <p className="text-sm text-[#3d5230]">
+          <p className="text-sm text-[var(--ink-700)]">
             ¿Preguntas o sugerencias?{" "}
             <Link href="/faq" className="font-semibold text-[#4e6f2a] hover:underline">
               Consulta nuestro FAQ

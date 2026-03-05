@@ -102,20 +102,115 @@ html {
  * of the user's color scheme preference.
  */
 .ink-light {
+  --background: #f6f2df !important;
+  --foreground: #222d1a !important;
+  --surface-50: #fffdf5 !important;
+  --surface-100: #fff8e7 !important;
+  --surface-200: #e8eed7 !important;
   --ink-900: #1f2a1a !important;
   --ink-800: #2d3c24 !important;
   --ink-700: #445538 !important;
   --ink-600: #64785a !important;
+  --ink-500: #8d9e83 !important;
+  --ink-400: #abc0a0 !important;
+  --ink-300: #c5d4bc !important;
   --brand-primary: #4e6f2a !important;
   --brand-accent: #6c8a35 !important;
+  --brand-sky: #cc8b33 !important;
 }
 
 /* Variant for light blue/indigo containers (Multiverse cards) */
 .ink-light-blue {
+  --background: #e9eeff !important;
+  --foreground: #141d3c !important;
+  --surface-50: #f7f9ff !important;
+  --surface-100: #f3f6ff !important;
+  --surface-200: #e4eafe !important;
   --ink-900: #1c2960 !important;
   --ink-800: #253278 !important;
   --ink-700: #2d3f8a !important;
   --ink-600: #3d50a0 !important;
+  --ink-500: #5a6cb1 !important;
+  --ink-400: #7686c7 !important;
+  --ink-300: #97a5db !important;
+  --brand-primary: #4a62b5 !important;
+  --brand-accent: #6a7fdb !important;
+  --brand-sky: #94a6ff !important;
+}
+
+/**
+ * Dark mode contrast guard:
+ * whenever a component uses an explicitly light background class, force
+ * light-surface ink tokens locally so text with var(--ink-*) stays readable.
+ */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) :where(
+      [class*="bg-white"],
+      [class*="bg-[#f"],
+      [class*="bg-[#e"],
+      [class*="bg-[#d"],
+      [class*="bg-green-50"],
+      [class*="bg-blue-50"],
+      [class*="bg-red-50"],
+      [class*="bg-amber-50"],
+      [class*="bg-purple-50"],
+      [class*="bg-pink-50"],
+      [class*="bg-[linear-gradient"][class*="#f"],
+      [class*="bg-[linear-gradient"][class*="#e"],
+      [class*="bg-[radial-gradient"][class*="#f"],
+      [class*="bg-[radial-gradient"][class*="#e"],
+      [class*="from-white"],
+      [class*="to-white"],
+      [class*="from-[#f"],
+      [class*="to-[#f"]
+    ):not([class*="dark:bg-"]):not([class*="dark:from-"]):not([class*="dark:to-"]) {
+    --background: #f6f2df !important;
+    --foreground: #222d1a !important;
+    --surface-50: #fffdf5 !important;
+    --surface-100: #fff8e7 !important;
+    --surface-200: #e8eed7 !important;
+    --ink-900: #1f2a1a !important;
+    --ink-800: #2d3c24 !important;
+    --ink-700: #445538 !important;
+    --ink-600: #64785a !important;
+    --ink-500: #8d9e83 !important;
+    --ink-400: #abc0a0 !important;
+    --ink-300: #c5d4bc !important;
+  }
+}
+
+[data-theme="dark"] :where(
+    [class*="bg-white"],
+    [class*="bg-[#f"],
+    [class*="bg-[#e"],
+    [class*="bg-[#d"],
+    [class*="bg-green-50"],
+    [class*="bg-blue-50"],
+    [class*="bg-red-50"],
+    [class*="bg-amber-50"],
+    [class*="bg-purple-50"],
+    [class*="bg-pink-50"],
+    [class*="bg-[linear-gradient"][class*="#f"],
+    [class*="bg-[linear-gradient"][class*="#e"],
+    [class*="bg-[radial-gradient"][class*="#f"],
+    [class*="bg-[radial-gradient"][class*="#e"],
+    [class*="from-white"],
+    [class*="to-white"],
+    [class*="from-[#f"],
+    [class*="to-[#f"]
+  ):not([class*="dark:bg-"]):not([class*="dark:from-"]):not([class*="dark:to-"]) {
+  --background: #f6f2df !important;
+  --foreground: #222d1a !important;
+  --surface-50: #fffdf5 !important;
+  --surface-100: #fff8e7 !important;
+  --surface-200: #e8eed7 !important;
+  --ink-900: #1f2a1a !important;
+  --ink-800: #2d3c24 !important;
+  --ink-700: #445538 !important;
+  --ink-600: #64785a !important;
+  --ink-500: #8d9e83 !important;
+  --ink-400: #abc0a0 !important;
+  --ink-300: #c5d4bc !important;
 }
 
 /* Home visual system */
@@ -289,22 +384,13 @@ html {
   filter: brightness(1.1);
 }
 
-/* Botones secondary en modo oscuro: superficie oscura en vez de blanco */
-[data-theme="dark"] .btn-secondary {
-  background-color: var(--surface-100);
+/* Base contrast for secondary buttons */
+.btn-secondary {
+  color: #1f2a1a;
 }
-[data-theme="dark"] .btn-secondary:hover,
-[data-theme="dark"] .btn-secondary:active {
-  background-color: var(--surface-200);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .btn-secondary {
-    background-color: var(--surface-100);
-  }
-  :root:not([data-theme="light"]) .btn-secondary:hover,
-  :root:not([data-theme="light"]) .btn-secondary:active {
-    background-color: var(--surface-200);
-  }
+
+.btn-secondary.text-white {
+  color: #ffffff;
 }
 
 :root {
@@ -601,4 +687,3 @@ html[data-universe="multiverse"][data-theme="dark"] .home-page-shell {
     --home-pill-icon: #95b0ff;
   }
 }
-

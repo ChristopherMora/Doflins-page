@@ -4,7 +4,6 @@ import { ChevronLeftIcon } from "@heroicons/react/24/outline";
 import {
   QuestionMarkCircleIcon,
   TruckIcon,
-  ShieldCheckIcon,
   CreditCardIcon,
   SparklesIcon,
   GlobeAltIcon,
@@ -160,14 +159,14 @@ export default function FAQPage(): React.JSX.Element {
         </div>
 
         <div className="mb-8 space-y-3">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#e6f2d0] px-4 py-1.5 text-sm font-semibold text-[#1f2a1a]">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#e6f2d0] px-4 py-1.5 text-sm font-semibold text-[var(--ink-900)]">
             <QuestionMarkCircleIcon className="h-5 w-5" />
             Preguntas Frecuentes
           </div>
-          <h1 className="font-title text-4xl text-[#1f2a1a] sm:text-5xl">
+          <h1 className="font-title text-4xl text-[var(--ink-900)] sm:text-5xl">
             ¿Tienes dudas sobre DOFLINS?
           </h1>
-          <p className="text-lg text-[#3d5230]">
+          <p className="text-lg text-[var(--ink-700)]">
             Encuentra respuestas sobre nuestra colección, sistema de rareza, envíos y más.
           </p>
         </div>
@@ -183,14 +182,14 @@ export default function FAQPage(): React.JSX.Element {
                   <div className="rounded-lg bg-[#e6f2d0] p-2">
                     <category.icon className="h-6 w-6 text-[#4e6f2a]" />
                   </div>
-                  <h2 className="font-title text-2xl text-[#1f2a1a]">{category.category}</h2>
+                  <h2 className="font-title text-2xl text-[var(--ink-900)]">{category.category}</h2>
                 </div>
 
                 <div className="space-y-5">
                   {category.questions.map((item, idx) => (
                     <div key={idx} className="space-y-2">
-                      <h3 className="font-semibold text-[#1f2a1a]">{item.q}</h3>
-                      <p className="text-sm leading-relaxed text-[#3d5230]">{item.a}</p>
+                      <h3 className="font-semibold text-[var(--ink-900)]">{item.q}</h3>
+                      <p className="text-sm leading-relaxed text-[var(--ink-700)]">{item.a}</p>
                       {idx < category.questions.length - 1 && (
                         <div className="mt-4 border-t border-[#e8f1d2]" />
                       )}
@@ -205,8 +204,8 @@ export default function FAQPage(): React.JSX.Element {
         <Card className="mt-8 border-[#d8ca9e] bg-[linear-gradient(135deg,#f5f8e8,#e8f1d2)]">
           <CardContent className="space-y-4 p-6 text-center">
             <GlobeAltIcon className="mx-auto h-12 w-12 text-[#4e6f2a]" />
-            <h2 className="font-title text-2xl text-[#1f2a1a]">¿No encontraste tu respuesta?</h2>
-            <p className="text-[#3d5230]">
+            <h2 className="font-title text-2xl text-[var(--ink-900)]">¿No encontraste tu respuesta?</h2>
+            <p className="text-[var(--ink-700)]">
               Contáctanos directamente y te ayudaremos con cualquier duda sobre DOFLINS.
             </p>
             <div className="flex flex-wrap justify-center gap-3">

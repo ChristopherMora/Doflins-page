@@ -189,7 +189,7 @@ const RARITY_FILTER_OPTIONS: { value: RarityFilter; label: string }[] = [
   })),
 ];
 
-const UNIVERSE_THEME: Record<Universe, UniverseTheme> = {
+const UNIVERSE_THEME_LIGHT: Record<Universe, UniverseTheme> = {
   animals: {
     pageGlow:
       "bg-[radial-gradient(circle_at_8%_10%,rgba(206,166,93,0.24),transparent_34%),radial-gradient(circle_at_90%_8%,rgba(152,180,95,0.2),transparent_32%),radial-gradient(circle_at_50%_90%,rgba(92,120,55,0.2),transparent_34%)]",
@@ -232,6 +232,57 @@ const UNIVERSE_THEME: Record<Universe, UniverseTheme> = {
     platformCard: "border-[#cdd8ff] bg-[#f5f7ff]/94",
     ctaCard: "bg-[linear-gradient(135deg,#293c91,#4b58c2,#7c60d2)] shadow-[0_25px_50px_rgba(55,63,128,0.46)]",
     ctaPrimaryText: "text-[#2b3278]",
+    heroTitle: "Catálogo Multiverse",
+    heroDescription:
+      "Paleta fría, vibe futurista y variantes de alto impacto. Es un universo más agresivo para cazadores de rareza.",
+    heroTag: "Universo Multiverse",
+    qrNarrative: "Desde aquí puedes cambiar de universo y guardar tu avance.",
+  },
+};
+
+const UNIVERSE_THEME_DARK: Record<Universe, UniverseTheme> = {
+  animals: {
+    pageGlow:
+      "bg-[radial-gradient(circle_at_8%_10%,rgba(127,182,72,0.25),transparent_34%),radial-gradient(circle_at_90%_8%,rgba(103,149,54,0.24),transparent_32%),radial-gradient(circle_at_50%_90%,rgba(176,132,50,0.17),transparent_34%)]",
+    pageGradient: "bg-[linear-gradient(180deg,#0f1a0a,#141f0f_42%,#182513)]",
+    headerShell: "border-[#44612f]/85 bg-[#111e0d]/90 shadow-[0_10px_26px_rgba(2,9,2,0.45)]",
+    logoGradient: "bg-[linear-gradient(135deg,#5d9138,#84b95a)]",
+    primaryButton: "bg-[linear-gradient(135deg,#5d9138,#84b95a)]",
+    pillButton: "bg-[linear-gradient(135deg,#5d9138,#84b95a)] text-white",
+    heroBadge: "ink-light border-[#e4d6af] bg-[#fff9ea] text-[#445538] ring-1 ring-[#d6c79b]",
+    heroChip: "ink-light border-[#e6d9b4] bg-[#fff8e8] text-[#445538]",
+    heroStateCard: "ink-light border-[#e8dcb8]/80 bg-[#fff9ea]/90 shadow-[0_18px_45px_rgba(89,79,30,0.18)]",
+    heroStateInfo: "bg-white/90",
+    panelCard: "ink-light border-[#e7dab8] bg-[#fff9ea]/90",
+    rarityInfoChip: "ink-light bg-[#fff7df] text-[#445538] ring-1 ring-[#d3c18f]",
+    rarityCard: "ink-light border-[#e8dab4] bg-[#fff9e8]/88",
+    platformCard: "ink-light border-[#dccc99] bg-[#fff8e7]/90",
+    ctaCard: "bg-[linear-gradient(135deg,#1e3312,#274d39,#324c8d)] shadow-[0_25px_50px_rgba(3,8,5,0.6)]",
+    ctaPrimaryText: "text-[#1f3b12]",
+    heroTitle: "Catálogo Animals",
+    heroDescription:
+      "Tonos naturales, energía de selva y personajes inspirados en fauna. Aquí el universo se siente orgánico y coleccionable.",
+    heroTag: "Universo Animals",
+    qrNarrative: "Este QR te abre el catálogo oficial y tu progreso de colección.",
+  },
+  multiverse: {
+    pageGlow:
+      "bg-[radial-gradient(circle_at_10%_8%,rgba(115,149,255,0.3),transparent_34%),radial-gradient(circle_at_86%_10%,rgba(132,103,246,0.28),transparent_34%),radial-gradient(circle_at_50%_88%,rgba(70,110,225,0.24),transparent_30%)]",
+    pageGradient: "bg-[linear-gradient(180deg,#070d24,#0c1538_42%,#111b46)]",
+    headerShell: "border-[#3e529f]/85 bg-[#0e173a]/90 shadow-[0_10px_26px_rgba(2,5,22,0.5)]",
+    logoGradient: "bg-[linear-gradient(135deg,#5068d4,#7090f8)]",
+    primaryButton: "bg-[linear-gradient(135deg,#5068d4,#7090f8)]",
+    pillButton: "bg-[linear-gradient(135deg,#5068d4,#7090f8)] text-white",
+    heroBadge: "ink-light-blue border-[#cad4ff] bg-[#eef2ff] text-[#2d3f8a] ring-1 ring-[#c4d0ff]",
+    heroChip: "ink-light-blue border-[#d1dbff] bg-[#f3f6ff] text-[#2d3f8a]",
+    heroStateCard: "ink-light-blue border-[#d3ddff]/90 bg-[#f4f7ff]/92 shadow-[0_18px_45px_rgba(73,88,153,0.2)]",
+    heroStateInfo: "bg-white/88",
+    panelCard: "ink-light-blue border-[#d7e0ff] bg-[#f6f8ff]/92",
+    rarityInfoChip: "ink-light-blue bg-[#eef3ff] text-[#2d3f8a] ring-1 ring-[#c8d4ff]",
+    rarityCard: "ink-light-blue border-[#d2dcff] bg-[#f5f8ff]/92",
+    platformCard: "ink-light-blue border-[#cdd8ff] bg-[#f5f7ff]/94",
+    ctaCard: "bg-[linear-gradient(135deg,#1b2d7a,#3448a5,#6548b8)] shadow-[0_25px_50px_rgba(8,12,38,0.62)]",
+    ctaPrimaryText: "text-[#243271]",
     heroTitle: "Catálogo Multiverse",
     heroDescription:
       "Paleta fría, vibe futurista y variantes de alto impacto. Es un universo más agresivo para cazadores de rareza.",
@@ -418,6 +469,7 @@ interface DoflinModalProps {
   imageSrc: string;
   shopUrl: string;
   isAuthenticated: boolean;
+  isDark: boolean;
   theme: UniverseTheme;
   onShare: () => void;
   onMarkOwned: (id: number) => void;
@@ -447,6 +499,7 @@ function DoflinModal({
   imageSrc,
   shopUrl,
   isAuthenticated,
+  isDark,
   theme,
   onShare,
   onMarkOwned,
@@ -541,7 +594,7 @@ function DoflinModal({
                 </div>
 
                 {/* RIGHT — info panel */}
-                <div className="flex flex-col bg-white md:max-h-[92svh] md:overflow-hidden">
+                <div className="flex flex-col bg-[var(--surface-50)] md:max-h-[92svh] md:overflow-hidden">
                   <div className="flex flex-1 flex-col gap-4 p-5 md:overflow-y-auto md:p-6">
                     <div className="flex items-start justify-between gap-3 pr-6">
                       <div>
@@ -563,7 +616,13 @@ function DoflinModal({
 
                     <div className="flex flex-wrap gap-1.5">
                       <span className={`inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold ${
-                        isOriginal ? "bg-[#eaf5d8] text-[#2f5b1f] ring-1 ring-[#c6dba0]" : "bg-[#e9efff] text-[#2f448f] ring-1 ring-[#c9d6ff]"
+                        isOriginal
+                          ? isDark
+                            ? "bg-[#1f3414] text-[#cbe4ab] ring-1 ring-[#4d6d37]"
+                            : "bg-[#eaf5d8] text-[#2f5b1f] ring-1 ring-[#c6dba0]"
+                          : isDark
+                            ? "bg-[#182653] text-[#c6d5ff] ring-1 ring-[#4f67b9]"
+                            : "bg-[#e9efff] text-[#2f448f] ring-1 ring-[#c9d6ff]"
                       }`}>
                         {isOriginal ? "Animal original" : "Variante"}
                       </span>
@@ -591,11 +650,15 @@ function DoflinModal({
                     ) : null}
 
                     <div className={`flex items-center justify-between gap-3 rounded-2xl p-4 ring-1 ring-black/[0.06] ${
-                      isAuthenticated && isOwned ? "bg-[#eaf5d8]" : "bg-[var(--surface-100)]"
+                      isAuthenticated && isOwned
+                        ? isDark
+                          ? "bg-[#1f3414]"
+                          : "bg-[#eaf5d8]"
+                        : "bg-[var(--surface-100)]"
                     }`}>
                       <div className="flex items-center gap-3">
                         <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${
-                          isAuthenticated && isOwned ? "bg-[var(--brand-primary)]" : "bg-white ring-1 ring-black/10"
+                          isAuthenticated && isOwned ? "bg-[var(--brand-primary)]" : "bg-[var(--surface-50)] ring-1 ring-black/10"
                         }`}>
                           <CheckCircleIcon className={`h-5 w-5 ${isAuthenticated && isOwned ? "text-white" : "text-[var(--ink-300)]"}`} />
                         </div>
@@ -622,7 +685,7 @@ function DoflinModal({
                     </div>
                   </div>
 
-                  <div className="shrink-0 border-t border-black/[0.07] bg-white p-4">
+                  <div className="shrink-0 border-t border-black/[0.07] bg-[var(--surface-50)] p-4">
                     <p className="mb-2.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[var(--ink-400)]">Comprar sobres</p>
                     <div className="flex gap-2">
                       <Button asChild className={`flex-1 ${theme.primaryButton}`}>
@@ -658,7 +721,7 @@ function DoflinModal({
                       const vConfig = CATALOG_RARITY_CONFIG[vRarity];
                       return (
                         <button key={variant.id} type="button" onClick={() => onNavigate(variant)}
-                          className={`group relative flex shrink-0 flex-col overflow-hidden rounded-xl bg-white transition-all duration-150 ${
+                          className={`group relative flex shrink-0 flex-col overflow-hidden rounded-xl bg-[var(--surface-50)] transition-all duration-150 ${
                             isCurrent
                               ? "shadow-[0_0_0_2.5px_var(--brand-primary),0_6px_20px_rgba(0,0,0,0.14)]"
                               : "shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_2px_8px_rgba(0,0,0,0.05)] hover:-translate-y-0.5 hover:shadow-[0_0_0_1px_rgba(0,0,0,0.12),0_8px_20px_rgba(0,0,0,0.10)]"
@@ -865,8 +928,12 @@ export function RevealExperience({
             packs: ANIMALS_PACKS,
             cards: animalsFiltered,
             count: collectionCounts.animals,
-            badgeClass: "bg-[#edf4d8] text-[var(--ink-800)] ring-1 ring-[#c9da9a]",
-            cardClass: "border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)]",
+            badgeClass: dark
+              ? "bg-[#edf4d8] text-[#2d3c24] ring-1 ring-[#c9da9a]"
+              : "bg-[#edf4d8] text-[var(--ink-800)] ring-1 ring-[#c9da9a]",
+            cardClass: dark
+              ? "ink-light border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)]"
+              : "border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)]",
             ctaTitle: "Colecciona la fauna completa",
           }
         : {
@@ -875,14 +942,18 @@ export function RevealExperience({
             packs: MULTIVERSE_PACKS,
             cards: multiverseFiltered,
             count: collectionCounts.multiverse,
-            badgeClass: "bg-[#e9efff] text-[var(--ink-800)] ring-1 ring-[#c8d3f4]",
-            cardClass: "border-[#ccd2e8] bg-[linear-gradient(180deg,#eff3ff,#e4e9fb)]",
+            badgeClass: dark
+              ? "bg-[#e9efff] text-[#253278] ring-1 ring-[#c8d3f4]"
+              : "bg-[#e9efff] text-[var(--ink-800)] ring-1 ring-[#c8d3f4]",
+            cardClass: dark
+              ? "ink-light-blue border-[#ccd2e8] bg-[linear-gradient(180deg,#eff3ff,#e4e9fb)]"
+              : "border-[#ccd2e8] bg-[linear-gradient(180deg,#eff3ff,#e4e9fb)]",
             ctaTitle: "Activa tu salto Multiverse",
           },
-    [activeUniverse, animalsFiltered, collectionCounts.animals, collectionCounts.multiverse, multiverseFiltered],
+    [activeUniverse, animalsFiltered, collectionCounts.animals, collectionCounts.multiverse, dark, multiverseFiltered],
   );
 
-  const activeTheme = UNIVERSE_THEME[activeUniverse];
+  const activeTheme = (dark ? UNIVERSE_THEME_DARK : UNIVERSE_THEME_LIGHT)[activeUniverse];
   const ownedSet = useMemo(() => new Set(ownedIds), [ownedIds]);
   const activeUniverseCollection = activeUniverse === "animals" ? animalsCollection : multiverseCollection;
   const activeBaseModelStats = useMemo(() => {
@@ -1556,8 +1627,16 @@ export function RevealExperience({
     handleModal3DView();
   }, [handleModal3DView, selectedDoflin, selectedDoflinModelConfig?.modelUrl]);
 
+  const mainInkScopeClass = !dark
+    ? activeUniverse === "animals"
+      ? "ink-light"
+      : "ink-light-blue"
+    : "";
+  const ctaPrimaryButtonTextClass =
+    activeUniverse === "animals" ? "!text-[#1f3b12]" : "!text-[#243271]";
+
   return (
-    <main className={`relative overflow-hidden pb-36 transition-colors duration-500 md:pb-24 ${activeUniverse === "animals" ? "ink-light" : "ink-light-blue"}`} style={themeVars}>
+    <main className={`relative overflow-hidden pb-36 transition-colors duration-500 md:pb-24 ${mainInkScopeClass}`} style={themeVars}>
       {isOffline ? (
         <div className="sticky top-14 z-50 flex items-center justify-center gap-2 bg-amber-100 px-4 py-2 text-center text-xs font-semibold text-amber-900 ring-1 ring-amber-300">
           <WifiIcon className="h-4 w-4" />
@@ -1733,9 +1812,13 @@ export function RevealExperience({
         <div className="grid gap-4 md:grid-cols-3">
           {activeConfig.packs.map((pack) => {
             const Icon = pack.icon;
+            const packCardClass = pack.cardClassName;
 
             return (
-              <Card key={pack.name} className={`overflow-hidden border-0 ${pack.cardClassName}`}>
+              <Card
+                key={pack.name}
+                className={`overflow-hidden border-0 ${packCardClass} ${dark ? (activeUniverse === "animals" ? "ink-light" : "ink-light-blue") : ""}`}
+              >
                 <CardContent className="space-y-2 p-6">
                   <div className="flex items-center justify-between">
                     <h4 className="font-title text-2xl text-[var(--ink-900)]">{pack.name}</h4>
@@ -2047,7 +2130,7 @@ export function RevealExperience({
       <section className="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 lg:px-10" id="rareza">
         <div className="mb-5 flex items-center justify-between gap-3">
           <h3 className="font-title text-3xl text-[var(--ink-900)]">Sistema de rareza</h3>
-          <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm text-[var(--ink-700)] ${activeTheme.rarityInfoChip}`}>
+          <div className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm ${dark ? "" : "text-[var(--ink-700)]"} ${activeTheme.rarityInfoChip}`}>
             <FireIcon className="h-4 w-4 text-orange-600" />
             Quedan {remainingLegendaryCount ?? "--"} legendarias sin descubrir
           </div>
@@ -2262,7 +2345,7 @@ export function RevealExperience({
             <h3 className="font-title text-3xl sm:text-4xl">{activeConfig.ctaTitle}</h3>
             <p className="mx-auto max-w-2xl text-white/85">Selecciona tu universo favorito o combínalos para completar todo el catálogo.</p>
             <div className="flex flex-wrap items-center justify-center gap-3">
-              <Button asChild variant="ghost" className={`bg-white hover:bg-slate-100 ${activeTheme.ctaPrimaryText}`} size="lg">
+              <Button asChild variant="ghost" className={`bg-white hover:bg-slate-100 ${ctaPrimaryButtonTextClass}`} size="lg">
                 <a
                   href={shopUrl}
                   onClick={() => handlePurchaseIntent({ source: "footer_buy", packSize: 15 })}
@@ -2303,6 +2386,7 @@ export function RevealExperience({
         imageSrc={selectedDoflinImageSrc}
         shopUrl={selectedShopUrl}
         isAuthenticated={isAuthenticatedViewer}
+        isDark={dark}
         theme={activeTheme}
         onShare={() => void handleShareDoflin()}
         onMarkOwned={markAsOwned}
