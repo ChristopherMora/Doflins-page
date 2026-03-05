@@ -12,9 +12,9 @@ const buttonVariants = cva(
         primary:
           "bg-[var(--brand-primary)] text-white shadow-md hover:-translate-y-0.5 hover:shadow-lg active:shadow-sm active:brightness-90 focus-visible:ring-[var(--brand-primary)]",
         secondary:
-          "bg-white text-[var(--ink-900)] ring-1 ring-black/10 hover:bg-[var(--surface-200)] active:bg-[var(--surface-200)] focus-visible:ring-[var(--brand-accent)]",
+          "bg-[var(--btn-secondary-bg)] text-[var(--ink-900)] ring-1 ring-[var(--btn-secondary-ring)] hover:bg-[var(--surface-200)] active:bg-[var(--surface-200)] focus-visible:ring-[var(--brand-accent)]",
         ghost:
-          "bg-transparent text-[var(--ink-700)] hover:bg-white/70 active:bg-white/50 focus-visible:ring-[var(--brand-accent)]",
+          "bg-transparent text-[var(--ink-700)] hover:bg-[var(--surface-100)] active:bg-[var(--surface-100)] focus-visible:ring-[var(--brand-accent)]",
       },
       size: {
         sm: "h-9 px-4",

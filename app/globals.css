@@ -305,6 +305,8 @@ html {
   --brand-primary: #4e6f2a;
   --brand-accent: #6c8a35;
   --brand-sky: #cc8b33;
+  --btn-secondary-bg: #ffffff;
+  --btn-secondary-ring: rgba(0, 0, 0, 0.10);
 }
 
 @theme inline {
@@ -370,6 +372,8 @@ a {
     --brand-primary: #7dba4c;
     --brand-accent: #8dc955;
     --brand-sky: #e0a845;
+    --btn-secondary-bg: var(--surface-100);
+    --btn-secondary-ring: rgba(255, 255, 255, 0.12);
   }
 
   :root:not([data-theme="light"]) body {
@@ -402,6 +406,8 @@ a {
   --brand-primary: #7dba4c;
   --brand-accent: #8dc955;
   --brand-sky: #e0a845;
+  --btn-secondary-bg: var(--surface-100);
+  --btn-secondary-ring: rgba(255, 255, 255, 0.12);
 }
 
 [data-theme="dark"] body {
