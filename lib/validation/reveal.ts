@@ -52,7 +52,7 @@ export const collectionItemSchema = z.object({
   rarity: raritySchema,
   probability: z.number().min(0).max(100),
   imageUrl: z.string().min(1),
-  silhouetteUrl: z.string().min(1),
+  silhouetteUrl: z.string(),
   active: z.boolean(),
   funFact: z.string().nullable().optional(),
 });
