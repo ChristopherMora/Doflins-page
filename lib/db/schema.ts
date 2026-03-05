@@ -126,6 +126,23 @@ export const scanEvents = mysqlTable(
   ],
 );
 
+export const userProfiles = mysqlTable(
+  "user_profiles",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
+    displayName: varchar("display_name", { length: 50 }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  },
+  (table) => [
+    uniqueIndex("user_profiles_user_unique").on(table.supabaseUserId),
+  ],
+);
+
 export const userCollectionProgress = mysqlTable(
   "user_collection_progress",
   {

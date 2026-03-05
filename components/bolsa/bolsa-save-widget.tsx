@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   CheckCircleIcon,
@@ -37,6 +37,11 @@ export function BolsaSaveWidget({ codigo, doflinCount }: BolsaSaveWidgetProps) {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [saveResult, setSaveResult] = useState<SaveResult | null>(null);
+  // Ref guard: bloquea llamadas concurrentes antes de que React re-renderice.
+  // Necesario porque getUser() y onAuthStateChange pueden disparar casi
+  // simultáneamente → el check saveState !== "idle" no alcanza a atrapar
+  // la segunda llamada si el componente aún no se re-renderizó.
+  const saveInFlightRef = useRef(false);
 
   // Observar sesión
   useEffect(() => {
@@ -56,6 +61,9 @@ export function BolsaSaveWidget({ codigo, doflinCount }: BolsaSaveWidgetProps) {
   }, [user]);
 
   const handleSave = async () => {
+    // Guard síncrono: bloquea la segunda llamada aunque React no haya re-renderizado
+    if (saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
     setSaveState("saving");
     try {
       const res = await fetch(`/api/bolsa/${codigo}/save`, { method: "POST" });
@@ -66,9 +74,11 @@ export function BolsaSaveWidget({ codigo, doflinCount }: BolsaSaveWidgetProps) {
       } else if (res.status === 401) {
         setSaveState("idle");
       } else {
+        saveInFlightRef.current = false; // permitir reintento
         setSaveState("error");
       }
     } catch {
+      saveInFlightRef.current = false; // permitir reintento
       setSaveState("error");
     }
   };

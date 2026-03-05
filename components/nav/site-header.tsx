@@ -10,8 +10,10 @@ import {
   QuestionMarkCircleIcon,
   RectangleStackIcon,
   ShieldCheckIcon,
+  ShoppingBagIcon,
   ShoppingCartIcon,
   Squares2X2Icon,
+  TrophyIcon,
   UserCircleIcon,
 } from "@heroicons/react/24/solid";
 
@@ -233,6 +235,24 @@ export function SiteHeader(): React.JSX.Element {
                     >
                       <UserCircleIcon className="h-4 w-4 shrink-0" />
                       Mi Colección
+                    </Link>
+                    <Link
+                      href="/mis-pedidos"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-[#f0f8e0]"
+                      style={{ color: dark ? "#c8e0a8" : "#3a5a18" }}
+                    >
+                      <ShoppingBagIcon className="h-4 w-4 shrink-0" />
+                      Mis pedidos
+                    </Link>
+                    <Link
+                      href="/ranking"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-[#f0f8e0]"
+                      style={{ color: dark ? "#c8e0a8" : "#3a5a18" }}
+                    >
+                      <TrophyIcon className="h-4 w-4 shrink-0" />
+                      Ranking
                     </Link>
                     <button
                       onClick={() => void handleSignOut()}

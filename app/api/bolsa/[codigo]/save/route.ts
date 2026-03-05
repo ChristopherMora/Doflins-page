@@ -7,6 +7,7 @@ import {
   codigosBolsaItems,
   doflins,
   userCollectionProgress,
+  userProfiles,
 } from "@/lib/db/schema";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 
@@ -28,7 +29,6 @@ export async function POST(
 
   const { codigo } = await params;
   const codigoNorm = codigo.toUpperCase();
-
   const db = getDb();
 
   // Buscar la bolsa
@@ -74,18 +74,37 @@ export async function POST(
     return NextResponse.json({ saved: 0, alreadyOwned: doflinIds.length });
   }
 
-  // Obtener el email del usuario para guardarlo
+  // Obtener el email y nombre de Google del usuario
   const userEmail = user.email ?? "";
+  const displayName =
+    (user.user_metadata?.full_name as string | undefined) ??
+    (user.user_metadata?.name as string | undefined) ??
+    null;
 
-  // Insertar en la colección del usuario
-  await db.insert(userCollectionProgress).values(
-    toInsert.map((doflinId) => ({
-      supabaseUserId: user.id,
-      userEmail,
-      doflinId,
-      owned: true,
-    })),
-  );
+  // Guardar nombre de Google silenciosamente (se actualiza en cada scan)
+  if (displayName) {
+    void db
+      .insert(userProfiles)
+      .values({ supabaseUserId: user.id, displayName })
+      .onDuplicateKeyUpdate({ set: { displayName } })
+      .catch(() => { /* no bloquear el flujo principal */ });
+  }
+
+  // Insertar en la colección del usuario con upsert idempotente.
+  // onDuplicateKeyUpdate evita el duplicate key error cuando dos requests
+  // concurrentes (getUser + onAuthStateChange) pasan el check de alreadyOwned
+  // casi al mismo tiempo antes de que alguna fila haya sido insertada.
+  await db
+    .insert(userCollectionProgress)
+    .values(
+      toInsert.map((doflinId) => ({
+        supabaseUserId: user.id,
+        userEmail,
+        doflinId,
+        owned: true,
+      })),
+    )
+    .onDuplicateKeyUpdate({ set: { owned: true } });
 
   // Obtener nombres de las figuras guardadas para la respuesta
   const savedDoflins = await db

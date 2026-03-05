@@ -9,61 +9,9 @@ interface CatalogSeedItem {
   probabilidad: number;
 }
 
-const CATALOG_SEED: CatalogSeedItem[] = [
-  {
-    nombre: "Jaguar Prisma Original",
-    modeloBase: "Doflin Jaguar Prisma",
-    variante: "Original",
-    serie: "Animals",
-    rareza: "COMMON",
-    probabilidad: 50,
-  },
-  {
-    nombre: "Jaguar Prisma Rojo",
-    modeloBase: "Doflin Jaguar Prisma",
-    variante: "Rojo",
-    serie: "Animals",
-    rareza: "RARE",
-    probabilidad: 30,
-  },
-  {
-    nombre: "Jaguar Prisma Selva",
-    modeloBase: "Doflin Jaguar Prisma",
-    variante: "Selva",
-    serie: "Animals",
-    rareza: "EPIC",
-    probabilidad: 15,
-  },
-  { nombre: "Brisa Solar", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Koala Bronce", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Lobo Ceniza", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Panda Nube", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Mono Magma", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Tigre Arena", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Pulpo Jade", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Axolote Coral", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Búho Cobre", serie: "Animals", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Tortuga Hielo", serie: "Multiverse", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Fénix Menta", serie: "Multiverse", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "León Quartz", serie: "Multiverse", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Delfín Aurora", serie: "Multiverse", rareza: "COMMON", probabilidad: 45 },
-  { nombre: "Coyote Volt", serie: "Multiverse", rareza: "RARE", probabilidad: 25 },
-  { nombre: "Pantera Pixel", serie: "Multiverse", rareza: "RARE", probabilidad: 25 },
-  { nombre: "Rana Nova", serie: "Multiverse", rareza: "RARE", probabilidad: 25 },
-  { nombre: "Gacela Fractal", serie: "Multiverse", rareza: "RARE", probabilidad: 25 },
-  { nombre: "Erizo Vapor", serie: "Multiverse", rareza: "RARE", probabilidad: 25 },
-  { nombre: "Halcón Neon", serie: "Multiverse", rareza: "RARE", probabilidad: 25 },
-  { nombre: "Lince Rayo", serie: "Multiverse", rareza: "RARE", probabilidad: 25 },
-  { nombre: "Tiburón Cobalto", serie: "Multiverse", rareza: "RARE", probabilidad: 25 },
-  { nombre: "Dragón Plasma", serie: "Multiverse", rareza: "EPIC", probabilidad: 15 },
-  { nombre: "Mantis Vortex", serie: "Multiverse", rareza: "EPIC", probabilidad: 15 },
-  { nombre: "Cuervo Quantum", serie: "Multiverse", rareza: "EPIC", probabilidad: 15 },
-  { nombre: "Fuego Ártico", serie: "Multiverse", rareza: "EPIC", probabilidad: 15 },
-  { nombre: "Centella Dorada", serie: "Multiverse", rareza: "LEGENDARY", probabilidad: 8 },
-  { nombre: "Titanio Lunar", serie: "Multiverse", rareza: "LEGENDARY", probabilidad: 8 },
-  { nombre: "Omega Carmesí", serie: "Multiverse", rareza: "ULTRA", probabilidad: 5 },
-  { nombre: "Sombra Eterna", serie: "Multiverse", rareza: "MYTHIC", probabilidad: 2 },
-];
+// Catálogo de respaldo vacío — se muestra solo si la DB no está disponible.
+// Agrega aquí los doflins reales si quieres un fallback con datos válidos.
+const CATALOG_SEED: CatalogSeedItem[] = [];
 
 export const FALLBACK_COLLECTION: CollectionItemDTO[] = CATALOG_SEED.map((item, index) => {
   const number = index + 1;
@@ -85,12 +33,12 @@ export const FALLBACK_COLLECTION: CollectionItemDTO[] = CATALOG_SEED.map((item, 
 });
 
 export const FALLBACK_REMAINING_BY_RARITY: Record<Rarity, number> = {
-  COMMON: 477,
-  RARE: 265,
-  EPIC: 159,
-  LEGENDARY: 85,
-  ULTRA: 53,
-  MYTHIC: 21,
+  COMMON: 0,
+  RARE: 0,
+  EPIC: 0,
+  LEGENDARY: 0,
+  ULTRA: 0,
+  MYTHIC: 0,
 };
 
 export const FALLBACK_REMAINING_TOTAL = Object.values(FALLBACK_REMAINING_BY_RARITY).reduce(

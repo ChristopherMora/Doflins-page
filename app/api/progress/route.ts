@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getDb } from "@/lib/db/client";
-import { userCollectionProgress } from "@/lib/db/schema";
+import { userCollectionProgress, userProfiles } from "@/lib/db/schema";
 import { hasSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 
@@ -43,6 +43,10 @@ async function resolveAuthenticatedUser(
   return {
     id: user.id,
     email: user.email,
+    displayName:
+      (user.user_metadata?.full_name as string | undefined) ??
+      (user.user_metadata?.name as string | undefined) ??
+      null,
   };
 }
 
@@ -102,6 +106,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
+    // Guardar nombre de Google silenciosamente al marcar cualquier sticker
+    if (user.displayName) {
+      void getDb()
+        .insert(userProfiles)
+        .values({ supabaseUserId: user.id, displayName: user.displayName })
+        .onDuplicateKeyUpdate({ set: { displayName: user.displayName } })
+        .catch(() => { /* no bloquear */ });
+    }
+
     if (payload.owned) {
       await getDb()
         .insert(userCollectionProgress)
