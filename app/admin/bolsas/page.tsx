@@ -29,6 +29,17 @@ const RARITY_COLORS: Record<string, string> = {
   ULTRA: "#c0392b",
   MYTHIC: "#9b5de5",
 };
+const SCAN_TYPE_LABELS: Record<string, string> = {
+  scan: "Escaneo",
+  invalid: "Inválido",
+  reveal_success: "Revelado",
+  purchase_intent: "Intención compra",
+  rate_limited: "Rate limit",
+  universe_switch: "Cambio universo",
+  filter_apply: "Filtro",
+  card_open: "Carta abierta",
+  view_3d: "Vista 3D",
+};
 
 interface DoflinOption {
   id: number;
@@ -53,9 +64,31 @@ interface BagRow {
   packSize: number;
   usado: boolean;
   scanCount: number;
+  lastScannedAt: string | null;
   status: "active" | "blocked";
   createdAt: string;
   items: BagItem[];
+}
+
+interface BagDetail {
+  bag: BagRow;
+  scans: {
+    id: number;
+    eventType: string;
+    ipHash: string;
+    device: string;
+    createdAt: string;
+  }[];
+  scansByType: Record<string, number>;
+  usuarios: {
+    userId: string;
+    email: string;
+    doflinIdsRegistrados: number[];
+    totalRegistrados: number;
+    totalBolsa: number;
+    porcentaje: number;
+    lastActivity: string;
+  }[];
 }
 
 export default function AdminBolsasPage() {
@@ -439,9 +472,26 @@ function BagCard({
   onQrClick: (codigo: string) => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [detail, setDetail] = useState<BagDetail | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
+
+  const handleExpand = async () => {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && !detail) {
+      setLoadingDetail(true);
+      try {
+        const res = await fetch(`/api/admin/bolsas/${bag.id}`);
+        if (res.ok) setDetail((await res.json()) as BagDetail);
+      } finally {
+        setLoadingDetail(false);
+      }
+    }
+  };
 
   return (
     <div className="rounded-2xl border border-[var(--surface-200)] bg-white overflow-hidden">
+      {/* ── Cabecera ── */}
       <div className="flex items-center gap-4 p-4">
         {/* Mini QR */}
         <div
@@ -457,11 +507,9 @@ function BagCard({
             <code className="font-mono font-bold text-[#4e6f2a] text-base tracking-widest">
               {bag.codigo}
             </code>
-            <span
-              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
-                bag.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
-              }`}
-            >
+            <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${
+              bag.status === "active" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+            }`}>
               {bag.status === "active" ? "Activa" : "Bloqueada"}
             </span>
             {bag.usado ? (
@@ -472,6 +520,7 @@ function BagCard({
           </div>
           <p className="text-xs text-[var(--ink-500)] mt-0.5">
             {bag.items.length} doflins · ×{bag.packSize} pack · {bag.scanCount} scans
+            {bag.lastScannedAt ? ` · último ${new Date(bag.lastScannedAt).toLocaleDateString("es-MX")}` : ""}
           </p>
         </div>
 
@@ -485,39 +534,128 @@ function BagCard({
             Ver
           </a>
           <button
-            onClick={() => setExpanded((v) => !v)}
+            onClick={() => void handleExpand()}
             className="rounded-lg border border-[var(--surface-200)] p-1.5 text-[var(--ink-400)] hover:bg-[var(--surface-100)] transition-colors"
           >
-            <ChevronDownIcon
-              className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`}
-            />
+            <ChevronDownIcon className={`h-4 w-4 transition-transform ${expanded ? "rotate-180" : ""}`} />
           </button>
         </div>
       </div>
 
-      {expanded && bag.items.length > 0 ? (
-        <div className="border-t border-[var(--surface-100)] px-4 py-3">
-          <div className="flex flex-wrap gap-2">
-            {bag.items.map((item) => (
-              <div
-                key={item.id}
-                className="flex items-center gap-1.5 rounded-full border border-[var(--surface-200)] bg-[var(--surface-50)] pl-1 pr-3 py-1"
-              >
-                {item.imagenUrl ? (
-                  <div className="h-6 w-6 rounded-full overflow-hidden shrink-0">
-                    <Image src={item.imagenUrl} alt={item.nombre} width={24} height={24} className="object-cover" unoptimized />
-                  </div>
-                ) : null}
-                <span className="text-xs font-medium text-[var(--ink-700)]">{item.nombre}</span>
-                <span
-                  className="text-[10px] font-bold"
-                  style={{ color: RARITY_COLORS[item.rareza] ?? "#666" }}
-                >
-                  {RARITY_LABELS[item.rareza] ?? item.rareza}
-                </span>
-              </div>
-            ))}
+      {/* ── Panel expandido ── */}
+      {expanded ? (
+        <div className="border-t border-[var(--surface-100)] space-y-4 px-4 py-4">
+
+          {/* Doflins en la bolsa */}
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink-400)] mb-2">Figuras en la bolsa</p>
+            <div className="flex flex-wrap gap-2">
+              {bag.items.map((item) => (
+                <div key={item.id} className="flex items-center gap-1.5 rounded-full border border-[var(--surface-200)] bg-[var(--surface-50)] pl-1 pr-3 py-1">
+                  {item.imagenUrl ? (
+                    <div className="h-6 w-6 rounded-full overflow-hidden shrink-0">
+                      <Image src={item.imagenUrl} alt={item.nombre} width={24} height={24} className="object-cover" unoptimized />
+                    </div>
+                  ) : null}
+                  <span className="text-xs font-medium text-[var(--ink-700)]">{item.nombre}</span>
+                  <span className="text-[10px] font-bold" style={{ color: RARITY_COLORS[item.rareza] ?? "#666" }}>
+                    {RARITY_LABELS[item.rareza] ?? item.rareza}
+                  </span>
+                </div>
+              ))}
+            </div>
           </div>
+
+          {loadingDetail ? (
+            <div className="flex items-center gap-2 py-2 text-xs text-[var(--ink-400)]">
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#d8d2b4] border-t-[#4e6f2a]" />
+              Cargando detalles…
+            </div>
+          ) : detail ? (
+            <>
+              {/* Usuarios que registraron */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink-400)] mb-2">
+                  Usuarios que registraron figuras de esta bolsa
+                  <span className="ml-2 rounded-full bg-[#eaf5d8] px-2 py-0.5 text-[#4e6f2a]">
+                    {detail.usuarios.length}
+                  </span>
+                </p>
+                {detail.usuarios.length === 0 ? (
+                  <p className="text-xs text-[var(--ink-400)] italic">
+                    Nadie ha registrado estas figuras aún.
+                  </p>
+                ) : (
+                  <div className="divide-y divide-[var(--surface-100)] rounded-xl border border-[var(--surface-200)] overflow-hidden">
+                    {detail.usuarios.map((u) => (
+                      <div key={u.userId} className="flex items-center gap-3 px-3 py-2.5 bg-white hover:bg-[var(--surface-50)]">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#eaf5d8] text-[10px] font-black text-[#4e6f2a]">
+                          {u.email.slice(0, 2).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="truncate text-sm font-semibold text-[var(--ink-800)]">{u.email}</p>
+                          <p className="text-[11px] text-[var(--ink-400)]">
+                            Última actividad: {new Date(u.lastActivity).toLocaleDateString("es-MX", { day: "2-digit", month: "short", year: "numeric" })}
+                          </p>
+                        </div>
+                        <div className="text-right shrink-0">
+                          <p className="text-sm font-bold text-[#4e6f2a]">{u.totalRegistrados}/{u.totalBolsa}</p>
+                          <div className="mt-1 h-1.5 w-20 rounded-full bg-[#d8f0b4] overflow-hidden">
+                            <div className="h-full rounded-full bg-[#4e6f2a] transition-all" style={{ width: `${u.porcentaje}%` }} />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Historial de escaneos */}
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[var(--ink-400)] mb-2">
+                  Historial de escaneos
+                  <span className="ml-2 rounded-full bg-[#e8ecff] px-2 py-0.5 text-[#3040a0]">
+                    {detail.scans.length}
+                  </span>
+                </p>
+                {detail.scans.length === 0 ? (
+                  <p className="text-xs text-[var(--ink-400)] italic">Sin escaneos registrados.</p>
+                ) : (
+                  <div className="divide-y divide-[var(--surface-100)] rounded-xl border border-[var(--surface-200)] overflow-hidden">
+                    {detail.scans.map((s) => (
+                      <div key={s.id} className="flex items-center gap-3 px-3 py-2 bg-white text-xs hover:bg-[var(--surface-50)]">
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold shrink-0 ${
+                          s.eventType === "scan" ? "bg-blue-50 text-blue-600"
+                          : s.eventType === "reveal_success" ? "bg-green-50 text-green-700"
+                          : s.eventType === "invalid" ? "bg-red-50 text-red-600"
+                          : "bg-gray-100 text-gray-600"
+                        }`}>
+                          {SCAN_TYPE_LABELS[s.eventType] ?? s.eventType}
+                        </span>
+                        <span className="flex-1 text-[var(--ink-500)]">{s.device}</span>
+                        <span className="shrink-0 text-[var(--ink-400)]">
+                          {new Date(s.createdAt).toLocaleString("es-MX", {
+                            day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Stats por tipo de scan */}
+              {Object.keys(detail.scansByType).length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(detail.scansByType).map(([type, count]) => (
+                    <span key={type} className="rounded-full border border-[var(--surface-200)] bg-[var(--surface-50)] px-3 py-1 text-xs font-medium text-[var(--ink-600)]">
+                      {SCAN_TYPE_LABELS[type] ?? type}: <strong>{count}</strong>
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </>
+          ) : null}
         </div>
       ) : null}
     </div>
