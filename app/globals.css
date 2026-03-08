@@ -671,6 +671,56 @@ html[data-universe="multiverse"][data-theme="dark"] .home-page-shell {
   --home-primary-shadow: 0 14px 30px rgba(80, 104, 212, 0.50);
   --home-pill-icon: #95b0ff;
 }
+@media print {
+  /* Ocultar toda la navegación: header sticky, bottom nav fijo y footer */
+  header,
+  footer,
+  nav {
+    display: none !important;
+  }
+
+  /* Eliminar min-height: 100vh que genera página en blanco */
+  main {
+    min-height: 0 !important;
+    padding-bottom: 0 !important;
+  }
+
+  /* Quitar el padding-bottom que reservan las páginas para el bottom nav */
+  body {
+    padding-bottom: 0 !important;
+  }
+
+  /* Evitar cortes de página dentro de cards */
+  .card,
+  article,
+  section {
+    break-inside: avoid;
+  }
+
+  /* Cuando el modal QR está abierto: solo imprimir el QR */
+  body:has([data-qr-modal]) > * {
+    visibility: hidden;
+  }
+  body:has([data-qr-modal]) [data-qr-modal] {
+    visibility: visible;
+    position: fixed !important;
+    inset: 0;
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    background: white !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  body:has([data-qr-modal]) [data-qr-modal] * {
+    visibility: visible;
+  }
+  /* Ocultar los botones del modal al imprimir */
+  body:has([data-qr-modal]) [data-qr-modal] button {
+    display: none !important;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   html[data-universe="multiverse"]:not([data-theme="light"]) .home-page-shell {
     --home-shell-bg:

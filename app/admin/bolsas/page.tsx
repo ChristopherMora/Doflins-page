@@ -425,6 +425,7 @@ export default function AdminBolsasPage() {
           <div
             className="bg-white rounded-3xl p-8 shadow-2xl flex flex-col items-center gap-4"
             onClick={(e) => e.stopPropagation()}
+            data-qr-modal
           >
             <p className="text-xs font-bold uppercase tracking-widest text-[var(--ink-400)]">
               Código QR — pegar en la bolsa

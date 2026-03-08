@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { TrophyIcon } from "@heroicons/react/24/solid";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { NicknameEditor } from "@/components/collection/nickname-editor";
 
 export const metadata: Metadata = {
   title: "Ranking · DOFLINS",
@@ -66,6 +67,11 @@ export default async function RankingPage(): Promise<React.JSX.Element> {
             Ranking de Coleccionistas
           </h1>
           <p className="mt-1 text-xs text-[var(--ink-400)]">Top 50 · Actualizado cada 3 minutos</p>
+        </div>
+
+        {/* Tu nombre en el ranking */}
+        <div className="mb-8">
+          <NicknameEditor />
         </div>
 
         {ranking.length === 0 ? (

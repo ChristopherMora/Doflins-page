@@ -2,6 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getSupabaseAnonKey, getSupabaseUrl, hasSupabasePublicConfig } from "@/lib/supabase/config";
+import { getDb } from "@/lib/db/client";
+import { userProfiles } from "@/lib/db/schema";
 
 function sanitizeNextPath(rawValue: string | null): string {
   if (!rawValue) return "/reveal";
@@ -57,9 +59,26 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   try {
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+    const { data: sessionData, error } = await supabase.auth.exchangeCodeForSession(code);
     if (error) {
       return NextResponse.redirect(new URL("/reveal?auth=oauth_error", baseUrl));
+    }
+
+    // Guardar display_name de Google automáticamente (fire and forget)
+    const user = sessionData.user;
+    if (user) {
+      const displayName =
+        (user.user_metadata?.full_name as string | undefined) ??
+        (user.user_metadata?.name as string | undefined) ??
+        null;
+      if (displayName) {
+        const db = getDb();
+        void db
+          .insert(userProfiles)
+          .values({ supabaseUserId: user.id, displayName })
+          .onDuplicateKeyUpdate({ set: { displayName } })
+          .catch(() => {});
+      }
     }
 
     return response;

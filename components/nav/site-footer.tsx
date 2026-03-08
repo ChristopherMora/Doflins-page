@@ -50,6 +50,14 @@ export function SiteFooter(): React.JSX.Element {
                   Mi Colección
                 </Link>
               </li>
+              <li>
+                <Link 
+                  href="/ranking" 
+                  className="font-medium !text-[#3d5230] transition-colors hover:!text-[#4e6f2a] hover:underline"
+                >
+                  🏆 Ranking
+                </Link>
+              </li>
             </ul>
           </div>
 

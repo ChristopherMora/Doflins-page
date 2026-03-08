@@ -10,6 +10,7 @@ import {
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { Button } from "@/components/ui/button";
 import { BolsaSaveWidget } from "@/components/bolsa/bolsa-save-widget";
+import { ShareButton } from "@/components/bolsa/share-button";
 import { getDb } from "@/lib/db/client";
 import { codigosBolsa, codigosBolsaItems, doflins } from "@/lib/db/schema";
 import { asc, eq } from "drizzle-orm";
@@ -188,6 +189,9 @@ export default async function BolsaPage({ params }: BolsaPageProps): Promise<Rea
 
         {/* CTA guardar progreso */}
         <BolsaSaveWidget codigo={codigo.toUpperCase()} doflinCount={items.length} />
+
+        {/* Compartir bolsa */}
+        <ShareButton codigo={codigo.toUpperCase()} itemCount={items.length} />
 
         {/* CTA comprar más */}
         <div className="mt-4 rounded-2xl bg-[var(--surface-100)] p-4 flex items-center gap-4">
