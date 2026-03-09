@@ -225,7 +225,8 @@ export default function DevolucionesPage(): React.JSX.Element {
                   <div>
                     <h3 className="font-semibold text-[var(--ink-900)]">Contacta con nosotros</h3>
                     <p className="text-sm text-[var(--ink-700)]">
-                      Envía un email a <strong>devoluciones@doflins.dofer.mx</strong> (actualiza con tu correo real) 
+                      Envía un email a{" "}
+                      <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}`} className="font-semibold underline">{process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}</a>{" "}
                       dentro de los primeros 7 días naturales después de recibir tu pedido.
                     </p>
                     <p className="mt-1 text-xs text-[var(--ink-700)]">
@@ -366,8 +367,13 @@ export default function DevolucionesPage(): React.JSX.Element {
             <section>
               <h2 className="font-title text-2xl text-[var(--ink-900)]">10. Contacto para devoluciones</h2>
               <p className="text-[var(--ink-700)]">
-                <strong>Email:</strong> devoluciones@doflins.dofer.mx (actualiza con tu correo real)<br />
-                <strong>WhatsApp:</strong> [Tu número] (horario de atención)<br />
+                <strong>Email:</strong>{" "}
+                <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}`} className="underline">
+                  {process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}
+                </a><br />
+                {process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL ? (
+                  <><strong>WhatsApp:</strong>{" "}<a href={process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline">Escribenos por WhatsApp</a><br /></>
+                ) : null}
                 <strong>Horario:</strong> Lunes a viernes, 9:00 AM - 6:00 PM (hora CDMX)
               </p>
             </section>

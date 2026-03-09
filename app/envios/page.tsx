@@ -262,8 +262,13 @@ export default function EnviosPage(): React.JSX.Element {
               <h2 className="font-title text-2xl text-[var(--ink-900)]">9. Contacto</h2>
               <p className="text-[var(--ink-700)]">
                 Para consultas sobre tu envío:<br />
-                <strong>Email:</strong> envios@doflins.dofer.mx (actualiza con tu correo real)<br />
-                <strong>WhatsApp:</strong> [Tu número] (horario de atención)
+                <strong>Email:</strong>{" "}
+                <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}`} className="underline">
+                  {process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}
+                </a><br />
+                {process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL ? (
+                  <><strong>WhatsApp:</strong>{" "}<a href={process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="underline">Escribenos por WhatsApp</a><br /></>
+                ) : null}
               </p>
             </section>
 

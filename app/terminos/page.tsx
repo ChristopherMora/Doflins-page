@@ -177,7 +177,10 @@ export default function TerminosPage(): React.JSX.Element {
               <h2 className="font-title text-2xl text-[var(--ink-900)]">12. Contacto</h2>
               <p className="text-[var(--ink-700)]">
                 Para preguntas sobre estos términos, contáctanos en:<br />
-                <strong>Email:</strong> legal@doflins.dofer.mx (actualiza con tu correo real)
+                <strong>Email:</strong>{" "}
+                <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}`} className="underline">
+                  {process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}
+                </a>
               </p>
             </section>
 

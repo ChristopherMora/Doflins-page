@@ -109,8 +109,8 @@ export default function PrivacidadPage(): React.JSX.Element {
                 <li><strong>Revocar</strong> tu consentimiento en cualquier momento</li>
               </ul>
               <p className="text-[var(--ink-700)]">
-                Para ejercer estos derechos, envía un correo a: <strong>privacidad@doflins.dofer.mx</strong> 
-                (actualiza con tu correo real)
+                Para ejercer estos derechos, envía un correo a:{" "}
+                <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}`} className="font-semibold underline">{process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}</a>
               </p>
             </section>
 
@@ -134,7 +134,10 @@ export default function PrivacidadPage(): React.JSX.Element {
               <h2 className="font-title text-2xl text-[var(--ink-900)]">9. Contacto</h2>
               <p className="text-[var(--ink-700)]">
                 Para cualquier duda sobre este aviso de privacidad, contáctanos en:<br />
-                <strong>Email:</strong> privacidad@doflins.dofer.mx (actualiza con tu correo real)
+                <strong>Email:</strong>{" "}
+                <a href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}`} className="underline">
+                  {process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}
+                </a>
               </p>
             </section>
 
