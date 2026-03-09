@@ -541,33 +541,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
     localStorage.setItem("doflins_pending_ref", refCode);
   }, []);
 
-  // Cuando el carrito cargue, aplicar el código pendiente si existe
-  useEffect(() => {
-    const pending = localStorage.getItem("doflins_pending_ref");
-    if (!pending || !cart) return;
-    // Solo aplicar si no hay ya un descuento activo
-    const alreadyApplied = cart.discountCodes.some(
-      (d) => d.code.toUpperCase() === pending && d.applicable,
-    );
-    if (alreadyApplied) {
-      localStorage.removeItem("doflins_pending_ref");
-      return;
-    }
-    localStorage.removeItem("doflins_pending_ref");
-    setDiscountCode(pending);
-    fetch("/api/cart/discount", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: pending }),
-    })
-      .then(async (res) => {
-        const data = (await res.json()) as { cart?: { discountCodes?: Array<{ code: string; applicable: boolean }> } };
-        if (data.cart) setCart(data.cart as never);
-        toast.success(`Código de referido ${pending} aplicado 🎉`, { duration: 4000 });
-      })
-      .catch(() => null);
-  }, [cart]);
-
   // Broadcast visual universe so header/home stay in sync
   useEffect(() => {
     broadcastUniverse(visualUniverse);
@@ -624,6 +597,33 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   // Mantener cartRef siempre sincronizado con el estado cart
   useEffect(() => {
     cartRef.current = cart;
+  }, [cart]);
+
+  // Cuando el carrito cargue, aplicar el código de referido pendiente (?ref= URL)
+  useEffect(() => {
+    const pending = localStorage.getItem("doflins_pending_ref");
+    if (!pending || !cart) return;
+    // Solo aplicar si no hay ya un descuento activo con ese código
+    const alreadyApplied = cart.discountCodes.some(
+      (d) => d.code.toUpperCase() === pending.toUpperCase() && d.applicable,
+    );
+    if (alreadyApplied) {
+      localStorage.removeItem("doflins_pending_ref");
+      return;
+    }
+    localStorage.removeItem("doflins_pending_ref");
+    setDiscountCode(pending);
+    fetch("/api/cart/discount", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: pending }),
+    })
+      .then(async (res) => {
+        const data = (await res.json()) as { cart?: { discountCodes?: Array<{ code: string; applicable: boolean }> } };
+        if (data.cart) setCart(data.cart as never);
+        toast.success(`Código de referido ${pending} aplicado 🎉`, { duration: 4000 });
+      })
+      .catch(() => null);
   }, [cart]);
 
   // Keep Home neutral at top, but once user enters shop section switch to an active purchase theme.
