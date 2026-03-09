@@ -13,7 +13,12 @@ export function pushDataLayerEvent(
     | "universe_switch"
     | "filter_apply"
     | "card_open"
-    | "view_3d",
+    | "view_3d"
+    | "scan_bag"
+    | "save_to_collection"
+    | "share"
+    | "purchase_complete"
+    | "achievement_unlocked",
   payload: Record<string, unknown>,
 ): void {
   if (typeof window === "undefined") {

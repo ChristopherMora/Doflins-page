@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { GiftIcon } from "@heroicons/react/24/solid";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
-import { SiteHeader } from "@/components/nav/site-header";
 import { ReferralCard } from "@/components/ui/referral-card";
 
 export const metadata: Metadata = {
@@ -13,7 +12,6 @@ export const metadata: Metadata = {
 export default function MiCodigoPage(): React.JSX.Element {
   return (
     <>
-      <SiteHeader />
       <main className="mx-auto w-full max-w-xl px-5 pb-32 pt-8">
         {/* Header */}
         <div className="mb-6 space-y-1">

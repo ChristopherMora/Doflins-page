@@ -70,7 +70,12 @@ async function getBolsaData(codigo: string): Promise<{
     const db = getDb();
 
     const [bag] = await db
-      .select({ id: codigosBolsa.id, packSize: codigosBolsa.packSize, status: codigosBolsa.status })
+      .select({
+        id: codigosBolsa.id,
+        packSize: codigosBolsa.packSize,
+        status: codigosBolsa.status,
+        scanCount: codigosBolsa.scanCount,
+      })
       .from(codigosBolsa)
       .where(eq(codigosBolsa.codigo, codigo.toUpperCase()))
       .limit(1);
@@ -96,10 +101,10 @@ async function getBolsaData(codigo: string): Promise<{
       .where(eq(codigosBolsaItems.codigoBolsaId, bag.id))
       .orderBy(asc(codigosBolsaItems.posicion));
 
-    // Registrar scan (fire and forget)
+    // Registrar scan (fire and forget) — incremento atómico
     void db
       .update(codigosBolsa)
-      .set({ scanCount: bag.id, usado: true, lastScannedAt: new Date(), updatedAt: new Date() })
+      .set({ scanCount: (bag.scanCount ?? 0) + 1, usado: true, lastScannedAt: new Date(), updatedAt: new Date() })
       .where(eq(codigosBolsa.id, bag.id))
       .catch(console.error);
 

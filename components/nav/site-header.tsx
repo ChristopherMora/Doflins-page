@@ -287,6 +287,18 @@ export function SiteHeader(): React.JSX.Element {
             </div>
           ) : null}
 
+          {/* Botón de login cuando no hay sesión */}
+          {!userEmail ? (
+            <Link
+              href="/coleccion"
+              className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full border px-4 text-sm font-semibold transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2"
+              style={{ color: navColor, borderColor: `${navColor}55` }}
+            >
+              <UserCircleIcon className="h-4 w-4" />
+              Entrar
+            </Link>
+          ) : null}
+
           <a
             href="/#compras"
             className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"

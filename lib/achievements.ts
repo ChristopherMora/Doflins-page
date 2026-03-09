@@ -116,6 +116,15 @@ export const ACHIEVEMENTS: Achievement[] = [
       (ownedByRarity["LEGENDARY"] ?? 0) >= 1,
   },
   {
+    id: "ultra_found",
+    title: "¡Ultra rara!",
+    description: "Consigue tu primera figura Ultra.",
+    emoji: "🔥",
+    color: "#8a2020",
+    check: ({ ownedByRarity }) =>
+      (ownedByRarity["ULTRA"] ?? 0) >= 1,
+  },
+  {
     id: "mythic_found",
     title: "Mítico entre mortales",
     description: "Consigue una figura Mítica. Increíble.",

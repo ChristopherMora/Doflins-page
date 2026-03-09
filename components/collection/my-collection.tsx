@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRightOnRectangleIcon,
+  ArrowUpTrayIcon,
   CheckCircleIcon,
   LockClosedIcon,
   SparklesIcon,
@@ -273,12 +274,25 @@ export function MyCollection() {
           <h1 className="font-title text-3xl text-[var(--ink-900)]">Mi Colección</h1>
           <p className="text-sm text-[var(--ink-600)]">{user.email}</p>
         </div>
-        <button
-          onClick={() => void handleSignOut()}
-          className="flex items-center gap-2 rounded-full border border-[#d8d2b4] bg-white px-4 py-2 text-xs font-medium text-[var(--ink-700)] hover:bg-[#f4f6e8] transition"
-        >
-          <ArrowRightOnRectangleIcon className="h-4 w-4" /> Cerrar sesión
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={async () => {
+              await navigator.clipboard.writeText(
+                `${window.location.origin}/coleccion/${user.id}`,
+              );
+              toast.success("¡Enlace copiado! Comparte tu colección.");
+            }}
+            className="flex items-center gap-2 rounded-full border border-[#d8d2b4] bg-white px-4 py-2 text-xs font-medium text-[var(--ink-700)] hover:bg-[#f4f6e8] transition"
+          >
+            <ArrowUpTrayIcon className="h-4 w-4" /> Compartir
+          </button>
+          <button
+            onClick={() => void handleSignOut()}
+            className="flex items-center gap-2 rounded-full border border-[#d8d2b4] bg-white px-4 py-2 text-xs font-medium text-[var(--ink-700)] hover:bg-[#f4f6e8] transition"
+          >
+            <ArrowRightOnRectangleIcon className="h-4 w-4" /> Cerrar sesión
+          </button>
+        </div>
       </div>
 
       {/* Progress overview */}

@@ -1,8 +1,12 @@
 import type { Metadata } from "next";
+import { desc, eq, sql } from "drizzle-orm";
 import { TrophyIcon } from "@heroicons/react/24/solid";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { NicknameEditor } from "@/components/collection/nickname-editor";
+import { MyRankBanner } from "@/components/ranking/my-rank-banner";
+import { getDb } from "@/lib/db/client";
+import { userCollectionProgress, userProfiles } from "@/lib/db/schema";
 
 export const metadata: Metadata = {
   title: "Ranking · DOFLINS",
@@ -24,13 +28,40 @@ interface RankingRow {
 
 // ─── Fetch server-side ─────────────────────────────────────────────────────────
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split("@");
+  if (!local || !domain) return "Coleccionista";
+  return `${local.slice(0, 3)}***@${domain}`;
+}
+
 async function getRanking(): Promise<RankingRow[]> {
-  const base = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   try {
-    const res = await fetch(`${base}/api/ranking`, { next: { revalidate: 180 } });
-    if (!res.ok) return [];
-    const data = (await res.json()) as { ranking: RankingRow[] };
-    return data.ranking ?? [];
+    const db = getDb();
+    const rows = await db
+      .select({
+        supabaseUserId: userCollectionProgress.supabaseUserId,
+        userEmail: userCollectionProgress.userEmail,
+        displayName: userProfiles.displayName,
+        total: sql<number>`CAST(COUNT(*) AS UNSIGNED)`,
+      })
+      .from(userCollectionProgress)
+      .leftJoin(userProfiles, eq(userProfiles.supabaseUserId, userCollectionProgress.supabaseUserId))
+      .where(eq(userCollectionProgress.owned, true))
+      .groupBy(
+        userCollectionProgress.supabaseUserId,
+        userCollectionProgress.userEmail,
+        userProfiles.displayName,
+      )
+      .orderBy(desc(sql`COUNT(*)`))
+      .limit(50);
+
+    return rows.map((r, i) => ({
+      rank: i + 1,
+      supabaseUserId: r.supabaseUserId,
+      displayName: r.displayName ?? null,
+      userEmail: maskEmail(r.userEmail),
+      total: r.total,
+    }));
   } catch {
     return [];
   }
@@ -41,7 +72,6 @@ async function getRanking(): Promise<RankingRow[]> {
 function displayLabel(row: RankingRow) {
   return row.displayName ?? row.userEmail;
 }
-
 // ─── Página ────────────────────────────────────────────────────────────────────
 
 export default async function RankingPage(): Promise<React.JSX.Element> {
@@ -70,9 +100,12 @@ export default async function RankingPage(): Promise<React.JSX.Element> {
         </div>
 
         {/* Tu nombre en el ranking */}
-        <div className="mb-8">
+        <div className="mb-6">
           <NicknameEditor />
         </div>
+
+        {/* Tu posición si estás en el top 50 */}
+        <MyRankBanner ranking={ranking} />
 
         {ranking.length === 0 ? (
           <p className="text-center text-sm text-[var(--ink-400)]">Aún no hay datos disponibles.</p>

@@ -10,22 +10,24 @@ import { getDb } from "@/lib/db/client";
 import { doflins, userCollectionProgress } from "@/lib/db/schema";
 
 const RARITY_COLORS: Record<string, string> = {
-  common: "#7F856F",
-  rare: "#2E7A4E",
-  epic: "#B46A2D",
-  legendary: "#e0a845",
-  mythic: "#9b5de5",
+  COMMON: "#7F856F",
+  RARE: "#2E7A4E",
+  EPIC: "#B46A2D",
+  LEGENDARY: "#e0a845",
+  ULTRA: "#8a2020",
+  MYTHIC: "#9b5de5",
 };
 
 const RARITY_LABEL: Record<string, string> = {
-  common: "Común",
-  rare: "Raro",
-  epic: "Épico",
-  legendary: "Legendario",
-  mythic: "Mítico",
+  COMMON: "Común",
+  RARE: "Raro",
+  EPIC: "Épico",
+  LEGENDARY: "Legendario",
+  ULTRA: "Ultra",
+  MYTHIC: "Mítico",
 };
 
-const RARITIES = ["common", "rare", "epic", "legendary", "mythic"];
+const RARITIES = ["COMMON", "RARE", "EPIC", "LEGENDARY", "ULTRA", "MYTHIC"];
 
 export async function generateMetadata({
   params,
