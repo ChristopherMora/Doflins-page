@@ -160,7 +160,7 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
       <main className="flex min-h-dvh flex-col items-center justify-center px-5 pb-28 pt-10">
         <div className="w-full max-w-sm space-y-5">
