@@ -1,5 +1,5 @@
 import crypto from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getDb } from "@/lib/db/client";
@@ -120,10 +120,10 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       discountApplied: discountAmount,
     });
 
-    // Incrementar contador en referral_codes
+    // Incrementar contador de forma atómica para evitar race conditions
     await db
       .update(referralCodes)
-      .set({ usesCount: referral.usesCount + 1 })
+      .set({ usesCount: sql`${referralCodes.usesCount} + 1` })
       .where(eq(referralCodes.id, referral.id));
   }
 

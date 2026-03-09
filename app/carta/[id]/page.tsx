@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRightIcon, ShareIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/24/solid";
 import { eq } from "drizzle-orm";
 
 import { BottomNav } from "@/components/nav/bottom-nav";

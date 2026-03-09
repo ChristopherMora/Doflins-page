@@ -619,9 +619,14 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       body: JSON.stringify({ code: pending }),
     })
       .then(async (res) => {
-        const data = (await res.json()) as { cart?: { discountCodes?: Array<{ code: string; applicable: boolean }> } };
-        if (data.cart) setCart(data.cart as never);
-        toast.success(`Código de referido ${pending} aplicado 🎉`, { duration: 4000 });
+        if (!res.ok) return;
+        const data = (await res.json()) as { cart?: ShopCart; coupon?: { code: string; applied: boolean } };
+        if (data.cart) setCart(data.cart);
+        if (data.coupon?.applied) {
+          toast.success(`Código de referido ${pending} aplicado 🎉`, { duration: 4000 });
+        } else {
+          toast.error(`El código ${pending} no pudo aplicarse al carrito.`);
+        }
       })
       .catch(() => null);
   }, [cart]);

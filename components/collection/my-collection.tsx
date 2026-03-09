@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRightOnRectangleIcon,
   CheckCircleIcon,
@@ -68,8 +68,7 @@ export function MyCollection() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
   const [showOwned, setShowOwned] = useState<"all" | "owned" | "missing">("all");
-  // Ref para detectar logros nuevos sin disparar al cargar inicial
-  const prevUnlockedIdsRef = useRef<Set<string> | null>(null);
+
 
   const supabase = getSupabaseBrowserClient();
 
@@ -192,7 +191,6 @@ export function MyCollection() {
           });
         }
       }
-      prevUnlockedIdsRef.current = new Set(achievementsAfter.filter((a) => a.unlocked).map((a) => a.id));
     }
   };
 
