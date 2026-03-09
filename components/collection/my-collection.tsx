@@ -8,6 +8,7 @@ import {
   ArrowUpTrayIcon,
   CheckCircleIcon,
   LockClosedIcon,
+  MagnifyingGlassIcon,
   SparklesIcon,
   XMarkIcon,
   ChevronLeftIcon,
@@ -68,6 +69,7 @@ export function MyCollection() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
   const [showOwned, setShowOwned] = useState<"all" | "owned" | "missing">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
 
   const supabase = getSupabaseBrowserClient();
@@ -79,6 +81,16 @@ export function MyCollection() {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
+      if (_event === "SIGNED_IN" && session?.user) {
+        const key = `doflins_welcomed_${session.user.id}`;
+        if (typeof sessionStorage !== "undefined" && !sessionStorage.getItem(key)) {
+          sessionStorage.setItem(key, "1");
+          toast.success("¡Bienvenido a DOFLINS! 🎴", {
+            description: "Tu colección se sincroniza automáticamente.",
+            duration: 5000,
+          });
+        }
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -126,6 +138,10 @@ export function MyCollection() {
     if (activeFilter !== "ALL") list = list.filter((d) => d.rareza === activeFilter);
     if (showOwned === "owned") list = list.filter((d) => ownedSet.has(d.id));
     if (showOwned === "missing") list = list.filter((d) => !ownedSet.has(d.id));
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter((d) => d.nombre.toLowerCase().includes(q));
+    }
     return list.sort((a, b) => {
       const ra = RARITY_ORDER.indexOf(a.rareza);
       const rb = RARITY_ORDER.indexOf(b.rareza);
@@ -397,6 +413,18 @@ export function MyCollection() {
           series: [...new Set(data.doflins.filter((d) => ownedSet.has(d.id)).map((d) => d.serie))],
         }}
       />
+
+      {/* Buscador */}
+      <div className="relative">
+        <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-400)]" />
+        <input
+          type="search"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Buscar figura por nombre…"
+          className="w-full rounded-full border border-[#d8d2b4] bg-white py-2 pl-10 pr-4 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-400)] focus:outline-none focus:ring-2 focus:ring-[#4e6f2a]/40"
+        />
+      </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2">

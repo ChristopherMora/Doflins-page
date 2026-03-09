@@ -3,11 +3,14 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { ChevronLeftIcon } from "@heroicons/react/24/solid";
+import { cache } from "react";
 import type { Metadata } from "next";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { getDb } from "@/lib/db/client";
 import { doflins, userCollectionProgress } from "@/lib/db/schema";
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://doflins.dofer.mx";
 
 const RARITY_COLORS: Record<string, string> = {
   COMMON: "#7F856F",
@@ -29,18 +32,71 @@ const RARITY_LABEL: Record<string, string> = {
 
 const RARITIES = ["COMMON", "RARE", "EPIC", "LEGENDARY", "ULTRA", "MYTHIC"];
 
+// React.cache deduplicates identical calls within the same request
+const getCollectionStats = cache(async (userId: string) => {
+  if (!userId || userId.length > 64) return null;
+  try {
+    const db = getDb();
+    const [allRows, ownedRows] = await Promise.all([
+      db.select({ id: doflins.id }).from(doflins).where(eq(doflins.activo, true)),
+      db
+        .select({
+          doflinId: userCollectionProgress.doflinId,
+          userEmail: userCollectionProgress.userEmail,
+        })
+        .from(userCollectionProgress)
+        .where(eq(userCollectionProgress.supabaseUserId, userId)),
+    ]);
+    if (ownedRows.length === 0) return null;
+    const rawEmail = ownedRows[0]?.userEmail ?? "";
+    const [userPart] = rawEmail.split("@");
+    const maskedEmail = userPart
+      ? `${userPart.slice(0, 2)}${"*".repeat(Math.max(0, userPart.length - 2))}`
+      : "coleccionista";
+    const total = allRows.length;
+    const owned = ownedRows.length;
+    const pct = total > 0 ? Math.round((owned / total) * 100) : 0;
+    return { total, owned, pct, maskedEmail };
+  } catch {
+    return null;
+  }
+});
+
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ userId: string }>;
 }): Promise<Metadata> {
   const { userId } = await params;
+  const stats = await getCollectionStats(userId);
+
+  if (!stats) {
+    return {
+      title: "Colección pública · DOFLINS",
+      robots: { index: false },
+    };
+  }
+
+  const { total, owned, pct, maskedEmail } = stats;
+  const title = `Colección de ${maskedEmail} — ${pct}% · DOFLINS`;
+  const description = `Este coleccionista tiene ${owned} de ${total} figuras DOFLINS. ¡Mira su progreso!`;
+  const ogImage = `${SITE_URL}/api/og/collection?owned=${owned}&total=${total}&pct=${pct}&user=${encodeURIComponent(maskedEmail)}`;
+
   return {
-    title: `Colección pública · DOFLINS`,
-    description: `Mira la colección de figuras DOFLINS de este coleccionista.`,
+    title,
+    description,
     robots: { index: false },
     openGraph: {
-      url: `https://doflins.dofer.mx/coleccion/${userId}`,
+      title,
+      description,
+      url: `${SITE_URL}/coleccion/${userId}`,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [ogImage],
     },
   };
 }

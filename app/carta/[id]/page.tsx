@@ -7,6 +7,7 @@ import { eq } from "drizzle-orm";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { Button } from "@/components/ui/button";
+import { MarkOwnedButton } from "@/components/carta/mark-owned-button";
 import { ShareFigureButton } from "@/components/carta/share-figure-button";
 import { getDb } from "@/lib/db/client";
 import { doflins } from "@/lib/db/schema";
@@ -169,6 +170,7 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
 
           {/* CTAs */}
           <div className="space-y-2">
+            <MarkOwnedButton doflinId={doflin.id} />
             <ShareFigureButton
               nombre={doflin.nombre}
               rareza={RARITY_LABEL[rareza] ?? rareza}
