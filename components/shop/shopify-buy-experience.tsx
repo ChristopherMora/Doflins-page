@@ -33,6 +33,7 @@ import {
 
 import type { ShopCart, ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
 import { broadcastUniverse, onUniverseChange, type Universe } from "@/lib/universe-store";
+import { CART_SNAPSHOT_STORAGE_KEY } from "@/lib/constants/shop";
 import { Badge } from "@/components/ui/badge";
 import { WatchingBadge } from "@/components/ui/watching-badge";
 import { Button } from "@/components/ui/button";
@@ -90,7 +91,6 @@ const FREE_GIFT_MIN_SUBTOTAL_ENV = Number(process.env.NEXT_PUBLIC_FREE_GIFT_MIN_
 const FREE_GIFT_MIN_SUBTOTAL =
   Number.isFinite(FREE_GIFT_MIN_SUBTOTAL_ENV) && FREE_GIFT_MIN_SUBTOTAL_ENV > 0 ? FREE_GIFT_MIN_SUBTOTAL_ENV : null;
 const LOW_STOCK_THRESHOLD = 5;
-const CART_SNAPSHOT_STORAGE_KEY = "doflins_cart_snapshot_v1";
 const CART_SNAPSHOT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 14;
 const SUPPORT_WHATSAPP_URL =
   process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL?.trim() ??

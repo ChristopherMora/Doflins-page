@@ -21,6 +21,7 @@ import {
 import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getStoredUniverse, onUniverseChange, type Universe } from "@/lib/universe-store";
+import { CART_SNAPSHOT_STORAGE_KEY } from "@/lib/constants/shop";
 
 function useDarkMode(): boolean {
   const [dark, setDark] = useState(false);
@@ -57,7 +58,7 @@ export function SiteHeader(): React.JSX.Element {
   useEffect(() => {
     const readCartCount = () => {
       try {
-        const raw = localStorage.getItem("doflins_cart_snapshot_v1");
+        const raw = localStorage.getItem(CART_SNAPSHOT_STORAGE_KEY);
         if (!raw) { setCartCount(0); return; }
         const parsed = JSON.parse(raw) as { lines?: { quantity: number }[] };
         const count = Array.isArray(parsed.lines)

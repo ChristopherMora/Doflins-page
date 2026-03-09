@@ -6,8 +6,7 @@ import { CheckCircleIcon, ShoppingCartIcon, XCircleIcon } from "@heroicons/react
 
 import { Button } from "@/components/ui/button";
 import type { ShopCart } from "@/lib/shopify/types";
-
-const CART_SNAPSHOT_KEY = "doflins_cart_snapshot_v1";
+import { CART_SNAPSHOT_STORAGE_KEY } from "@/lib/constants/shop";
 
 interface AddToCartButtonProps {
   variantId: string;
@@ -22,11 +21,11 @@ function writeCartSnapshot(cart: ShopCart): void {
       quantity: l.quantity,
     }));
     if (!lines.length) {
-      localStorage.removeItem(CART_SNAPSHOT_KEY);
+      localStorage.removeItem(CART_SNAPSHOT_STORAGE_KEY);
       return;
     }
     localStorage.setItem(
-      CART_SNAPSHOT_KEY,
+      CART_SNAPSHOT_STORAGE_KEY,
       JSON.stringify({ updatedAt: Date.now(), checkoutUrl: cart.checkoutUrl, lines }),
     );
     window.dispatchEvent(
@@ -57,6 +56,7 @@ export function AddToCartButton({
       const data = (await res.json()) as { cart?: ShopCart };
       if (data.cart) writeCartSnapshot(data.cart);
       setState("added");
+      setTimeout(() => setState("idle"), 3500);
       toast.success(`${productTitle} agregado al carrito 🛒`, {
         action: {
           label: "Ver carrito",
