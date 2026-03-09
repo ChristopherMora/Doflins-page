@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRightOnRectangleIcon,
   CheckCircleIcon,
@@ -12,7 +12,9 @@ import {
   ChevronLeftIcon,
 } from "@heroicons/react/24/solid";
 import type { User } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
+import { computeAchievements } from "@/lib/achievements";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -66,6 +68,8 @@ export function MyCollection() {
   const [isLoading, setIsLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
   const [showOwned, setShowOwned] = useState<"all" | "owned" | "missing">("all");
+  // Ref para detectar logros nuevos sin disparar al cargar inicial
+  const prevUnlockedIdsRef = useRef<Set<string> | null>(null);
 
   const supabase = getSupabaseBrowserClient();
 
@@ -139,6 +143,16 @@ export function MyCollection() {
   const toggleOwned = async (doflinId: number) => {
     if (!user) return;
     const wasOwned = ownedSet.has(doflinId);
+    // Snapshot de logros ANTES del cambio
+    const achievementsBefore = data ? computeAchievements({
+      totalOwned: ownedSet.size,
+      totalDoflins: data.doflins.length,
+      ownedByRarity: Object.fromEntries(Object.entries(byRarity).map(([r, v]) => [r.toLowerCase(), v.owned])),
+      totalByRarity: Object.fromEntries(Object.entries(byRarity).map(([r, v]) => [r.toLowerCase(), v.total])),
+      series: [...new Set(data.doflins.filter((d) => ownedSet.has(d.id)).map((d) => d.serie))],
+    }) : [];
+    const unlockedBefore = new Set(achievementsBefore.filter((a) => a.unlocked).map((a) => a.id));
+
     // Optimistic update
     setData((prev) => {
       if (!prev) return prev;
@@ -147,11 +161,39 @@ export function MyCollection() {
         : [...prev.ownedIds, doflinId];
       return { ...prev, ownedIds: newOwnedIds };
     });
+
     await fetch("/api/collection/user", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ doflinId, owned: !wasOwned }),
     });
+
+    // Detectar logros nuevos tras el cambio (solo al agregar, no al quitar)
+    if (!wasOwned && data) {
+      const newOwnedSet = new Set([...data.ownedIds, doflinId]);
+      const newByRarity: Record<string, { total: number; owned: number }> = {};
+      for (const d of data.doflins) {
+        if (!newByRarity[d.rareza]) newByRarity[d.rareza] = { total: 0, owned: 0 };
+        newByRarity[d.rareza].total++;
+        if (newOwnedSet.has(d.id)) newByRarity[d.rareza].owned++;
+      }
+      const achievementsAfter = computeAchievements({
+        totalOwned: newOwnedSet.size,
+        totalDoflins: data.doflins.length,
+        ownedByRarity: Object.fromEntries(Object.entries(newByRarity).map(([r, v]) => [r.toLowerCase(), v.owned])),
+        totalByRarity: Object.fromEntries(Object.entries(newByRarity).map(([r, v]) => [r.toLowerCase(), v.total])),
+        series: [...new Set(data.doflins.filter((d) => newOwnedSet.has(d.id)).map((d) => d.serie))],
+      });
+      for (const ach of achievementsAfter) {
+        if (ach.unlocked && !unlockedBefore.has(ach.id)) {
+          toast.success(`¡Logro desbloqueado! ${ach.emoji} ${ach.title}`, {
+            description: ach.description,
+            duration: 5000,
+          });
+        }
+      }
+      prevUnlockedIdsRef.current = new Set(achievementsAfter.filter((a) => a.unlocked).map((a) => a.id));
+    }
   };
 
   // — NOT LOGGED IN —

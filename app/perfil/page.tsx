@@ -11,6 +11,7 @@ import {
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { NicknameEditor } from "@/components/collection/nickname-editor";
 import { ReferralCard } from "@/components/ui/referral-card";
+import { AcquisitionHistory } from "@/components/perfil/acquisition-history";
 
 export const metadata: Metadata = {
   title: "Mi Perfil · DOFLINS",
@@ -101,11 +102,19 @@ export default function PerfilPage(): React.JSX.Element {
         </section>
 
         {/* Código de referido inline */}
-        <section>
+        <section className="mb-8">
           <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-[var(--ink-400)]">
             Tu código de referido
           </h2>
           <ReferralCard />
+        </section>
+
+        {/* Historial de adquisiciones */}
+        <section>
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-[var(--ink-400)]">
+            Últimas figuras obtenidas
+          </h2>
+          <AcquisitionHistory />
         </section>
       </main>
 

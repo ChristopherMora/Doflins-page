@@ -532,6 +532,42 @@ export function ShopifyBuyExperience(): React.JSX.Element {
     });
   }, []);
 
+  // Auto-aplicar código de referido desde ?ref= en la URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const refCode = params.get("ref")?.trim().toUpperCase();
+    if (!refCode) return;
+    // Guardamos en localStorage para aplicarlo cuando el carrito esté listo
+    localStorage.setItem("doflins_pending_ref", refCode);
+  }, []);
+
+  // Cuando el carrito cargue, aplicar el código pendiente si existe
+  useEffect(() => {
+    const pending = localStorage.getItem("doflins_pending_ref");
+    if (!pending || !cart) return;
+    // Solo aplicar si no hay ya un descuento activo
+    const alreadyApplied = cart.discountCodes.some(
+      (d) => d.code.toUpperCase() === pending && d.applicable,
+    );
+    if (alreadyApplied) {
+      localStorage.removeItem("doflins_pending_ref");
+      return;
+    }
+    localStorage.removeItem("doflins_pending_ref");
+    setDiscountCode(pending);
+    fetch("/api/cart/discount", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ code: pending }),
+    })
+      .then(async (res) => {
+        const data = (await res.json()) as { cart?: { discountCodes?: Array<{ code: string; applicable: boolean }> } };
+        if (data.cart) setCart(data.cart as never);
+        toast.success(`Código de referido ${pending} aplicado 🎉`, { duration: 4000 });
+      })
+      .catch(() => null);
+  }, [cart]);
+
   // Broadcast visual universe so header/home stay in sync
   useEffect(() => {
     broadcastUniverse(visualUniverse);

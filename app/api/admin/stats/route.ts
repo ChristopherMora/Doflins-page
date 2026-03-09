@@ -1,9 +1,17 @@
-import { and, count, gte, sql } from "drizzle-orm";
+import { and, count, countDistinct, gte, sql, sum } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminEmail } from "@/lib/auth-admin";
 import { getDb } from "@/lib/db/client";
-import { codigosBolsa, codigosBolsaItems, doflins, scanEvents } from "@/lib/db/schema";
+import {
+  codigosBolsa,
+  codigosBolsaItems,
+  doflins,
+  referralCodes,
+  scanEvents,
+  userCollectionProgress,
+  userProfiles,
+} from "@/lib/db/schema";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -22,7 +30,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const db = getDb();
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [revealsByDay, eventsByType, stockByDoflin] = await Promise.all([
+  const [revealsByDay, eventsByType, stockByDoflin, referralStats, userStats] = await Promise.all([
     // Reveals per day (last 30 days)
     db
       .select({
@@ -66,11 +74,32 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         ),
       )
       .groupBy(doflins.id, doflins.nombre, doflins.rareza),
+
+    // Referral summary: active codes + total uses
+    db
+      .select({
+        activeCodes: count(),
+        totalUses: sum(referralCodes.usesCount),
+      })
+      .from(referralCodes)
+      .where(sql`${referralCodes.active} = 1`),
+
+    // User counts
+    Promise.all([
+      db.select({ total: count() }).from(userProfiles),
+      db.select({ total: countDistinct(userCollectionProgress.supabaseUserId) }).from(userCollectionProgress),
+    ]),
   ]);
 
   const lowStock = stockByDoflin
     .filter((row) => row.remaining <= 5)
     .sort((a, b) => a.remaining - b.remaining);
+
+  const [profileStats, collectorStats] = userStats;
+  const totalProfiles = profileStats[0]?.total ?? 0;
+  const activeCollectors = collectorStats[0]?.total ?? 0;
+  const activeReferralCodes = referralStats[0]?.activeCodes ?? 0;
+  const totalReferralUses = Number(referralStats[0]?.totalUses ?? 0);
 
   const revealSuccessCount =
     eventsByType.find((e) => e.eventType === "reveal_success")?.count ?? 0;
@@ -90,5 +119,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     conversionRate,
     purchaseIntentCount,
     revealSuccessCount,
+    totalProfiles,
+    activeCollectors,
+    activeReferralCodes,
+    totalReferralUses,
   });
 }

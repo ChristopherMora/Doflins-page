@@ -6,7 +6,9 @@ import {
   ChartBarIcon,
   ExclamationTriangleIcon,
   FireIcon,
+  GiftIcon,
   SparklesIcon,
+  UserGroupIcon,
 } from "@heroicons/react/24/solid";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,6 +40,10 @@ interface StatsData {
   conversionRate: number;
   purchaseIntentCount: number;
   revealSuccessCount: number;
+  totalProfiles: number;
+  activeCollectors: number;
+  activeReferralCodes: number;
+  totalReferralUses: number;
 }
 
 const RARITY_COLORS: Record<string, string> = {
@@ -179,7 +185,7 @@ export function AdminDashboard() {
         </button>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards — fila 1 */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {[
           {
@@ -205,6 +211,46 @@ export function AdminDashboard() {
             value: `${stats.conversionRate.toFixed(1)}%`,
             icon: <FireIcon className="h-6 w-6 text-red-500" />,
             bg: "bg-[#fff0f0]",
+          },
+        ].map((kpi) => (
+          <Card key={kpi.label} className={`border border-[#d8d2b4] ${kpi.bg} shadow-sm`}>
+            <CardContent className="flex items-center gap-4 p-5">
+              <div className="rounded-2xl bg-white/80 p-3 shadow-sm">{kpi.icon}</div>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-600)]">{kpi.label}</p>
+                <p className="font-title text-3xl text-[var(--ink-900)]">{kpi.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* KPI Cards — fila 2: usuarios y referidos */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {[
+          {
+            label: "Perfiles creados",
+            value: stats.totalProfiles,
+            icon: <UserGroupIcon className="h-6 w-6 text-[#1a7a4a]" />,
+            bg: "bg-[#e8faf0]",
+          },
+          {
+            label: "Coleccionistas activos",
+            value: stats.activeCollectors,
+            icon: <SparklesIcon className="h-6 w-6 text-[#b46a2d]" />,
+            bg: "bg-[#fff4e8]",
+          },
+          {
+            label: "Códigos referido activos",
+            value: stats.activeReferralCodes,
+            icon: <GiftIcon className="h-6 w-6 text-[#9b1fae]" />,
+            bg: "bg-[#fde8f5]",
+          },
+          {
+            label: "Usos de referido",
+            value: stats.totalReferralUses,
+            icon: <GiftIcon className="h-6 w-6 text-[#3b5bdb]" />,
+            bg: "bg-[#e8f0fe]",
           },
         ].map((kpi) => (
           <Card key={kpi.label} className={`border border-[#d8d2b4] ${kpi.bg} shadow-sm`}>

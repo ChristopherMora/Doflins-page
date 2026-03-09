@@ -1,11 +1,13 @@
-"use client";
-
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { notFound } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { ChevronLeftIcon } from "@heroicons/react/24/solid";
+import type { Metadata } from "next";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { getDb } from "@/lib/db/client";
+import { doflins, userCollectionProgress } from "@/lib/db/schema";
 
 const RARITY_COLORS: Record<string, string> = {
   common: "#7F856F",
@@ -23,84 +25,75 @@ const RARITY_LABEL: Record<string, string> = {
   mythic: "Mítico",
 };
 
-interface DoflinRow {
-  id: number;
-  nombre: string;
-  rareza: string;
-  imagenUrl: string | null;
-  siluetaUrl: string | null;
-  serie: string | null;
-  numeroColeccion: number | null;
-}
+const RARITIES = ["common", "rare", "epic", "legendary", "mythic"];
 
-interface PublicProfileData {
-  maskedEmail: string;
-  doflins: DoflinRow[];
-  ownedIds: number[];
-}
-
-export default function PublicCollectionPage({
+export async function generateMetadata({
   params,
 }: {
-  params: { userId: string };
-}) {
-  const [data, setData] = useState<PublicProfileData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  params: Promise<{ userId: string }>;
+}): Promise<Metadata> {
+  const { userId } = await params;
+  return {
+    title: `Colección pública · DOFLINS`,
+    description: `Mira la colección de figuras DOFLINS de este coleccionista.`,
+    robots: { index: false },
+    openGraph: {
+      url: `https://doflins.dofer.mx/coleccion/${userId}`,
+    },
+  };
+}
 
-  useEffect(() => {
-    fetch(`/api/collection/public/${params.userId}`)
-      .then(async (res) => {
-        if (!res.ok) throw new Error("Perfil no encontrado");
-        return res.json() as Promise<PublicProfileData>;
+export default async function PublicCollectionPage({
+  params,
+}: {
+  params: Promise<{ userId: string }>;
+}): Promise<React.JSX.Element> {
+  const { userId } = await params;
+
+  if (!userId || userId.length > 64) notFound();
+
+  const db = getDb();
+
+  const [allDoflins, ownedRows] = await Promise.all([
+    db
+      .select({
+        id: doflins.id,
+        nombre: doflins.nombre,
+        rareza: doflins.rareza,
+        imagenUrl: doflins.imagenUrl,
+        siluetaUrl: doflins.siluetaUrl,
+        serie: doflins.serie,
+        numeroColeccion: doflins.numeroColeccion,
       })
-      .then(setData)
-      .catch((e: unknown) =>
-        setError(e instanceof Error ? e.message : "Error desconocido"),
-      )
-      .finally(() => setLoading(false));
-  }, [params.userId]);
+      .from(doflins)
+      .where(eq(doflins.activo, true)),
 
-  if (loading) {
-    return (
-      <>
-        <main className="flex min-h-[80dvh] items-center justify-center pb-28">
-          <p className="animate-pulse text-[var(--ink-600)]">Cargando colección…</p>
-        </main>
-        <BottomNav />
-      </>
-    );
-  }
+    db
+      .select({
+        doflinId: userCollectionProgress.doflinId,
+        userEmail: userCollectionProgress.userEmail,
+      })
+      .from(userCollectionProgress)
+      .where(eq(userCollectionProgress.supabaseUserId, userId)),
+  ]);
 
-  if (error || !data) {
-    return (
-      <>
-        <main className="flex min-h-[80dvh] flex-col items-center justify-center gap-4 pb-28 text-center">
-          <p className="text-4xl">😕</p>
-          <p className="text-[var(--ink-700)]">{error ?? "Perfil no disponible"}</p>
-          <Link
-            href="/"
-            className="text-sm font-medium text-[var(--brand-primary)] underline underline-offset-2"
-          >
-            Volver al inicio
-          </Link>
-        </main>
-        <BottomNav />
-      </>
-    );
-  }
+  if (ownedRows.length === 0) notFound();
 
-  const ownedSet = new Set(data.ownedIds);
-  const total = data.doflins.length;
+  const ownedSet = new Set(ownedRows.map((r) => r.doflinId));
+  const rawEmail = ownedRows[0]?.userEmail ?? "";
+  const [user, domain] = rawEmail.split("@");
+  const maskedEmail = user
+    ? `${user.slice(0, 2)}${"*".repeat(Math.max(0, user.length - 2))}@${domain ?? ""}`
+    : "coleccionista";
+
+  const total = allDoflins.length;
   const owned = ownedSet.size;
   const pct = total > 0 ? Math.round((owned / total) * 100) : 0;
-
-  const rarities = ["common", "rare", "epic", "legendary", "mythic"];
 
   return (
     <>
       <main className="mx-auto w-full max-w-3xl px-4 py-10 pb-28">
-        {/* Botón volver */}
+        {/* Volver */}
         <div className="mb-6">
           <Link
             href="/"
@@ -116,7 +109,7 @@ export default function PublicCollectionPage({
             <span className="text-2xl">🎴</span>
           </div>
           <h1 className="font-title mb-1 text-xl font-bold text-[var(--ink-900)]">
-            Colección de {data.maskedEmail}
+            Colección de {maskedEmail}
           </h1>
           <p className="text-sm text-[var(--ink-600)]">
             {owned} de {total} figuras — {pct}% completado
@@ -132,17 +125,14 @@ export default function PublicCollectionPage({
 
           {/* Barras por rareza */}
           <div className="mt-4 grid grid-cols-2 gap-2 text-left">
-            {rarities.map((r) => {
-              const rarityDoflins = data.doflins.filter((d) => d.rareza === r);
-              const rarityOwned = rarityDoflins.filter((d) =>
-                ownedSet.has(d.id),
-              ).length;
+            {RARITIES.map((r) => {
+              const rarityDoflins = allDoflins.filter((d) => d.rareza === r);
+              const rarityOwned = rarityDoflins.filter((d) => ownedSet.has(d.id)).length;
               const rarityPct =
                 rarityDoflins.length > 0
                   ? Math.round((rarityOwned / rarityDoflins.length) * 100)
                   : 0;
-              const color =
-                RARITY_COLORS[r as keyof typeof RARITY_COLORS] ?? "#aaa";
+              const color = RARITY_COLORS[r] ?? "#aaa";
               return (
                 <div key={r}>
                   <div className="mb-1 flex justify-between text-xs text-[var(--ink-600)]">
@@ -165,7 +155,7 @@ export default function PublicCollectionPage({
 
         {/* Grid de figuras */}
         <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
-          {data.doflins.map((d) => {
+          {allDoflins.map((d) => {
             const isOwned = ownedSet.has(d.id);
             const imgSrc = isOwned
               ? (d.imagenUrl ?? "/images/placeholders/doflin.webp")
@@ -199,6 +189,7 @@ export default function PublicCollectionPage({
           })}
         </div>
       </main>
+
       <BottomNav />
     </>
   );

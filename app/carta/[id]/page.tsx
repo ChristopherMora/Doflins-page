@@ -2,11 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { ArrowRightIcon, ShareIcon, SparklesIcon } from "@heroicons/react/24/solid";
 import { eq } from "drizzle-orm";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { Button } from "@/components/ui/button";
+import { ShareFigureButton } from "@/components/carta/share-figure-button";
 import { getDb } from "@/lib/db/client";
 import { doflins } from "@/lib/db/schema";
 
@@ -168,6 +169,10 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
 
           {/* CTAs */}
           <div className="space-y-2">
+            <ShareFigureButton
+              nombre={doflin.nombre}
+              rareza={RARITY_LABEL[rareza] ?? rareza}
+            />
             <Button asChild className="w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
               <Link href="/coleccion">
                 ¿Ya la tienes? Guarda tu progreso
