@@ -40,6 +40,7 @@ export function SiteHeader(): React.JSX.Element {
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -50,6 +51,27 @@ export function SiteHeader(): React.JSX.Element {
     return () => {
       window.clearTimeout(timer);
       unsubscribe();
+    };
+  }, []);
+
+  useEffect(() => {
+    const readCartCount = () => {
+      try {
+        const raw = localStorage.getItem("doflins_cart_snapshot_v1");
+        if (!raw) { setCartCount(0); return; }
+        const parsed = JSON.parse(raw) as { lines?: { quantity: number }[] };
+        const count = Array.isArray(parsed.lines)
+          ? parsed.lines.reduce((s, l) => s + (Number(l?.quantity) || 0), 0)
+          : 0;
+        setCartCount(count);
+      } catch { setCartCount(0); }
+    };
+    readCartCount();
+    window.addEventListener("doflins:cart-updated", readCartCount);
+    window.addEventListener("storage", readCartCount);
+    return () => {
+      window.removeEventListener("doflins:cart-updated", readCartCount);
+      window.removeEventListener("storage", readCartCount);
     };
   }, []);
 
@@ -297,6 +319,22 @@ export function SiteHeader(): React.JSX.Element {
               <UserCircleIcon className="h-4 w-4" />
               Entrar
             </Link>
+          ) : null}
+
+          {/* Badge contador de carrito */}
+          {cartCount > 0 ? (
+            <a
+              href="/#compras"
+              className="relative hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:brightness-110 active:scale-95"
+              style={{ color: navColor, borderColor: `${navColor}55` }}
+              title={`${cartCount} item${cartCount !== 1 ? "s" : ""} en el carrito`}
+              aria-label={`Carrito: ${cartCount} item${cartCount !== 1 ? "s" : ""}`}
+            >
+              <ShoppingCartIcon className="h-4 w-4" />
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white leading-none">
+                {cartCount > 9 ? "9+" : cartCount}
+              </span>
+            </a>
           ) : null}
 
           <a

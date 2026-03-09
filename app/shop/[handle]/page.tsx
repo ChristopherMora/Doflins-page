@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { ProductViewer3D } from "@/components/shop/product-viewer-3d";
 import { resolveProductModelUrl } from "@/lib/shop/product-model";
 import type { ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
@@ -279,9 +280,16 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
               ) : null}
 
               <div className="space-y-2">
-                <Button asChild className="h-12 w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
+                {recommendedVariant ? (
+                  <AddToCartButton
+                    variantId={recommendedVariant.id}
+                    productTitle={product.title}
+                    isSoldOut={isSoldOut}
+                  />
+                ) : null}
+                <Button asChild className="h-12 w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] opacity-80">
                   <Link href="/#compras">
-                    <ShoppingCartIcon className="h-5 w-5" /> Ir a compras y agregar al carrito
+                    <ShoppingCartIcon className="h-5 w-5" /> Ver catálogo completo
                   </Link>
                 </Button>
                 <Button asChild variant="secondary" className="h-12 w-full">
@@ -289,7 +297,7 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                     <ArrowLeftIcon className="h-5 w-5" /> Seguir explorando universos
                   </Link>
                 </Button>
-                <p className="text-center text-xs text-[var(--ink-600)]">Tu carrito se mantiene en esta sesión cuando regresas al catálogo.</p>
+                <p className="text-center text-xs text-[var(--ink-600)]">Tu carrito se sincroniza cuando vuelves al catálogo.</p>
               </div>
             </div>
           </CardContent>

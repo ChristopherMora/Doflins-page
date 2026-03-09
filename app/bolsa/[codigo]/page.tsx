@@ -157,8 +157,8 @@ export default async function BolsaPage({ params }: BolsaPageProps): Promise<Rea
           {items.map((item, i) => (
             <div
               key={item.id}
-              className={`rounded-2xl bg-gradient-to-b ${RARITY_GRADIENT[item.rareza] ?? "from-[#f5f5f0] to-[#ebebeb]"} overflow-hidden shadow-sm`}
-              style={{ animationDelay: `${i * 60}ms` }}
+              className={`animate-card-reveal rounded-2xl bg-gradient-to-b ${RARITY_GRADIENT[item.rareza] ?? "from-[#f5f5f0] to-[#ebebeb]"} overflow-hidden shadow-sm`}
+              style={{ animationDelay: `${i * 80}ms` }}
             >
               <div className="relative h-40 w-full overflow-hidden">
                 <Image

@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRightOnRectangleIcon,
   ArrowUpTrayIcon,
@@ -14,7 +14,6 @@ import {
 } from "@heroicons/react/24/solid";
 import type { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
-
 import { computeAchievements } from "@/lib/achievements";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -133,6 +132,43 @@ export function MyCollection() {
       return ra !== rb ? rb - ra : a.numeroColeccion - b.numeroColeccion;
     });
   }, [data, activeFilter, showOwned, ownedSet]);
+
+  // ── Confetti al completar la colección al 100% ────────────────────────────
+  const totalOwnedForEffect = data?.ownedIds.length ?? 0;
+  const totalDoflinsForEffect = data?.doflins.length ?? 0;
+  const pctForEffect = totalDoflinsForEffect > 0
+    ? Math.round((totalOwnedForEffect / totalDoflinsForEffect) * 100)
+    : 0;
+  const hasShownConfettiRef = useRef(false);
+
+  useEffect(() => {
+    if (pctForEffect !== 100 || !data || hasShownConfettiRef.current) return;
+    hasShownConfettiRef.current = true;
+    toast.success("🎉 ¡Colección completa! Tienes todas las figuras DOFLINS.", { duration: 6000 });
+    // Confetti burst
+    if (typeof document === "undefined") return;
+    const colors = ["#4e6f2a","#8ab84a","#f0c020","#e85a3a","#3a7abd","#c84ab0","#f7f7f7"];
+    const container = document.createElement("div");
+    container.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:hidden";
+    for (let i = 0; i < 90; i++) {
+      const el = document.createElement("div");
+      const tx = Math.round(Math.random() * 420 - 210);
+      const ty = Math.round(-(180 + Math.random() * 380));
+      const rot = Math.round(Math.random() * 720 - 360);
+      const size = Math.round(Math.random() * 9 + 5);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      const left = Math.random() * 100;
+      const delay = (Math.random() * 0.9).toFixed(2);
+      const dur = (0.9 + Math.random() * 0.9).toFixed(2);
+      el.style.cssText = `position:absolute;left:${left}%;bottom:5%;width:${size}px;height:${size}px;` +
+        `background:${color};border-radius:${Math.random() > 0.5 ? "50%" : "2px"};` +
+        `--tx:${tx}px;--ty:${ty}px;--rot:${rot}deg;` +
+        `animation:confetti-fly ${dur}s ease-out ${delay}s both;`;
+      container.appendChild(el);
+    }
+    document.body.appendChild(container);
+    setTimeout(() => container.remove(), 3000);
+  }, [pctForEffect, data]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
