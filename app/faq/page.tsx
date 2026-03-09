@@ -210,7 +210,7 @@ export default function FAQPage(): React.JSX.Element {
             </p>
             <div className="flex flex-wrap justify-center gap-3">
               <Button asChild className="bg-[#4e6f2a]">
-                <Link href="mailto:contacto@doflins.com">
+                <Link href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL ?? "contacto@doflins.com"}`}>
                   Enviar correo
                 </Link>
               </Button>

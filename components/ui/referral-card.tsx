@@ -42,6 +42,10 @@ export function ReferralCard() {
         setError("Inicia sesión para ver tu código de referido.");
         return;
       }
+      if (res.status === 503) {
+        setError("El sistema de referidos no está disponible aún. Contacta al equipo DOFLINS.");
+        return;
+      }
       if (!res.ok) throw new Error("Error al cargar código");
       const json = (await res.json()) as ReferralData;
       setData(json);
@@ -94,8 +98,15 @@ export function ReferralCard() {
 
   if (error) {
     return (
-      <div className="rounded-3xl border border-[var(--surface-200)] bg-[var(--surface-50)] p-6 text-center text-sm text-[var(--ink-600)]">
-        {error}
+      <div className="rounded-3xl border border-[var(--surface-200)] bg-[var(--surface-50)] p-6 text-center space-y-3">
+        <GiftIcon className="mx-auto h-8 w-8 text-[var(--ink-300)]" />
+        <p className="text-sm text-[var(--ink-600)]">{error}</p>
+        <button
+          onClick={() => void fetchReferral()}
+          className="text-xs font-semibold text-[var(--brand-primary)] hover:underline"
+        >
+          Reintentar
+        </button>
       </div>
     );
   }
