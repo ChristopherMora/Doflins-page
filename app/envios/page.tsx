@@ -148,8 +148,7 @@ export default function EnviosPage(): React.JSX.Element {
               <div className="mt-4 rounded-lg border-2 border-[#4e6f2a] bg-[#e6f2d0] p-4">
                 <p className="font-semibold text-[var(--ink-900)]">🎁 Envío Gratis</p>
                 <p className="text-sm text-[var(--ink-700)]">
-                  Ofrecemos envío gratis en compras mayores a <strong>$XXX pesos</strong> 
-                  <span className="block text-xs">(actualiza este monto según tu estrategia)</span>
+                  Ofrecemos envío gratis en compras mayores a <strong>${process.env.NEXT_PUBLIC_FREE_GIFT_MIN_SUBTOTAL ?? "450"} pesos</strong>
                 </p>
               </div>
             </section>
