@@ -1,9 +1,15 @@
 import type { MetadataRoute } from 'next';
+import { eq } from 'drizzle-orm';
 
-export default function sitemap(): MetadataRoute.Sitemap {
+import { getDb } from '@/lib/db/client';
+import { doflins } from '@/lib/db/schema';
+
+export const revalidate = 3600;
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://doflins.dofer.mx';
 
-  return [
+  const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: baseUrl,
       lastModified: new Date(),
@@ -77,4 +83,24 @@ export default function sitemap(): MetadataRoute.Sitemap {
       priority: 0.5,
     },
   ];
+
+  // Rutas dinámicas: una URL por figura activa
+  try {
+    const db = getDb();
+    const allDoflins = await db
+      .select({ id: doflins.id, updatedAt: doflins.updatedAt })
+      .from(doflins)
+      .where(eq(doflins.activo, true));
+
+    const doflinRoutes: MetadataRoute.Sitemap = allDoflins.map((d) => ({
+      url: `${baseUrl}/carta/${d.id}`,
+      lastModified: d.updatedAt,
+      changeFrequency: 'monthly',
+      priority: 0.6,
+    }));
+
+    return [...staticRoutes, ...doflinRoutes];
+  } catch {
+    return staticRoutes;
+  }
 }

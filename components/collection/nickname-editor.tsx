@@ -7,6 +7,8 @@ import type { User } from "@supabase/supabase-js";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
+const AVATAR_EMOJIS = ["🦁","🐯","🦊","🐺","🦝","🐻","🦄","🐉","🦅","🦋","🐸","🦈","🐼","🐨","🦓","🦩"];
+
 export function NicknameEditor(): React.JSX.Element | null {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [displayName, setDisplayName] = useState<string | null>(null);
@@ -93,6 +95,25 @@ export function NicknameEditor(): React.JSX.Element | null {
               className="rounded-xl border border-[#c5dca0] bg-white px-3 py-1.5 text-sm font-semibold text-[var(--ink-900)] outline-none ring-0 focus:border-[#4e6f2a] focus:ring-2 focus:ring-[#4e6f2a]/20 w-52 sm:w-64"
             />
             {error ? <p className="text-xs text-red-500">{error}</p> : null}
+            {/* Emoji picker */}
+            <div className="flex flex-wrap gap-0.5 w-52 sm:w-64">
+              {AVATAR_EMOJIS.map((emoji) => (
+                <button
+                  key={emoji}
+                  type="button"
+                  onClick={() => {
+                    setDraft((prev) => {
+                      const cleaned = prev.replace(/^[\u{1F000}-\u{1FFFF}\u{2600}-\u{27BF}]+\s*/u, "").trim();
+                      return `${emoji} ${cleaned}`;
+                    });
+                  }}
+                  className="rounded-md p-0.5 text-base leading-none transition hover:bg-[#d8f0a4] active:scale-90"
+                  title={`Usar ${emoji}`}
+                >
+                  {emoji}
+                </button>
+              ))}
+            </div>
           </div>
         ) : (
           <div className="min-w-0">

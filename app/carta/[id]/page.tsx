@@ -3,11 +3,12 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowRightIcon, SparklesIcon } from "@heroicons/react/24/solid";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { Button } from "@/components/ui/button";
 import { MarkOwnedButton } from "@/components/carta/mark-owned-button";
+import { NextMissingButton } from "@/components/carta/next-missing-button";
 import { ShareFigureButton } from "@/components/carta/share-figure-button";
 import { getDb } from "@/lib/db/client";
 import { doflins } from "@/lib/db/schema";
@@ -43,6 +44,21 @@ const RARITY_COLOR: Record<string, string> = {
 
 interface CartaPageProps {
   params: Promise<{ id: string }>;
+}
+
+async function getSerieDoflins(serie: string) {
+  const db = getDb();
+  return db
+    .select({
+      id: doflins.id,
+      nombre: doflins.nombre,
+      rareza: doflins.rareza,
+      imagenUrl: doflins.imagenUrl,
+      numeroColeccion: doflins.numeroColeccion,
+    })
+    .from(doflins)
+    .where(and(eq(doflins.serie, serie), eq(doflins.activo, true)))
+    .orderBy(doflins.numeroColeccion);
 }
 
 async function getDoflin(id: number) {
@@ -108,9 +124,44 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
   if (!doflin) notFound();
 
   const rareza = doflin.rareza;
+  const serieDoflins = await getSerieDoflins(doflin.serie);
+
+  // 4 figuras más cercanas en número de colección (excluyendo la actual)
+  const related = serieDoflins
+    .filter((d) => d.id !== numId)
+    .sort(
+      (a, b) =>
+        Math.abs(a.numeroColeccion - doflin.numeroColeccion) -
+        Math.abs(b.numeroColeccion - doflin.numeroColeccion),
+    )
+    .slice(0, 4);
+
+  const serieForButton = serieDoflins.map((d) => ({ id: d.id, nombre: d.nombre }));
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: doflin.nombre,
+    description:
+      doflin.datoCurioso ??
+      `Figura DOFLINS ${RARITY_LABEL[rareza] ?? rareza} de la serie ${doflin.serie}.`,
+    image: doflin.imagenUrl,
+    url: `${BASE_URL}/carta/${doflin.id}`,
+    brand: { "@type": "Brand", name: "DOFLINS" },
+    category: "Collectible Toy",
+    additionalProperty: [
+      { "@type": "PropertyValue", name: "Rareza", value: RARITY_LABEL[rareza] ?? rareza },
+      { "@type": "PropertyValue", name: "Serie", value: doflin.serie },
+      { "@type": "PropertyValue", name: "Número", value: String(doflin.numeroColeccion).padStart(2, "0") },
+    ],
+  };
 
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       <main className="flex min-h-dvh flex-col items-center justify-center px-5 pb-28 pt-10">
         <div className="w-full max-w-sm space-y-5">
           {/* Carta */}
@@ -171,6 +222,11 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
           {/* CTAs */}
           <div className="space-y-2">
             <MarkOwnedButton doflinId={doflin.id} />
+            <NextMissingButton
+              currentId={doflin.id}
+              serie={doflin.serie}
+              serieDoflins={serieForButton}
+            />
             <ShareFigureButton
               nombre={doflin.nombre}
               rareza={RARITY_LABEL[rareza] ?? rareza}
@@ -191,6 +247,47 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
           <p className="text-center text-xs text-[var(--ink-400)]">
             Figura de la colección DOFLINS · Animals &amp; Multiverse
           </p>
+
+          {/* Figuras relacionadas de la misma serie */}
+          {related.length > 0 ? (
+            <div className="pt-2">
+              <p className="mb-3 text-center text-[11px] font-bold uppercase tracking-[0.14em] text-[var(--ink-500)]">
+                Más de la serie {doflin.serie}
+              </p>
+              <div className="grid grid-cols-4 gap-2">
+                {related.map((r) => (
+                  <Link
+                    key={r.id}
+                    href={`/carta/${r.id}`}
+                    className="group flex flex-col items-center gap-1 rounded-2xl border border-[#d8d2b4] bg-white/60 p-2 text-center transition hover:scale-[1.04] hover:bg-[#f0f8e0] hover:border-[#b8d890] active:scale-95"
+                  >
+                    <div className="relative h-14 w-full overflow-hidden rounded-xl">
+                      <Image
+                        src={r.imagenUrl}
+                        alt={r.nombre}
+                        fill
+                        className="object-contain"
+                        unoptimized
+                        sizes="80px"
+                      />
+                    </div>
+                    <p className="line-clamp-2 text-[10px] font-semibold leading-tight text-[var(--ink-700)]">
+                      {r.nombre}
+                    </p>
+                    <span
+                      className="mt-auto rounded-full px-2 py-0.5 text-[9px] font-bold"
+                      style={{
+                        backgroundColor: (RARITY_COLOR[r.rareza] ?? "#888") + "22",
+                        color: RARITY_COLOR[r.rareza] ?? "#888",
+                      }}
+                    >
+                      {RARITY_LABEL[r.rareza] ?? r.rareza}
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
       </main>
       <BottomNav />

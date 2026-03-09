@@ -70,6 +70,7 @@ export function MyCollection() {
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
   const [showOwned, setShowOwned] = useState<"all" | "owned" | "missing">("all");
   const [searchQuery, setSearchQuery] = useState("");
+  const [sortBy, setSortBy] = useState<"rareza" | "nombre" | "numero">("rareza");
 
 
   const supabase = getSupabaseBrowserClient();
@@ -143,11 +144,13 @@ export function MyCollection() {
       list = list.filter((d) => d.nombre.toLowerCase().includes(q));
     }
     return list.sort((a, b) => {
+      if (sortBy === "nombre") return a.nombre.localeCompare(b.nombre, "es");
+      if (sortBy === "numero") return a.numeroColeccion - b.numeroColeccion;
       const ra = RARITY_ORDER.indexOf(a.rareza);
       const rb = RARITY_ORDER.indexOf(b.rareza);
       return ra !== rb ? rb - ra : a.numeroColeccion - b.numeroColeccion;
     });
-  }, [data, activeFilter, showOwned, ownedSet]);
+  }, [data, activeFilter, showOwned, ownedSet, searchQuery, sortBy]);
 
   // ── Confetti al completar la colección al 100% ────────────────────────────
   const totalOwnedForEffect = data?.ownedIds.length ?? 0;
@@ -414,16 +417,27 @@ export function MyCollection() {
         }}
       />
 
-      {/* Buscador */}
-      <div className="relative">
-        <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-400)]" />
-        <input
-          type="search"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Buscar figura por nombre…"
-          className="w-full rounded-full border border-[#d8d2b4] bg-white py-2 pl-10 pr-4 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-400)] focus:outline-none focus:ring-2 focus:ring-[#4e6f2a]/40"
-        />
+      {/* Buscador + Ordenar */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+        <div className="relative flex-1">
+          <MagnifyingGlassIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-400)]" />
+          <input
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar figura por nombre…"
+            className="w-full rounded-full border border-[#d8d2b4] bg-white py-2 pl-10 pr-4 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-400)] focus:outline-none focus:ring-2 focus:ring-[#4e6f2a]/40"
+          />
+        </div>
+        <select
+          value={sortBy}
+          onChange={(e) => setSortBy(e.target.value as "rareza" | "nombre" | "numero")}
+          className="rounded-full border border-[#d8d2b4] bg-white px-4 py-2 text-sm font-medium text-[var(--ink-700)] focus:outline-none focus:ring-2 focus:ring-[#4e6f2a]/40"
+        >
+          <option value="rareza">Ordenar por rareza</option>
+          <option value="nombre">Ordenar por nombre</option>
+          <option value="numero">Ordenar por número</option>
+        </select>
       </div>
 
       {/* Filters */}
@@ -438,7 +452,16 @@ export function MyCollection() {
                 : "border border-[#d8d2b4] bg-white text-[var(--ink-700)] hover:bg-[#f4f6e8]"
             }`}
           >
-            {r === "ALL" ? "Todas" : RARITY_LABELS[r] ?? r}
+          {r === "ALL" ? (
+              "Todas"
+            ) : (
+              <>
+                {RARITY_LABELS[r] ?? r}
+                <span className={`ml-1.5 text-[10px] font-bold opacity-70`}>
+                  {byRarity[r]?.owned ?? 0}/{byRarity[r]?.total ?? 0}
+                </span>
+              </>
+            )}
           </button>
         ))}
         <div className="ml-auto flex rounded-full border border-[#d8d2b4] overflow-hidden">
