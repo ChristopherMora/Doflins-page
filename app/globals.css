@@ -93,6 +93,14 @@ html {
   animation: confetti-fly 0.7s ease-out forwards;
 }
 
+/* Card image flip on hover (carta/[id]) */
+.card-img-flip {
+  transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-img-flip:hover {
+  transform: rotateY(360deg);
+}
+
 /* Lazy section reveal on scroll */
 .section-reveal {
   opacity: 0;

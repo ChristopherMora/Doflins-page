@@ -2,8 +2,9 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ArrowPathIcon,
   ArrowRightOnRectangleIcon,
   ArrowUpTrayIcon,
   CheckCircleIcon,
@@ -97,28 +98,24 @@ export function MyCollection() {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  useEffect(() => {
-    if (!user) {
-      setData(null);
-      return;
+  const loadCollection = useCallback(async () => {
+    if (!user) { setData(null); return; }
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/collection/user");
+      if (!res.ok) throw new Error("Error cargando colección");
+      const json = (await res.json()) as CollectionData;
+      setData(json);
+    } catch {
+      // ignore
+    } finally {
+      setIsLoading(false);
     }
-
-    const loadCollection = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch("/api/collection/user");
-        if (!res.ok) throw new Error("Error cargando colección");
-        const json = (await res.json()) as CollectionData;
-        setData(json);
-      } catch {
-        // ignore
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    void loadCollection();
   }, [user]);
+
+  useEffect(() => {
+    void loadCollection();
+  }, [loadCollection]);
 
   const ownedSet = useMemo(() => new Set(data?.ownedIds ?? []), [data]);
 
@@ -129,6 +126,17 @@ export function MyCollection() {
       if (!map[d.rareza]) map[d.rareza] = { total: 0, owned: 0 };
       map[d.rareza].total++;
       if (ownedSet.has(d.id)) map[d.rareza].owned++;
+    }
+    return map;
+  }, [data, ownedSet]);
+
+  const bySeries = useMemo(() => {
+    if (!data) return {} as Record<string, { total: number; owned: number }>;
+    const map: Record<string, { total: number; owned: number }> = {};
+    for (const d of data.doflins) {
+      if (!map[d.serie]) map[d.serie] = { total: 0, owned: 0 };
+      map[d.serie].total++;
+      if (ownedSet.has(d.id)) map[d.serie].owned++;
     }
     return map;
   }, [data, ownedSet]);
@@ -195,9 +203,7 @@ export function MyCollection() {
     setData(null);
   };
 
-  const toggleOwned = async (doflinId: number) => {
-    if (!user) return;
-    const wasOwned = ownedSet.has(doflinId);
+  const performToggle = async (doflinId: number, wasOwned: boolean) => {
     // Snapshot de logros ANTES del cambio
     const achievementsBefore = data ? computeAchievements({
       totalOwned: ownedSet.size,
@@ -217,13 +223,27 @@ export function MyCollection() {
       return { ...prev, ownedIds: newOwnedIds };
     });
 
-    await fetch("/api/collection/user", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ doflinId, owned: !wasOwned }),
-    });
+    try {
+      const res = await fetch("/api/collection/user", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doflinId, owned: !wasOwned }),
+      });
+      if (!res.ok) throw new Error("Error al actualizar");
+    } catch {
+      // Revertir actualización optimista si falla la red
+      setData((prev) => {
+        if (!prev) return prev;
+        const reverted = wasOwned
+          ? [...prev.ownedIds, doflinId]
+          : prev.ownedIds.filter((id) => id !== doflinId);
+        return { ...prev, ownedIds: reverted };
+      });
+      toast.error("No se pudo actualizar tu colección");
+      return;
+    }
 
-    // Detectar logros nuevos tras el cambio (solo al agregar, no al quitar)
+    // Detectar logros nuevos solo al agregar
     if (!wasOwned && data) {
       const newOwnedSet = new Set([...data.ownedIds, doflinId]);
       const newByRarity: Record<string, { total: number; owned: number }> = {};
@@ -248,6 +268,25 @@ export function MyCollection() {
         }
       }
     }
+  };
+
+  const toggleOwned = (doflinId: number) => {
+    if (!user) return;
+    const wasOwned = ownedSet.has(doflinId);
+    if (wasOwned) {
+      toast("¿Quitar esta figura de tu colección?", {
+        action: {
+          label: "Sí, quitar",
+          onClick: () => void performToggle(doflinId, wasOwned),
+        },
+        cancel: {
+          label: "Cancelar",
+          onClick: () => {},
+        },
+      });
+      return;
+    }
+    void performToggle(doflinId, wasOwned);
   };
 
   // — NOT LOGGED IN —
@@ -331,6 +370,14 @@ export function MyCollection() {
         </div>
         <div className="flex items-center gap-2">
           <button
+            onClick={() => void loadCollection()}
+            disabled={isLoading}
+            title="Actualizar colección"
+            className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d8d2b4] bg-white text-[var(--ink-700)] hover:bg-[#f4f6e8] transition disabled:opacity-50"
+          >
+            <ArrowPathIcon className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
+          </button>
+          <button
             onClick={async () => {
               await navigator.clipboard.writeText(
                 `${window.location.origin}/coleccion/${user.id}`,
@@ -399,6 +446,25 @@ export function MyCollection() {
               );
             })}
           </div>
+          {/* By series */}
+          {Object.keys(bySeries).length > 0 ? (
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              {Object.entries(bySeries).map(([serie, { total, owned: ownedCount }]) => {
+                const seriePct = total > 0 ? Math.round((ownedCount / total) * 100) : 0;
+                return (
+                  <div key={serie} className="rounded-2xl border border-[#d8d2b4] bg-white/70 px-3 py-2 space-y-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-semibold text-[var(--ink-800)]">{serie}</p>
+                      <span className="text-xs font-bold text-[var(--ink-700)]">{ownedCount}/{total}</span>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-[#e0e8d0] overflow-hidden">
+                      <div className="h-full rounded-full bg-[#4e6f2a] transition-all duration-700" style={{ width: `${seriePct}%` }} />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : null}
         </CardContent>
       </Card>
 

@@ -162,6 +162,20 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
       />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "Inicio", item: BASE_URL },
+              { "@type": "ListItem", position: 2, name: `Serie ${doflin.serie}`, item: `${BASE_URL}/reveal?universe=${doflin.serie.toLowerCase()}` },
+              { "@type": "ListItem", position: 3, name: doflin.nombre },
+            ],
+          }).replace(/</g, "\\u003c"),
+        }}
+      />
       <main className="flex min-h-dvh flex-col items-center justify-center px-5 pb-28 pt-10">
         <div className="w-full max-w-sm space-y-5">
           {/* Carta */}
@@ -184,12 +198,12 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
             </div>
 
             {/* Imagen */}
-            <div className="relative mt-4 h-72 w-full overflow-hidden">
+            <div className="relative mt-4 h-72 w-full overflow-hidden" style={{ perspective: "1200px" }}>
               <Image
                 src={doflin.imagenUrl}
                 alt={doflin.nombre}
                 fill
-                className="object-contain"
+                className="object-contain card-img-flip"
                 unoptimized
                 priority
               />

@@ -132,6 +132,22 @@ function fileNameToDoflinName(fileName: string): string {
     .join(" ");
 }
 
+// ── Vista previa de imagen seleccionada ──────────────────────────────────────
+function ImagePreview({ file }: { file: File }): React.JSX.Element | null {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    const url = URL.createObjectURL(file);
+    setSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+  if (!src) return null;
+  return (
+    <div className="mt-2 overflow-hidden rounded-xl border border-[#d8d2b4] bg-[#fafafa] p-1.5 flex items-center justify-center">
+      <img src={src} alt="Vista previa" className="h-28 w-auto max-w-full object-contain rounded-lg" />
+    </div>
+  );
+}
+
 export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps): React.JSX.Element {
   const [adminToken, setAdminToken] = useState("");
   const [formValues, setFormValues] = useState<FormValues>(INITIAL_VALUES);
@@ -1026,6 +1042,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                       required
                       onChange={(event) => setImageFile(event.target.files?.[0] ?? null)}
                     />
+                    {imageFile ? <ImagePreview file={imageFile} /> : null}
                   </label>
 
                   {formValues.variantMode === "original" ? (
@@ -1592,6 +1609,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                     accept="image/png,image/jpeg,image/webp,image/svg+xml"
                     onChange={(event) => setEditImageFile(event.target.files?.[0] ?? null)}
                   />
+                  {editImageFile ? <ImagePreview file={editImageFile} /> : null}
                 </label>
 
                 <label className="col-span-2 space-y-1">

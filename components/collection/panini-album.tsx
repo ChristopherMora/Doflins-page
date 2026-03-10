@@ -65,6 +65,7 @@ export function PaniniAlbum(): React.JSX.Element {
   const [data, setData] = useState<CollectionData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
+  const [showMissing, setShowMissing] = useState(false);
   const [justMarked, setJustMarked] = useState<number | null>(null);
 
   const ownedSet = useMemo(() => new Set(data?.ownedIds ?? []), [data]);
@@ -148,10 +149,11 @@ export function PaniniAlbum(): React.JSX.Element {
 
   const grouped = useMemo<GroupedBySeries>(() => {
     if (!data) return {};
-    const filtered =
+    let filtered =
       activeFilter === "ALL"
         ? data.doflins
         : data.doflins.filter((d) => d.serie === activeFilter);
+    if (showMissing) filtered = filtered.filter((d) => !ownedSet.has(d.id));
     const result: GroupedBySeries = {};
     for (const d of filtered) {
       if (!result[d.serie]) result[d.serie] = {};
@@ -159,7 +161,7 @@ export function PaniniAlbum(): React.JSX.Element {
       result[d.serie]![d.rareza]!.push(d);
     }
     return result;
-  }, [data, activeFilter]);
+  }, [data, activeFilter, showMissing, ownedSet]);
 
   if (isLoading || user === undefined) {
     return (
@@ -270,6 +272,18 @@ export function PaniniAlbum(): React.JSX.Element {
               {s === "ALL" ? "Todo" : s}
             </button>
           ))}
+          {user ? (
+            <button
+              onClick={() => setShowMissing((v) => !v)}
+              className={`ml-auto rounded-full px-4 py-1.5 text-sm font-semibold transition-all ${
+                showMissing
+                  ? "bg-amber-500 text-white shadow-sm"
+                  : "border border-[#d8d2b4] bg-white text-[#4a5a3a] hover:bg-[#f4f6e8]"
+              }`}
+            >
+              {showMissing ? "✓ Solo me faltan" : "Solo me faltan"}
+            </button>
+          ) : null}
           {!user ? (
             <button
               onClick={() => setIsAuthModalOpen(true)}
