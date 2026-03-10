@@ -31,10 +31,18 @@ interface LowStockItem {
   remaining: number;
 }
 
+interface RevealByDoflin {
+  doflinId: number;
+  name: string;
+  rarity: string;
+  revealCount: number;
+}
+
 interface StatsData {
   revealsByDay: RevealByDay[];
   eventsByType: EventByType[];
   lowStock: LowStockItem[];
+  revealsByDoflin: RevealByDoflin[];
   totalReveals30d: number;
   totalEvents30d: number;
   conversionRate: number;
@@ -348,6 +356,48 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Reveals por doflin (distribución) */}
+      {stats.revealsByDoflin.length > 0 && (
+        <Card className="border border-[#d8d2b4] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)]">
+          <CardContent className="p-6 space-y-4">
+            <h2 className="font-title text-xl text-[var(--ink-900)]">
+              Distribución de reveals por figura (30d)
+            </h2>
+            <p className="text-xs text-[var(--ink-500)]">
+              Top {stats.revealsByDoflin.length} figuras más reveladas. Compara la distribución real contra la rareza teórica.
+            </p>
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {stats.revealsByDoflin.map((item) => {
+                const maxCount = stats.revealsByDoflin[0]?.revealCount ?? 1;
+                const pct = Math.round((item.revealCount / stats.totalReveals30d) * 1000) / 10;
+                const barWidth = maxCount > 0 ? (item.revealCount / maxCount) * 100 : 0;
+                return (
+                  <div key={item.doflinId} className="flex items-center gap-3">
+                    <div className="flex w-44 shrink-0 items-center gap-2 min-w-0">
+                      <Badge
+                        className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded-full ${RARITY_COLORS[item.rarity] ?? "bg-gray-100 text-gray-700"}`}
+                      >
+                        {item.rarity.slice(0, 3)}
+                      </Badge>
+                      <span className="truncate text-xs text-[var(--ink-800)]">{item.name}</span>
+                    </div>
+                    <div className="flex-1 rounded-full bg-[#e8edd8] h-3 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-[#4e6f2a] transition-all duration-700"
+                        style={{ width: `${barWidth}%` }}
+                      />
+                    </div>
+                    <span className="w-16 shrink-0 text-right text-xs font-bold tabular-nums text-[var(--ink-900)]">
+                      {item.revealCount} ({pct}%)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

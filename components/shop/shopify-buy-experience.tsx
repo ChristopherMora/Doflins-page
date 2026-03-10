@@ -82,6 +82,7 @@ const UNIVERSE_LABELS: Record<UniverseFilter, string> = {
   multiverse: "Multiverse",
 };
 const BEST_SELLER_HANDLES = new Set(["safari-15"]);
+const BUNDLE_PROMO_CODE = process.env.NEXT_PUBLIC_BUNDLE_PROMO_CODE?.trim() ?? "";
 const DEFAULT_LIVE_REFRESH_MS = 15_000;
 const LIVE_REFRESH_MS_ENV = Number(process.env.NEXT_PUBLIC_SHOPIFY_LIVE_REFRESH_MS ?? DEFAULT_LIVE_REFRESH_MS);
 const LIVE_REFRESH_MS =
@@ -1423,7 +1424,14 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         return an - bn;
       });
     }
-    if (sortOrder === "default") return [...products];
+    if (sortOrder === "default") {
+      // Pin bestsellers first, then rest in original API order
+      return [...products].sort((a, b) => {
+        const aBS = BEST_SELLER_HANDLES.has(a.handle.toLowerCase()) ? 0 : 1;
+        const bBS = BEST_SELLER_HANDLES.has(b.handle.toLowerCase()) ? 0 : 1;
+        return aBS - bBS;
+      });
+    }
     return [...products].sort((a, b) => {
       const pa = Number(a.price.amount);
       const pb = Number(b.price.amount);
@@ -2114,6 +2122,41 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           ) : null}
 
           {!isLoadingProducts ? (
+            <div className="space-y-4">
+            {/* ── Bundle promo banner ── */}
+            {!shopSearch.trim() && !showWishlistOnly && BUNDLE_PROMO_CODE && filteredProducts.length >= 2 ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)] px-5 py-4">
+                <div className="min-w-0">
+                  <p className="font-semibold text-[var(--ink-900)]">
+                    🎁 ¡Lleva 3 packs y ahorra!
+                  </p>
+                  <p className="text-xs text-[var(--ink-700)] mt-0.5">
+                    Agrega 3 packs al carrito y aplica el código{" "}
+                    <button
+                      type="button"
+                      className="font-mono font-bold text-[var(--shop-primary-from)] underline"
+                      onClick={() => {
+                        setIsCartOpen(true);
+                        setDiscountCode(BUNDLE_PROMO_CODE);
+                      }}
+                    >
+                      {BUNDLE_PROMO_CODE}
+                    </button>{" "}
+                    en el carrito para obtener tu descuento.
+                  </p>
+                </div>
+                <Button
+                  className="h-9 shrink-0 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] text-sm"
+                  disabled={isMutatingCart || !stickyProduct}
+                  onClick={() => {
+                    if (stickyProduct) void addToCart(stickyProduct, 3);
+                  }}
+                >
+                  Agregar 3 packs
+                </Button>
+              </div>
+            ) : null}
+
             <div
               key={gridAnimKey}
               className={gridView === "grid" ? "grid gap-5 md:grid-cols-2 xl:grid-cols-3" : "grid gap-3"}
@@ -2127,9 +2170,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 const stockBadge = resolveStockBadge(selectedVariant);
 
                 const isJustAdded = lastAddedProductId === product.id;
-                const isUltraLowStock =
+                const isLowStock =
                   typeof selectedVariant?.quantityAvailable === "number" &&
                   selectedVariant.quantityAvailable > 0 &&
+                  selectedVariant.quantityAvailable <= LOW_STOCK_THRESHOLD;
+                const isUltraLowStock =
+                  isLowStock &&
+                  typeof selectedVariant?.quantityAvailable === "number" &&
                   selectedVariant.quantityAvailable <= 2;
                 const rarityTag = product.tags.find((t) =>
                   /legendary|legendari|epic|rare|especial|uncommon/i.test(t)
@@ -2162,10 +2209,10 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     <article
                     className={`group flex h-full cursor-pointer overflow-hidden rounded-3xl border transition hover:-translate-y-0.5 ${
                       gridView === "list" ? "flex-row" : "flex-col hover:-translate-y-1.5"
-                    }`}
+                    } ${isBestSeller ? "ring-2 ring-[#e6c676] ring-offset-1" : ""}`}
                     style={{
                       background: "var(--shop-card-bg)",
-                      borderColor: "var(--shop-card-border)",
+                      borderColor: isBestSeller ? "#d4a84b" : "var(--shop-card-border)",
                       boxShadow: "var(--shop-card-shadow)",
                     }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shop-card-hover-shadow)"; }}
@@ -2242,6 +2289,15 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       >
                         <HeartIcon className={`h-4 w-4 transition ${wishlist.has(product.id) ? "text-red-500" : "text-[var(--ink-400)]"}`} />
                       </button>
+                      {/* ── Low stock strip at bottom of image ── */}
+                      {isLowStock && !isSoldOut && gridView !== "list" ? (
+                        <div className={`absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center gap-1 bg-amber-500/90 py-1 text-center text-[11px] font-bold text-white backdrop-blur-sm ${isUltraLowStock ? "animate-pulse" : ""}`}>
+                          <ExclamationTriangleIcon className="h-3 w-3 shrink-0" />
+                          {isUltraLowStock
+                            ? `¡Solo ${selectedVariant?.quantityAvailable ?? ""} ${selectedVariant?.quantityAvailable === 1 ? "queda" : "quedan"}!`
+                            : "⚡ ¡Quedan pocos!"}
+                        </div>
+                      ) : null}
                     </div>
 
                     <div className={`flex flex-1 flex-col space-y-3 ${ gridView === "list" ? "justify-center p-3 sm:p-4" : "p-5" }`}>
@@ -2461,6 +2517,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   </LazyCard>
                 );
               })}
+            </div>
             </div>
           ) : null}
 

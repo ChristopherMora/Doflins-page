@@ -231,6 +231,18 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
   );
 
   const slugPreview = useMemo(() => toSlugPreview(formValues.name), [formValues.name]);
+
+  const ogPreviewUrl = useMemo(() => {
+    const name = formValues.name.trim();
+    if (!name) return null;
+    const params = new URLSearchParams({
+      name,
+      rarity: formValues.rarity,
+      series: formValues.series,
+      number: formValues.collectionNumber || "01",
+    });
+    return `/api/og/doflin?${params.toString()}`;
+  }, [formValues.name, formValues.rarity, formValues.series, formValues.collectionNumber]);
   const variantNumberRangePreview = useMemo(() => {
     if (formValues.variantMode !== "original" || variantFiles.length === 0) {
       return null;
@@ -1108,6 +1120,27 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                   <p className="text-sm font-medium text-[#935454]">
                     Primero crea un original en {formValues.series} para poder guardar variantes.
                   </p>
+                ) : null}
+
+                {/* ── Vista previa carta compartida (OG image) ── */}
+                {ogPreviewUrl ? (
+                  <div className="space-y-1.5 rounded-xl border border-[#d8d2b4] bg-[#f8f6ee] p-3">
+                    <p className="text-xs font-semibold text-[var(--ink-700)]">
+                      Vista previa de carta compartida
+                    </p>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={ogPreviewUrl}
+                      alt="OG preview"
+                      width={380}
+                      height={200}
+                      className="w-full max-w-sm rounded-lg border border-[#d8d2b4] object-cover"
+                      loading="lazy"
+                    />
+                    <p className="text-[10px] text-[var(--ink-500)]">
+                      Imagen generada para compartir en redes. Se actualiza al cambiar nombre, rareza o serie.
+                    </p>
+                  </div>
                 ) : null}
 
                 <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting || isVariantBlocked}>

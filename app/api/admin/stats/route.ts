@@ -30,7 +30,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const db = getDb();
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [revealsByDay, eventsByType, stockByDoflin, referralStats, userStats] = await Promise.all([
+  const [revealsByDay, eventsByType, stockByDoflin, referralStats, userStats, revealsByDoflin] = await Promise.all([
     // Reveals per day (last 30 days)
     db
       .select({
@@ -89,6 +89,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       db.select({ total: count() }).from(userProfiles),
       db.select({ total: countDistinct(userCollectionProgress.supabaseUserId) }).from(userCollectionProgress),
     ]),
+
+    // Reveals per doflin (last 30 days) — muestra distribución real de reveals
+    db
+      .select({
+        doflinId: doflins.id,
+        name: doflins.nombre,
+        rarity: doflins.rareza,
+        revealCount: count(),
+      })
+      .from(scanEvents)
+      .innerJoin(codigosBolsa, sql`${scanEvents.codigoBolsaId} = ${codigosBolsa.id}`)
+      .innerJoin(doflins, sql`${codigosBolsa.doflinId} = ${doflins.id}`)
+      .where(
+        and(
+          sql`${scanEvents.eventType} = 'reveal_success'`,
+          gte(scanEvents.createdAt, since30),
+        ),
+      )
+      .groupBy(doflins.id, doflins.nombre, doflins.rareza)
+      .orderBy(sql`count(*) DESC`)
+      .limit(20),
   ]);
 
   const lowStock = stockByDoflin
@@ -114,6 +135,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     revealsByDay,
     eventsByType,
     lowStock,
+    revealsByDoflin,
     totalReveals30d: revealsByDay.reduce((sum, r) => sum + r.count, 0),
     totalEvents30d: eventsByType.reduce((sum, r) => sum + r.count, 0),
     conversionRate,
