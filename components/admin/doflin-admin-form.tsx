@@ -148,6 +148,77 @@ function ImagePreview({ file }: { file: File }): React.JSX.Element | null {
   );
 }
 
+// ── Vista previa en catálogo ──────────────────────────────────────────────────
+function CatalogCardPreview({
+  name,
+  rarity,
+  collectionNumber,
+  series,
+  imageFile,
+}: {
+  name: string;
+  rarity: string;
+  collectionNumber: string;
+  series: string;
+  imageFile: File | null;
+}): React.JSX.Element {
+  const [src, setSrc] = useState<string | null>(null);
+  useEffect(() => {
+    if (!imageFile) { setSrc(null); return; }
+    const url = URL.createObjectURL(imageFile);
+    setSrc(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+
+  const cfg = RARITY_CONFIG[rarity as keyof typeof RARITY_CONFIG] ?? RARITY_CONFIG.COMMON;
+  const num = collectionNumber || "?";
+
+  return (
+    <div className="space-y-1.5 rounded-xl border border-[#d8d2b4] bg-[#f8f6ee] p-3">
+      <p className="text-xs font-semibold text-[var(--ink-700)]">Vista previa en catálogo</p>
+      <div className="flex items-start gap-3">
+        {/* Tarjeta miniatura */}
+        <div
+          className="relative flex w-28 shrink-0 flex-col overflow-hidden rounded-xl"
+          style={{
+            background: `linear-gradient(145deg, ${cfg.softColor}, white)`,
+            border: `2px solid ${cfg.color}50`,
+          }}
+        >
+          {/* Badge número */}
+          <div
+            className="absolute left-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full text-[8px] font-black leading-none text-white"
+            style={{ background: cfg.color }}
+          >
+            {num}
+          </div>
+          {/* Área imagen */}
+          <div className="relative w-full" style={{ aspectRatio: "1/1", background: cfg.softColor }}>
+            {src ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={src} alt={name} className="h-full w-full object-contain p-1.5" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center text-2xl opacity-25">🐾</div>
+            )}
+          </div>
+          {/* Footer */}
+          <div className="px-1.5 py-1">
+            <p className="truncate text-[9px] font-bold leading-tight" style={{ color: cfg.color }}>
+              {name}
+            </p>
+            <p className="text-[7px] leading-tight opacity-60" style={{ color: cfg.color }}>
+              {series} · {cfg.label}
+            </p>
+          </div>
+        </div>
+        <p className="pt-1 text-[10px] leading-relaxed text-[var(--ink-500)]">
+          Vista aproximada de cómo aparecerá en el álbum del coleccionista. La imagen se actualiza al seleccionarla.
+        </p>
+      </div>
+    </div>
+  );
+}
+
 export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps): React.JSX.Element {
   const [adminToken, setAdminToken] = useState("");
   const [formValues, setFormValues] = useState<FormValues>(INITIAL_VALUES);
@@ -232,17 +303,6 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
 
   const slugPreview = useMemo(() => toSlugPreview(formValues.name), [formValues.name]);
 
-  const ogPreviewUrl = useMemo(() => {
-    const name = formValues.name.trim();
-    if (!name) return null;
-    const params = new URLSearchParams({
-      name,
-      rarity: formValues.rarity,
-      series: formValues.series,
-      number: formValues.collectionNumber || "01",
-    });
-    return `/api/og/doflin?${params.toString()}`;
-  }, [formValues.name, formValues.rarity, formValues.series, formValues.collectionNumber]);
   const variantNumberRangePreview = useMemo(() => {
     if (formValues.variantMode !== "original" || variantFiles.length === 0) {
       return null;
@@ -1122,25 +1182,15 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                   </p>
                 ) : null}
 
-                {/* ── Vista previa carta compartida (OG image) ── */}
-                {ogPreviewUrl ? (
-                  <div className="space-y-1.5 rounded-xl border border-[#d8d2b4] bg-[#f8f6ee] p-3">
-                    <p className="text-xs font-semibold text-[var(--ink-700)]">
-                      Vista previa de carta compartida
-                    </p>
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={ogPreviewUrl}
-                      alt="OG preview"
-                      width={380}
-                      height={200}
-                      className="w-full max-w-sm rounded-lg border border-[#d8d2b4] object-cover"
-                      loading="lazy"
-                    />
-                    <p className="text-[10px] text-[var(--ink-500)]">
-                      Imagen generada para compartir en redes. Se actualiza al cambiar nombre, rareza o serie.
-                    </p>
-                  </div>
+                {/* ── Vista previa en catálogo ── */}
+                {formValues.name.trim() ? (
+                  <CatalogCardPreview
+                    name={formValues.name}
+                    rarity={formValues.rarity}
+                    collectionNumber={formValues.collectionNumber}
+                    series={formValues.series}
+                    imageFile={imageFile}
+                  />
                 ) : null}
 
                 <Button type="submit" className="w-full sm:w-auto" disabled={isSubmitting || isVariantBlocked}>

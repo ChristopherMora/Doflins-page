@@ -42,7 +42,7 @@ export function AdminNav(): React.JSX.Element | null {
                 className={`flex items-center gap-1.5 border-b-2 px-3 py-3 text-sm font-medium whitespace-nowrap transition-colors ${
                   active
                     ? "border-[#9acd42] text-[#c8f070]"
-                    : "border-transparent text-white/55 hover:border-white/25 hover:text-white/90"
+                    : "border-transparent text-[#b8d890] hover:border-[#6a9a30] hover:text-[#d8f0a0]"
                 }`}
               >
                 <Icon className="h-3.5 w-3.5 shrink-0" />
