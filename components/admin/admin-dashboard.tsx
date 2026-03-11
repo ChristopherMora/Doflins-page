@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   ArrowPathIcon,
+  ArrowDownTrayIcon,
   ChartBarIcon,
   ExclamationTriangleIcon,
   FireIcon,
@@ -38,11 +39,17 @@ interface RevealByDoflin {
   revealCount: number;
 }
 
+interface RevealByHour {
+  hour: number;
+  count: number;
+}
+
 interface StatsData {
   revealsByDay: RevealByDay[];
   eventsByType: EventByType[];
   lowStock: LowStockItem[];
   revealsByDoflin: RevealByDoflin[];
+  revealsByHour: RevealByHour[];
   totalReveals30d: number;
   totalEvents30d: number;
   conversionRate: number;
@@ -75,8 +82,111 @@ const EVENT_LABELS: Record<string, string> = {
   filter_apply: "Filtros aplicados",
 };
 
-function BarChart({ data, maxValue, color }: { data: { label: string; value: number }[]; maxValue: number; color: string }) {
+// ─── Mapa de calor por hora ────────────────────────────────────────────────────
+
+function HourHeatMap({ data }: { data: { hour: number; count: number }[] }) {
+  const map = new Map(data.map((d) => [d.hour, d.count]));
+  const maxCount = Math.max(...data.map((d) => d.count), 1);
+
+  const hours = Array.from({ length: 24 }, (_, h) => ({
+    hour: h,
+    count: map.get(h) ?? 0,
+  }));
+
   return (
+    <div className="space-y-2">
+      <div className="grid grid-cols-12 gap-1">
+        {hours.map(({ hour, count }) => {
+          const intensity = count / maxCount;
+          const opacity = count === 0 ? 0.07 : 0.18 + intensity * 0.82;
+          const label = `${String(hour).padStart(2, "0")}:00 — ${count} reveal${count !== 1 ? "s" : ""}`;
+          return (
+            <div
+              key={hour}
+              title={label}
+              className="flex aspect-square flex-col items-center justify-center rounded-lg text-[10px] font-bold transition-all duration-300 cursor-default select-none"
+              style={{ background: `rgba(78,111,42,${opacity})`, color: intensity > 0.5 ? "#fff" : "#4e6f2a" }}
+            >
+              {hour}
+            </div>
+          );
+        })}
+      </div>
+      <div className="flex items-center justify-between text-[10px] text-[var(--ink-500)]">
+        <span>00:00</span>
+        <span className="flex items-center gap-1">
+          Intensidad:
+          <span className="inline-flex gap-0.5">
+            {[0.08, 0.3, 0.55, 0.8, 1].map((o) => (
+              <span key={o} className="h-3 w-5 rounded-sm" style={{ background: `rgba(78,111,42,${o})` }} />
+            ))}
+          </span>
+        </span>
+        <span>23:00</span>
+      </div>
+    </div>
+  );
+}
+
+// ─── Exportar CSV ──────────────────────────────────────────────────────────────
+
+function downloadCsv(stats: StatsData): void {
+  const sections: string[] = [];
+
+  sections.push("REVEALS POR DÍA (30d)");
+  sections.push("Fecha,Reveals");
+  sections.push(...stats.revealsByDay.map((r) => `${r.date},${r.count}`));
+
+  sections.push("");
+  sections.push("EVENTOS POR TIPO (30d)");
+  sections.push("Tipo,Cantidad");
+  sections.push(...stats.eventsByType.map((e) => `${e.eventType},${e.count}`));
+
+  sections.push("");
+  sections.push("REVEALS POR HORA DEL DÍA (30d)");
+  sections.push("Hora,Reveals");
+  const hourMap = new Map(stats.revealsByHour.map((h) => [h.hour, h.count]));
+  sections.push(
+    ...Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, "0")}:00,${hourMap.get(h) ?? 0}`),
+  );
+
+  sections.push("");
+  sections.push("STOCK CRÍTICO (≤5)");
+  sections.push("ID,Nombre,Rareza,Restantes");
+  sections.push(...stats.lowStock.map((s) => `${s.doflinId},"${s.name}",${s.rarity},${s.remaining}`));
+
+  sections.push("");
+  sections.push("TOP FIGURAS REVELADAS (30d)");
+  sections.push("ID,Nombre,Rareza,Reveals");
+  sections.push(
+    ...stats.revealsByDoflin.map((d) => `${d.doflinId},"${d.name}",${d.rarity},${d.revealCount}`),
+  );
+
+  sections.push("");
+  sections.push("RESUMEN GENERAL");
+  sections.push("Métrica,Valor");
+  sections.push(`Reveals totales (30d),${stats.totalReveals30d}`);
+  sections.push(`Eventos totales (30d),${stats.totalEvents30d}`);
+  sections.push(`Tasa de conversión,${stats.conversionRate}%`);
+  sections.push(`Perfiles creados,${stats.totalProfiles}`);
+  sections.push(`Coleccionistas activos,${stats.activeCollectors}`);
+  sections.push(`Códigos referido activos,${stats.activeReferralCodes}`);
+  sections.push(`Usos de referido,${stats.totalReferralUses}`);
+
+  const csv = sections.join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  const date = new Date().toISOString().slice(0, 10);
+  a.href = url;
+  a.download = `doflins-stats-${date}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ─── Bar Chart ─────────────────────────────────────────────────────────────────
+
+function BarChart({ data, maxValue, color }: { data: { label: string; value: number }[]; maxValue: number; color: string }) {  return (
     <div className="flex items-end gap-1 h-24 w-full overflow-x-auto pb-1">
       {data.map((item) => {
         const height = maxValue > 0 ? Math.max(4, (item.value / maxValue) * 96) : 4;
@@ -185,12 +295,20 @@ export function AdminDashboard() {
             </p>
           )}
         </div>
-        <button
-          onClick={() => void fetchStats()}
-          className="flex items-center gap-2 rounded-full border border-[#d8d2b4] bg-white px-4 py-2 text-sm font-medium text-[var(--ink-800)] hover:bg-[#f4f6e8] transition"
-        >
-          <ArrowPathIcon className="h-4 w-4" /> Actualizar
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => downloadCsv(stats)}
+            className="flex items-center gap-2 rounded-full border border-[#c8e0a0] bg-[#eef5df] px-4 py-2 text-sm font-medium text-[#2f5b1f] hover:bg-[#ddefc7] transition"
+          >
+            <ArrowDownTrayIcon className="h-4 w-4" /> Exportar CSV
+          </button>
+          <button
+            onClick={() => void fetchStats()}
+            className="flex items-center gap-2 rounded-full border border-[#d8d2b4] bg-white px-4 py-2 text-sm font-medium text-[var(--ink-800)] hover:bg-[#f4f6e8] transition"
+          >
+            <ArrowPathIcon className="h-4 w-4" /> Actualizar
+          </button>
+        </div>
       </div>
 
       {/* KPI Cards — fila 1 */}
@@ -398,6 +516,21 @@ export function AdminDashboard() {
           </CardContent>
         </Card>
       )}
+
+      {/* Mapa de calor por hora del día */}
+      <Card className="border border-[#d8d2b4] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)]">
+        <CardContent className="p-6 space-y-3">
+          <div>
+            <h2 className="font-title text-xl text-[var(--ink-900)]">Mapa de calor — ¿a qué hora revelan?</h2>
+            <p className="text-xs text-[var(--ink-500)]">Distribución de reveals exitosos por hora del día (últimos 30 días). Hora local del servidor.</p>
+          </div>
+          {stats.revealsByHour.length > 0 ? (
+            <HourHeatMap data={stats.revealsByHour} />
+          ) : (
+            <p className="text-sm text-[var(--ink-500)]">Sin datos de reveals en los últimos 30 días.</p>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -30,7 +30,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const db = getDb();
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
-  const [revealsByDay, eventsByType, stockByDoflin, referralStats, userStats, revealsByDoflin] = await Promise.all([
+  const [revealsByDay, eventsByType, stockByDoflin, referralStats, userStats, revealsByDoflin, revealsByHour] = await Promise.all([
     // Reveals per day (last 30 days)
     db
       .select({
@@ -110,6 +110,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .groupBy(doflins.id, doflins.nombre, doflins.rareza)
       .orderBy(sql`count(*) DESC`)
       .limit(20),
+
+    // Reveals by hour of day (last 30 days) — para mapa de calor
+    db
+      .select({
+        hour: sql<number>`HOUR(${scanEvents.createdAt})`,
+        count: count(),
+      })
+      .from(scanEvents)
+      .where(
+        and(
+          sql`${scanEvents.eventType} = 'reveal_success'`,
+          gte(scanEvents.createdAt, since30),
+        ),
+      )
+      .groupBy(sql`HOUR(${scanEvents.createdAt})`),
   ]);
 
   const lowStock = stockByDoflin
@@ -136,6 +151,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     eventsByType,
     lowStock,
     revealsByDoflin,
+    revealsByHour,
     totalReveals30d: revealsByDay.reduce((sum, r) => sum + r.count, 0),
     totalEvents30d: eventsByType.reduce((sum, r) => sum + r.count, 0),
     conversionRate,
