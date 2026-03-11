@@ -24,6 +24,7 @@ interface SavedDoflin {
 interface SaveResult {
   saved: number;
   alreadyOwned?: number;
+  duplicateQuantity?: number;
   doflins?: SavedDoflin[];
 }
 
@@ -117,7 +118,7 @@ export function BolsaSaveWidget({ codigo, doflinCount }: BolsaSaveWidgetProps) {
 
   // Guardado exitoso
   if (saveState === "saved" && saveResult) {
-    const { saved, alreadyOwned = 0 } = saveResult;
+    const { saved, alreadyOwned = 0, duplicateQuantity = 0 } = saveResult;
     return (
       <Card className="overflow-hidden border-2 border-[#4e6f2a]">
         <div className="h-1.5 bg-gradient-to-r from-[#4e6f2a] to-[#8ab84a]" />
@@ -134,15 +135,15 @@ export function BolsaSaveWidget({ codigo, doflinCount }: BolsaSaveWidgetProps) {
                   </p>
                   {alreadyOwned > 0 && (
                     <p className="text-xs text-[var(--ink-500)] mt-0.5">
-                      {alreadyOwned} ya las tenías registradas
+                      {alreadyOwned} duplicada{alreadyOwned !== 1 ? "s" : ""} — ¡coleccionista serio! 🎴
                     </p>
                   )}
                 </>
               ) : (
                 <>
-                  <p className="font-bold text-[var(--ink-700)]">Ya tenías todas estas figuras</p>
+                  <p className="font-bold text-[var(--ink-700)]">¡Tienes {duplicateQuantity} duplicada{duplicateQuantity !== 1 ? "s" : ""}!</p>
                   <p className="text-xs text-[var(--ink-500)] mt-0.5">
-                    Las {alreadyOwned} figuras de esta bolsa ya estaban en tu colección
+                    Todas las figuras de esta bolsa ya estaban en tu colección. Se registraron como duplicados.
                   </p>
                 </>
               )}

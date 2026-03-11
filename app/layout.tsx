@@ -6,6 +6,7 @@ import { SiteFooter } from "@/components/nav/site-footer";
 import { SiteHeader } from "@/components/nav/site-header";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { PwaInstallPrompt } from "@/components/ui/pwa-install-prompt";
+import { ReferralBanner } from "@/components/ui/referral-banner";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
@@ -160,6 +161,7 @@ export default function RootLayout({
         <SiteFooter />
         <BackToTop />
         <PwaInstallPrompt />
+        <ReferralBanner />
         <Toaster />
       </body>
     </html>

@@ -1,4 +1,4 @@
-import { and, eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getDb } from "@/lib/db/client";
@@ -69,10 +69,7 @@ export async function POST(
     .then((rows) => new Set(rows.map((r) => r.doflinId)));
 
   const toInsert = doflinIds.filter((id) => !alreadyOwned.has(id));
-
-  if (toInsert.length === 0) {
-    return NextResponse.json({ saved: 0, alreadyOwned: doflinIds.length });
-  }
+  const toIncrement = doflinIds.filter((id) => alreadyOwned.has(id));
 
   // Obtener el email y nombre de Google del usuario
   const userEmail = user.email ?? "";
@@ -90,6 +87,24 @@ export async function POST(
       .catch(() => { /* no bloquear el flujo principal */ });
   }
 
+  // Incrementar quantity para figuras ya poseídas
+  if (toIncrement.length > 0) {
+    void db
+      .update(userCollectionProgress)
+      .set({ quantity: sql`${userCollectionProgress.quantity} + 1` })
+      .where(
+        and(
+          eq(userCollectionProgress.supabaseUserId, user.id),
+          inArray(userCollectionProgress.doflinId, toIncrement),
+        ),
+      )
+      .catch(() => { /* no bloquear el flujo principal */ });
+  }
+
+  if (toInsert.length === 0) {
+    return NextResponse.json({ saved: 0, alreadyOwned: toIncrement.length, duplicateQuantity: toIncrement.length });
+  }
+
   // Insertar en la colección del usuario con upsert idempotente.
   // onDuplicateKeyUpdate evita el duplicate key error cuando dos requests
   // concurrentes (getUser + onAuthStateChange) pasan el check de alreadyOwned
@@ -102,9 +117,10 @@ export async function POST(
         userEmail,
         doflinId,
         owned: true,
+        quantity: 1,
       })),
     )
-    .onDuplicateKeyUpdate({ set: { owned: true } });
+    .onDuplicateKeyUpdate({ set: { owned: true, quantity: sql`${userCollectionProgress.quantity} + 1` } });
 
   // Obtener nombres de las figuras guardadas para la respuesta
   const savedDoflins = await db
@@ -114,7 +130,8 @@ export async function POST(
 
   return NextResponse.json({
     saved: toInsert.length,
-    alreadyOwned: alreadyOwned.size,
+    alreadyOwned: toIncrement.length,
+    duplicateQuantity: toIncrement.length,
     doflins: savedDoflins,
   });
 }

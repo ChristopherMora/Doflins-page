@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { EyeIcon, ShoppingCartIcon, SparklesIcon } from "@heroicons/react/24/solid";
@@ -47,6 +47,108 @@ const RARITY_GLOW: Record<string, string> = {
 
 const RARITY_ORDER = ["MYTHIC", "ULTRA", "LEGENDARY", "EPIC", "RARE", "COMMON"] as const;
 
+// ─── Celebración para rarezas altas ──────────────────────────────────────────
+
+const CELEBRATION_CONFIG: Record<string, {
+  emoji: string;
+  title: string;
+  subtitle: string;
+  gradient: string;
+  glowColor: string;
+  textColor: string;
+  ringColor: string;
+}> = {
+  MYTHIC:    { emoji: "✨", title: "¡MÍTICO!",     subtitle: "Una figura extremadamente rara",  gradient: "linear-gradient(145deg,#2d0a4e,#7b2fa8)", glowColor: "rgba(155,93,229,0.7)",  textColor: "#f5ccff", ringColor: "#c77ce0" },
+  ULTRA:     { emoji: "💥", title: "¡ULTRA RARO!", subtitle: "Una rareza casi imposible",        gradient: "linear-gradient(145deg,#4e0a0a,#a83030)", glowColor: "rgba(192,57,43,0.7)",   textColor: "#ffd4d4", ringColor: "#e07c7c" },
+  LEGENDARY: { emoji: "⭐", title: "¡LEGENDARIO!", subtitle: "Una figura legendaria en tu pack", gradient: "linear-gradient(145deg,#4e3a0a,#a88010)", glowColor: "rgba(212,160,23,0.7)",  textColor: "#fff0c0", ringColor: "#e0c07c" },
+  EPIC:      { emoji: "🔥", title: "¡ÉPICO!",      subtitle: "Una figura épica para tu colección",gradient:"linear-gradient(145deg,#4e2a0a,#a85020)", glowColor: "rgba(184,101,40,0.7)",  textColor: "#ffe0c0", ringColor: "#e0a07c" },
+};
+
+function CelebrationOverlay({
+  item,
+  rarity,
+  onDismiss,
+}: {
+  item: DoflinRevealItem;
+  rarity: string;
+  onDismiss: () => void;
+}): React.JSX.Element {
+  const cfg = CELEBRATION_CONFIG[rarity] ?? CELEBRATION_CONFIG.EPIC!;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4"
+      onClick={onDismiss}
+    >
+      <div
+        className="animate-celebration-scale-in relative w-full max-w-xs overflow-hidden rounded-3xl shadow-2xl"
+        style={{ background: cfg.gradient }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Shimmer overlay */}
+        <div
+          className="pointer-events-none absolute inset-0 opacity-10"
+          style={{ background: "repeating-linear-gradient(45deg,white 0,transparent 2px,transparent 20px,white 22px)" }}
+        />
+        <div className="relative z-10 flex flex-col items-center gap-4 p-7 text-center">
+          {/* Emoji flotante */}
+          <div className="animate-bounce text-6xl select-none">{cfg.emoji}</div>
+
+          {/* Título */}
+          <div>
+            <p
+              className="font-title text-3xl font-black tracking-wider"
+              style={{ color: cfg.textColor, textShadow: `0 0 24px ${cfg.glowColor}` }}
+            >
+              {cfg.title}
+            </p>
+            <p className="mt-1 text-sm" style={{ color: `${cfg.textColor}bb` }}>
+              {cfg.subtitle}
+            </p>
+          </div>
+
+          {/* Figura destacada */}
+          <div
+            className="animate-celebration-glow overflow-hidden rounded-2xl"
+            style={{ ["--glow-color" as string]: cfg.glowColor, border: `3px solid ${cfg.ringColor}` }}
+          >
+            <div className="animate-celebration-float relative h-36 w-36">
+              <Image
+                src={item.imagenUrl || item.siluetaUrl}
+                alt={item.nombre}
+                fill
+                className="object-contain p-2"
+                unoptimized
+              />
+            </div>
+            <div className="bg-black/40 px-3 py-1.5">
+              <p className="text-sm font-bold" style={{ color: cfg.textColor }}>{item.nombre}</p>
+              <p className="text-[10px]" style={{ color: `${cfg.textColor}99` }}>
+                {item.serie} · #{String(item.numeroColeccion).padStart(2, "0")}
+              </p>
+            </div>
+          </div>
+
+          {/* Botón dismiss */}
+          <button
+            onClick={onDismiss}
+            className="rounded-full px-7 py-2.5 text-sm font-black transition active:scale-95"
+            style={{
+              background: "rgba(255,255,255,0.18)",
+              color: cfg.textColor,
+              border: `1px solid ${cfg.ringColor}55`,
+            }}
+          >
+            ¡A guardar mi figura! →
+          </button>
+          <p className="text-[10px]" style={{ color: `${cfg.textColor}66` }}>
+            Toca en cualquier lugar para cerrar
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export interface DoflinRevealItem {
   id: number;
   nombre: string;
@@ -69,6 +171,7 @@ export function BolsaRevealExperience({
 }) {
   const [started, setStarted] = useState(false);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
+  const [showCelebration, setShowCelebration] = useState(false);
 
   const flip = (id: number) =>
     setRevealed((prev) => {
@@ -81,6 +184,23 @@ export function BolsaRevealExperience({
 
   const topRarity = RARITY_ORDER.find((r) => items.some((d) => d.rareza === r)) ?? "COMMON";
   const hasSpecial = topRarity !== "COMMON" && topRarity !== "RARE";
+
+  // Encontrar la figura de mayor rareza para la celebración
+  const topItem = (() => {
+    for (const r of RARITY_ORDER) {
+      const found = items.find((d) => d.rareza === r);
+      if (found) return found;
+    }
+    return items[0];
+  })();
+
+  // Disparar celebración cuando se revelan todas las cartas y hay rareza especial
+  useEffect(() => {
+    if (allDone && hasSpecial) {
+      const t = window.setTimeout(() => setShowCelebration(true), 450);
+      return () => window.clearTimeout(t);
+    }
+  }, [allDone, hasSpecial]);
 
   // ── Intro screen ─────────────────────────────────────────────────────────
   if (!started) {
@@ -251,6 +371,15 @@ export function BolsaRevealExperience({
           </div>
         </div>
       )}
+
+      {/* Celebración al revelar figura rara */}
+      {showCelebration && topItem ? (
+        <CelebrationOverlay
+          item={topItem}
+          rarity={topRarity}
+          onDismiss={() => setShowCelebration(false)}
+        />
+      ) : null}
     </div>
   );
 }

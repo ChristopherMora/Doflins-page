@@ -1,4 +1,4 @@
-import { and, count, countDistinct, gte, sql, sum } from "drizzle-orm";
+import { and, count, countDistinct, eq, gte, sql, sum } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { isAdminEmail } from "@/lib/auth-admin";
@@ -30,18 +30,25 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const db = getDb();
   const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
 
+  // Filtro opcional por serie/universo (Animals | Multiverse)
+  const serie = request.nextUrl.searchParams.get("serie") as "Animals" | "Multiverse" | null;
+  const serieWhere = serie ? eq(doflins.serie, serie) : undefined;
+
   const [revealsByDay, eventsByType, stockByDoflin, referralStats, userStats, revealsByDoflin, revealsByHour] = await Promise.all([
-    // Reveals per day (last 30 days)
+    // Reveals per day (last 30 days) — with optional serie filter via codigosBolsa → doflins join
     db
       .select({
         date: sql<string>`DATE(${scanEvents.createdAt})`,
         count: count(),
       })
       .from(scanEvents)
+      .innerJoin(codigosBolsa, sql`${scanEvents.codigoBolsaId} = ${codigosBolsa.id}`)
+      .innerJoin(doflins, eq(codigosBolsa.doflinId, doflins.id))
       .where(
         and(
           sql`${scanEvents.eventType} = 'reveal_success'`,
           gte(scanEvents.createdAt, since30),
+          serieWhere,
         ),
       )
       .groupBy(sql`DATE(${scanEvents.createdAt})`),
@@ -56,7 +63,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       .where(gte(scanEvents.createdAt, since30))
       .groupBy(scanEvents.eventType),
 
-    // Remaining bags per doflin (low stock warning ≤ 5)
+    // Remaining bags per doflin (low stock warning ≤ 5) — with optional serie filter
     db
       .select({
         doflinId: doflins.id,
@@ -71,6 +78,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         and(
           sql`${codigosBolsa.usado} = 0`,
           sql`${codigosBolsa.status} = 'active'`,
+          serieWhere,
         ),
       )
       .groupBy(doflins.id, doflins.nombre, doflins.rareza),
@@ -105,6 +113,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         and(
           sql`${scanEvents.eventType} = 'reveal_success'`,
           gte(scanEvents.createdAt, since30),
+          serieWhere,
         ),
       )
       .groupBy(doflins.id, doflins.nombre, doflins.rareza)
@@ -118,10 +127,13 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         count: count(),
       })
       .from(scanEvents)
+      .innerJoin(codigosBolsa, sql`${scanEvents.codigoBolsaId} = ${codigosBolsa.id}`)
+      .innerJoin(doflins, eq(codigosBolsa.doflinId, doflins.id))
       .where(
         and(
           sql`${scanEvents.eventType} = 'reveal_success'`,
           gte(scanEvents.createdAt, since30),
+          serieWhere,
         ),
       )
       .groupBy(sql`HOUR(${scanEvents.createdAt})`),
@@ -147,6 +159,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       : 0;
 
   return NextResponse.json({
+    serie: serie ?? "all",
     revealsByDay,
     eventsByType,
     lowStock,

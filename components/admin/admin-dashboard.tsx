@@ -45,6 +45,7 @@ interface RevealByHour {
 }
 
 interface StatsData {
+  serie: "Animals" | "Multiverse" | "all";
   revealsByDay: RevealByDay[];
   eventsByType: EventByType[];
   lowStock: LowStockItem[];
@@ -210,12 +211,14 @@ export function AdminDashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [universeFilter, setUniverseFilter] = useState<"all" | "Animals" | "Multiverse">("all");
 
-  const fetchStats = async () => {
+  const fetchStats = async (filter: "all" | "Animals" | "Multiverse" = universeFilter) => {
     setIsLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/admin/stats");
+      const url = filter === "all" ? "/api/admin/stats" : `/api/admin/stats?serie=${filter}`;
+      const res = await fetch(url);
       if (!res.ok) {
         throw new Error("Error cargando estadísticas");
       }
@@ -229,8 +232,14 @@ export function AdminDashboard() {
     }
   };
 
+  const handleFilterChange = (filter: "all" | "Animals" | "Multiverse") => {
+    setUniverseFilter(filter);
+    void fetchStats(filter);
+  };
+
   useEffect(() => {
-    void fetchStats();
+    void fetchStats("all");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Build a 30-day array filling missing dates with 0
@@ -295,7 +304,23 @@ export function AdminDashboard() {
             </p>
           )}
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Universe filter */}
+          <div className="flex items-center rounded-full border border-[#d8d2b4] bg-white p-1 text-sm font-medium shadow-sm">
+            {(["all", "Animals", "Multiverse"] as const).map((f) => (
+              <button
+                key={f}
+                onClick={() => handleFilterChange(f)}
+                className={`rounded-full px-3 py-1 transition ${
+                  universeFilter === f
+                    ? "bg-[#4e6f2a] text-white"
+                    : "text-[var(--ink-700)] hover:bg-[#f4f6e8]"
+                }`}
+              >
+                {f === "all" ? "Todos" : f}
+              </button>
+            ))}
+          </div>
           <button
             onClick={() => downloadCsv(stats)}
             className="flex items-center gap-2 rounded-full border border-[#c8e0a0] bg-[#eef5df] px-4 py-2 text-sm font-medium text-[#2f5b1f] hover:bg-[#ddefc7] transition"

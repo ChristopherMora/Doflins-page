@@ -16,6 +16,18 @@ export default function GlobalError({
 }): React.JSX.Element {
   useEffect(() => {
     console.error("[GlobalError]", error);
+    // Report to server log (fire and forget)
+    void fetch("/api/errors", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        message: error.message,
+        digest: error.digest,
+        stack: error.stack?.slice(0, 600),
+        url: typeof window !== "undefined" ? window.location.href : "",
+        ts: new Date().toISOString(),
+      }),
+    }).catch(() => {});
   }, [error]);
 
   return (

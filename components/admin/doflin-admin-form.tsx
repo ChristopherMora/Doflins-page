@@ -250,6 +250,21 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
     failed: number;
   } | null>(null);
 
+  // ── CSV import state ─────────────────────────────────────────────────────────
+  interface CsvRow {
+    nombre: string;
+    serie: "Animals" | "Multiverse";
+    rareza: Rarity;
+    probabilidad: string;
+    numeroColeccion: string;
+    modeloBase: string;
+    variantName: string;
+  }
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvRows, setCsvRows] = useState<CsvRow[]>([]);
+  const [csvImporting, setCsvImporting] = useState(false);
+  const [csvProgress, setCsvProgress] = useState<{ done: number; total: number; failed: number } | null>(null);
+
   const seriesCount = useMemo(
     () => ({
       animals: adminItems.filter((item) => item.series.toLowerCase() === "animals").length,
@@ -908,6 +923,62 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
     }
   };
 
+  // ── CSV parser ───────────────────────────────────────────────────────────────
+  const parseCsvFile = (file: File): void => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = (e.target?.result as string) ?? "";
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      if (lines.length < 2) { toast.error("El CSV está vacío o no tiene filas de datos."); return; }
+      const VALID_RARITIES = new Set(["COMMON", "RARE", "EPIC", "LEGENDARY", "ULTRA", "MYTHIC"]);
+      const rows: CsvRow[] = [];
+      for (let i = 1; i < lines.length; i++) {
+        const cols = lines[i].split(",").map((c) => c.trim().replace(/^"|"$/g, ""));
+        const [nombre, serie, rareza, probabilidad, numeroColeccion, modeloBase, variantName] = cols;
+        if (!nombre || !serie || !rareza) continue;
+        const safeSerie = (serie === "Animals" || serie === "Multiverse") ? serie : "Animals";
+        const safeRareza = VALID_RARITIES.has(rareza.toUpperCase()) ? (rareza.toUpperCase() as Rarity) : "COMMON";
+        rows.push({ nombre, serie: safeSerie, rareza: safeRareza, probabilidad: probabilidad || "15", numeroColeccion: numeroColeccion || "", modeloBase: modeloBase || nombre, variantName: variantName || "Original" });
+      }
+      setCsvRows(rows);
+      if (rows.length === 0) toast.error("No se encontraron filas válidas en el CSV.");
+      else toast.success(`${rows.length} figura(s) listas para importar.`);
+    };
+    reader.readAsText(file);
+  };
+
+  const handleCsvImport = async (): Promise<void> => {
+    if (csvRows.length === 0) return;
+    setCsvImporting(true);
+    setCsvProgress({ done: 0, total: csvRows.length, failed: 0 });
+    let failed = 0;
+    for (let i = 0; i < csvRows.length; i++) {
+      const row = csvRows[i];
+      const formData = new FormData();
+      formData.set("name", row.nombre);
+      formData.set("series", row.serie);
+      formData.set("rarity", row.rareza);
+      formData.set("probability", row.probabilidad);
+      formData.set("collectionNumber", row.numeroColeccion);
+      formData.set("baseModel", row.modeloBase);
+      formData.set("variantName", row.variantName);
+      formData.set("active", "true");
+      const headers: HeadersInit = {};
+      if (adminToken.trim()) headers["x-admin-token"] = adminToken.trim();
+      try {
+        const res = await fetch("/api/admin/doflins", { method: "POST", headers, body: formData });
+        if (!res.ok) failed++;
+      } catch { failed++; }
+      setCsvProgress({ done: i + 1, total: csvRows.length, failed });
+    }
+    setCsvImporting(false);
+    toast.success(`Importación completa: ${csvRows.length - failed} OK, ${failed} errores.`);
+    setCsvRows([]);
+    setCsvFile(null);
+    setCsvProgress(null);
+    void refreshCollection();
+  };
+
   return (
     <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-6 space-y-2">
@@ -1334,6 +1405,73 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                   {isBulkSubmitting ? "Subiendo lote..." : "Crear lote de Doflins"}
                 </Button>
               </form>
+            </CardContent>
+          </Card>
+
+          {/* ── Importar desde CSV ──────────────────────────────────────────── */}
+          <Card className="border border-black/10 bg-white/85">
+            <CardContent className="p-5 sm:p-6 space-y-4">
+              <div>
+                <h2 className="font-title text-2xl text-[var(--ink-900)]">Importar desde CSV</h2>
+                <p className="mt-1 text-xs text-[var(--ink-600)]">
+                  Columnas: <code className="rounded bg-black/5 px-1">nombre,serie,rareza,probabilidad,numeroColeccion,modeloBase,variantName</code>
+                </p>
+              </div>
+              <label className="space-y-1">
+                <span className="text-sm font-semibold text-[var(--ink-800)]">Archivo CSV</span>
+                <Input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={(event) => {
+                    const file = event.target.files?.[0] ?? null;
+                    setCsvFile(file);
+                    setCsvRows([]);
+                    if (file) parseCsvFile(file);
+                  }}
+                />
+              </label>
+              {csvRows.length > 0 && (
+                <div className="overflow-x-auto rounded-xl border border-black/10">
+                  <table className="w-full min-w-[480px] text-xs">
+                    <thead className="bg-[#f4f6e8] text-[var(--ink-700)]">
+                      <tr>
+                        {["Nombre", "Serie", "Rareza", "Nº", "Modelo base", "Variante"].map((h) => (
+                          <th key={h} className="px-2 py-1.5 text-left font-semibold">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {csvRows.slice(0, 8).map((row, i) => (
+                        <tr key={i} className="border-t border-black/5 even:bg-[#fafaf6]">
+                          <td className="max-w-[120px] truncate px-2 py-1.5">{row.nombre}</td>
+                          <td className="px-2 py-1.5">{row.serie}</td>
+                          <td className="px-2 py-1.5">{row.rareza}</td>
+                          <td className="px-2 py-1.5">{row.numeroColeccion || "—"}</td>
+                          <td className="max-w-[100px] truncate px-2 py-1.5">{row.modeloBase}</td>
+                          <td className="px-2 py-1.5">{row.variantName}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {csvRows.length > 8 && (
+                    <p className="px-3 py-1.5 text-[11px] text-[var(--ink-500)] border-t border-black/5">
+                      +{csvRows.length - 8} filas más…
+                    </p>
+                  )}
+                </div>
+              )}
+              {csvProgress && (
+                <div className="rounded-2xl border border-black/10 bg-[var(--surface-200)]/60 p-3 text-xs text-[var(--ink-700)]">
+                  Importando {csvProgress.done}/{csvProgress.total} · Errores: {csvProgress.failed}
+                </div>
+              )}
+              <Button
+                onClick={() => void handleCsvImport()}
+                disabled={csvRows.length === 0 || csvImporting}
+                className="w-full sm:w-auto"
+              >
+                {csvImporting ? `Importando ${csvProgress?.done ?? 0}/${csvProgress?.total ?? 0}...` : `Importar ${csvRows.length} figura(s)`}
+              </Button>
             </CardContent>
           </Card>
         </div>

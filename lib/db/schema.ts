@@ -196,6 +196,7 @@ export const userCollectionProgress = mysqlTable(
       .notNull()
       .references(() => doflins.id),
     owned: boolean("owned").notNull().default(true),
+    quantity: int("quantity").notNull().default(1),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .notNull()
@@ -206,5 +207,19 @@ export const userCollectionProgress = mysqlTable(
     uniqueIndex("user_collection_progress_user_doflin_unique").on(table.supabaseUserId, table.doflinId),
     index("user_collection_progress_user_idx").on(table.supabaseUserId),
     index("user_collection_progress_doflin_idx").on(table.doflinId),
+  ],
+);
+
+export const wishlistItems = mysqlTable(
+  "wishlist_items",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
+    shopifyProductId: varchar("shopify_product_id", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("wishlist_user_product_unique").on(table.supabaseUserId, table.shopifyProductId),
+    index("wishlist_user_idx").on(table.supabaseUserId),
   ],
 );
