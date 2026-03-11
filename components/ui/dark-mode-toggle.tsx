@@ -6,14 +6,16 @@ import { useEffect, useState } from "react";
 const STORAGE_KEY = "doflins_theme";
 
 export function DarkModeToggle() {
-  const [dark, setDark] = useState(false);
+  const [dark, setDark] = useState(() => false);
 
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
     const isDark = saved ? saved === "dark" : prefersDark;
-    setDark(isDark);
     document.documentElement.dataset.theme = isDark ? "dark" : "light";
+    // Schedule the state update after paint to avoid cascading renders
+    const raf = requestAnimationFrame(() => setDark(isDark));
+    return () => cancelAnimationFrame(raf);
   }, []);
 
   const toggle = () => {

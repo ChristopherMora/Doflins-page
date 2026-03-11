@@ -127,6 +127,7 @@ export default function MisPedidosPage(): React.JSX.Element {
     return () => subscription.unsubscribe();
   }, []);
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!user) return;
     setLoading(true);

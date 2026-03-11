@@ -15,7 +15,7 @@ interface UserAuthModalProps {
 
 type AuthStep = "choose" | "magic-link" | "sent";
 
-export function UserAuthModal({ onClose, onAuthenticated, redirectTo = "/coleccion" }: UserAuthModalProps) {
+export function UserAuthModal({ onClose, onAuthenticated: _onAuthenticated, redirectTo = "/coleccion" }: UserAuthModalProps) {
   const [step, setStep] = useState<AuthStep>("choose");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);

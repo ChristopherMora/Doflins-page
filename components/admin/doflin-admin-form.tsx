@@ -133,16 +133,25 @@ function fileNameToDoflinName(fileName: string): string {
 }
 
 // ── Vista previa de imagen seleccionada ──────────────────────────────────────
-function ImagePreview({ file }: { file: File }): React.JSX.Element | null {
+function useObjectUrl(file: File | null): string | null {
   const [src, setSrc] = useState<string | null>(null);
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!file) { setSrc(null); return; }
+    let active = true;
     const url = URL.createObjectURL(file);
-    setSrc(url);
-    return () => URL.revokeObjectURL(url);
+    if (active) setSrc(url);
+    return () => { active = false; URL.revokeObjectURL(url); };
   }, [file]);
+  return src;
+}
+
+function ImagePreview({ file }: { file: File }): React.JSX.Element | null {
+  const src = useObjectUrl(file);
   if (!src) return null;
   return (
     <div className="mt-2 overflow-hidden rounded-xl border border-[#d8d2b4] bg-[#fafafa] p-1.5 flex items-center justify-center">
+      {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={src} alt="Vista previa" className="h-28 w-auto max-w-full object-contain rounded-lg" />
     </div>
   );
@@ -162,13 +171,7 @@ function CatalogCardPreview({
   series: string;
   imageFile: File | null;
 }): React.JSX.Element {
-  const [src, setSrc] = useState<string | null>(null);
-  useEffect(() => {
-    if (!imageFile) { setSrc(null); return; }
-    const url = URL.createObjectURL(imageFile);
-    setSrc(url);
-    return () => URL.revokeObjectURL(url);
-  }, [imageFile]);
+  const src = useObjectUrl(imageFile);
 
   const cfg = RARITY_CONFIG[rarity as keyof typeof RARITY_CONFIG] ?? RARITY_CONFIG.COMMON;
   const num = collectionNumber || "?";

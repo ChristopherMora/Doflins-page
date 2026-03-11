@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  CheckCircleIcon,
   FireIcon,
   ShoppingCartIcon,
   ShieldCheckIcon,

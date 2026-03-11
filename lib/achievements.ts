@@ -23,6 +23,7 @@ export interface AchievementInput {
   series: string[];
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const rarityOrder: Rarity[] = ["COMMON", "RARE", "EPIC", "LEGENDARY", "ULTRA", "MYTHIC"];
 
 export const ACHIEVEMENTS: Achievement[] = [

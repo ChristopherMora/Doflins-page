@@ -1491,6 +1491,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
     collectionByUniverse[activeUniverse].length - activeCollectionShowcaseItems.length,
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const productsCountLabel = `${products.length} pack${products.length === 1 ? "" : "s"}`;
   const selectedModalVariant = selectedProduct ? getSelectedVariant(selectedProduct) : null;
   const selectedModalSoldOut = !selectedModalVariant?.availableForSale;

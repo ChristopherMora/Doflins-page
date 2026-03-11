@@ -324,7 +324,7 @@ export function SiteHeader(): React.JSX.Element {
 
           {/* Badge contador de carrito */}
           {cartCount > 0 ? (
-            <a
+            <Link
               href="/#compras"
               className="relative hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:brightness-110 active:scale-95"
               style={{ color: navColor, borderColor: `${navColor}55` }}
@@ -335,17 +335,17 @@ export function SiteHeader(): React.JSX.Element {
               <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white leading-none">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
-            </a>
+            </Link>
           ) : null}
 
-          <a
+          <Link
             href="/#compras"
             className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             style={{ background: ctaGradient, boxShadow: ctaShadow }}
           >
             <GlobeAltIcon className="h-4 w-4" />
             Comprar packs
-          </a>
+          </Link>
         </div>
       </div>
     </header>

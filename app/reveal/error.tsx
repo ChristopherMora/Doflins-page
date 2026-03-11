@@ -1,7 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect } from "react";
-import { ExclamationTriangleIcon, ArrowPathIcon } from "@heroicons/react/24/solid";
+import { ArrowPathIcon } from "@heroicons/react/24/solid";
 
 import { Button } from "@/components/ui/button";
 
@@ -43,16 +44,16 @@ export default function RevealError({
           Reintentar
         </Button>
         <Button variant="secondary" asChild>
-          <a href="/">Volver al inicio</a>
+          <Link href="/">Volver al inicio</Link>
         </Button>
       </div>
 
       {/* Fallback info */}
       <p className="max-w-xs text-xs text-[var(--ink-400,#94a3b8)]">
         Puedes ver los packs disponibles en la{" "}
-        <a href="/" className="underline underline-offset-2">
+        <Link href="/" className="underline underline-offset-2">
           página principal
-        </a>
+        </Link>
         .
       </p>
     </main>

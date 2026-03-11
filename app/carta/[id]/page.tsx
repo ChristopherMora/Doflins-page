@@ -228,7 +228,7 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
             {doflin.datoCurioso ? (
               <div className="border-t border-black/[0.07] mx-4 mb-4 mt-0 pt-4">
                 <p className="text-center text-xs text-[var(--ink-600)] italic leading-relaxed">
-                  "{doflin.datoCurioso}"
+                  &ldquo;{doflin.datoCurioso}&rdquo;
                 </p>
               </div>
             ) : null}

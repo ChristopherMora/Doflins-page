@@ -10,7 +10,7 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/outline";
 
-import { Button } from "@/components/ui/button";
+
 
 interface ReferralData {
   code: string;

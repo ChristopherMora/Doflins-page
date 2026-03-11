@@ -57,7 +57,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
     // Para cada bolsa, obtener sus items
     const bagIds = bags.map((b) => b.id);
-    let itemsByBag: Record<number, { id: number; nombre: string; rareza: string; imagenUrl: string }[]> = {};
+    const itemsByBag: Record<number, { id: number; nombre: string; rareza: string; imagenUrl: string }[]> = {};
 
     if (bagIds.length > 0) {
       const items = await db

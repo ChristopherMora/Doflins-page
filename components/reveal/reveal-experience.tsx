@@ -412,6 +412,7 @@ function withPurchaseQuery(baseUrl: string, options: { packSize: PackSize; unive
   }
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function buildPurchaseUrls(baseUrl: string, universe: Universe): Record<PackSize, string> {
   return {
     5: withPurchaseQuery(baseUrl, { packSize: 5, universe }),
@@ -476,7 +477,7 @@ interface DoflinModalProps {
   onClearOwned: (id: number) => void;
   onPurchaseIntent: (opts?: { source?: string; packSize?: PackSize; doflinId?: number }) => void;
   onRequestAuth: () => void;
-  brokenImageIds: number[];
+  brokenImageIds: number[]; // eslint-disable-line @typescript-eslint/no-unused-vars
   onImageBroken: React.Dispatch<React.SetStateAction<number[]>>;
   brokenVariantImageIds: Set<number>;
   onVariantImageBroken: React.Dispatch<React.SetStateAction<Set<number>>>;
@@ -843,7 +844,7 @@ export function RevealExperience({
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(initialQuery);
   const [catalogAnimKey, setCatalogAnimKey] = useState(0);
   const [remaining, setRemaining] = useState<Record<Rarity, number> | null>(initialRemaining ?? null);
-  const [isAdminViewer, setIsAdminViewer] = useState(false);
+  const [_isAdminViewer, setIsAdminViewer] = useState(false);
   const [isAuthenticatedViewer, setIsAuthenticatedViewer] = useState(false);
   const [viewerEmail, setViewerEmail] = useState<string | null>(null);
   const [isAuthActionLoading, setIsAuthActionLoading] = useState(false);
@@ -1026,6 +1027,7 @@ export function RevealExperience({
   const selectedDoflinGroupStats = selectedDoflin ? activeBaseModelStats.map.get(baseModelKey(selectedDoflin)) : undefined;
   const selectedDoflinIsOriginal = selectedDoflin ? isOriginalVariant(selectedDoflin.variantName) : false;
   const selectedPurchaseUniverse = selectedDoflin ? universeFromSeries(selectedDoflin.series) : activeUniverse;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const selectedPurchaseUniverseLabel = selectedPurchaseUniverse === "animals" ? "Animals" : "Multiverse";
   const selectedDoflinImageSrc =
     selectedDoflin && brokenModalImageIds.includes(selectedDoflin.id)
@@ -1351,6 +1353,7 @@ export function RevealExperience({
     }
   }, []);
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleUserLogout = useCallback(async (): Promise<void> => {
     setIsAuthActionLoading(true);
 
