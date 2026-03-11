@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { LazySection } from "@/components/ui/lazy-section";
 import { LiveFigureCount } from "@/components/ui/live-figure-count";
+import { ActivityFeed } from "@/components/home/activity-feed";
 
 export const metadata: Metadata = {
   title: "DOFLINS | Colección Oficial Animals + Multiverse",
@@ -71,6 +72,11 @@ export default function Home(): React.JSX.Element {
                   <span className="inline-flex items-center gap-1"><ShieldCheckIcon className="h-3 w-3" /> Pago seguro</span>
                   <span className="inline-flex items-center gap-1"><FireIcon className="h-3 w-3 text-orange-400" /> 4 rarezas</span>
                   <LiveFigureCount className="inline-flex items-center gap-1" countClassName="" />
+                </div>
+
+                {/* Activity feed — reveals recientes */}
+                <div className="flex justify-center">
+                  <ActivityFeed />
                 </div>
               </CardContent>
             </Card>

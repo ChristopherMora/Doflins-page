@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { MarkOwnedButton } from "@/components/carta/mark-owned-button";
 import { NextMissingButton } from "@/components/carta/next-missing-button";
 import { ShareFigureButton } from "@/components/carta/share-figure-button";
+import { MissingCountCTA } from "@/components/carta/missing-count-cta";
 import { getDb } from "@/lib/db/client";
 import { doflins } from "@/lib/db/schema";
 
@@ -245,6 +246,7 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
               nombre={doflin.nombre}
               rareza={RARITY_LABEL[rareza] ?? rareza}
             />
+            <MissingCountCTA serie={doflin.serie} />
             <Button asChild className="w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
               <Link href="/coleccion">
                 ¿Ya la tienes? Guarda tu progreso
