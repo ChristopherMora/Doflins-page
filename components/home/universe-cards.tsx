@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import Link from "next/link";
 import {
   ArrowRightIcon,
@@ -14,13 +15,42 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 
+function TiltCard({ children, cardClassName }: { children: React.ReactNode; cardClassName: string }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    const el = ref.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    el.style.transform = `perspective(900px) rotateY(${x * 8}deg) rotateX(${-y * 6}deg) translateY(-4px) scale(1.01)`;
+  };
+
+  const handleMouseLeave = () => {
+    if (ref.current) ref.current.style.transform = "";
+  };
+
+  return (
+    <div
+      ref={ref}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="will-change-transform"
+      style={{ transition: "transform 0.18s ease, box-shadow 0.18s ease" }}
+    >
+      <Card className={cardClassName}>
+        {children}
+      </Card>
+    </div>
+  );
+}
+
 export function UniverseCards(): React.JSX.Element {
   return (
     <div className="grid gap-4 md:grid-cols-2">
       {/* ── Animals ── */}
-      <Card
-        className="group relative border border-[#bfd196] bg-[linear-gradient(180deg,#f8ffe7,#e5f4c4)] shadow-[0_16px_34px_rgba(74,114,39,0.2)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_44px_rgba(74,114,39,0.3)]"
-      >
+      <TiltCard cardClassName="group relative border border-[#bfd196] bg-[linear-gradient(180deg,#f8ffe7,#e5f4c4)] shadow-[0_16px_34px_rgba(74,114,39,0.2)] hover:shadow-[0_24px_44px_rgba(74,114,39,0.3)]">
         <CardContent className="space-y-3 p-4">
           <Badge className="w-fit bg-[#dcf0b4] text-[#1b2b13]">
             <Squares2X2Icon className="h-4 w-4" /> Universo Animals
@@ -60,12 +90,10 @@ export function UniverseCards(): React.JSX.Element {
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </TiltCard>
 
       {/* ── Multiverse ── */}
-      <Card
-        className="group border border-[#b7c7fb] bg-[linear-gradient(180deg,#edf3ff,#d9e5ff)] shadow-[0_16px_34px_rgba(66,86,174,0.2)] transition-all duration-300 hover:-translate-y-1.5 hover:shadow-[0_24px_44px_rgba(66,86,174,0.32)]"
-      >
+      <TiltCard cardClassName="group border border-[#b7c7fb] bg-[linear-gradient(180deg,#edf3ff,#d9e5ff)] shadow-[0_16px_34px_rgba(66,86,174,0.2)] hover:shadow-[0_24px_44px_rgba(66,86,174,0.32)]">
         <CardContent className="space-y-3 p-4">
           <Badge className="w-fit bg-[#d2deff] text-[#1a2b7e]">
             <BoltIcon className="h-4 w-4" /> Universo Multiverse
@@ -105,7 +133,7 @@ export function UniverseCards(): React.JSX.Element {
             </Button>
           </div>
         </CardContent>
-      </Card>
+      </TiltCard>
     </div>
   );
 }

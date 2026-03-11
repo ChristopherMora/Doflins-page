@@ -27,21 +27,26 @@ export function BottomNav(): React.JSX.Element {
       className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--surface-200)] bg-[var(--background)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
       aria-label="Navegación inferior"
     >
-      <div className="flex items-center justify-around py-2">
+      <div className="flex items-center justify-around py-1.5">
         {NAV_ITEMS.map(({ href, label, icon: Icon, isAnchor }) => {
           const isActive = !isAnchor && pathname === href.split("?")[0];
+          const isShopActive = isAnchor && pathname === "/";
 
           if (isAnchor) {
             return (
               <a
                 key={href}
                 href={href}
-                className={`flex flex-col items-center gap-0.5 px-5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] transition active:scale-95 ${
-                  pathname === "/" ? "text-[var(--brand-primary)]" : "text-[var(--ink-600)]"
-                }`}
+                className="relative flex flex-col items-center gap-0.5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] transition active:scale-95"
               >
-                <Icon className={`h-5 w-5 transition-transform ${pathname === "/" ? "scale-110" : ""}`} />
-                {label}
+                {isShopActive && (
+                  <span className="absolute inset-x-1 top-0.5 bottom-1 rounded-full bg-[var(--brand-primary)]/10" />
+                )}
+                <Icon className={`relative h-5 w-5 transition-transform ${isShopActive ? "scale-110 text-[var(--brand-primary)]" : "text-[var(--ink-600)]"}`} />
+                <span className={`relative ${isShopActive ? "text-[var(--brand-primary)]" : "text-[var(--ink-600)]"}`}>{label}</span>
+                {isShopActive && (
+                  <span className="nav-active-dot absolute -bottom-px left-1/2 h-1 w-5 -translate-x-1/2 rounded-full bg-[var(--brand-primary)]" />
+                )}
               </a>
             );
           }
@@ -50,14 +55,16 @@ export function BottomNav(): React.JSX.Element {
             <Link
               key={href}
               href={href}
-              className={`flex flex-col items-center gap-0.5 px-5 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] transition active:scale-95 ${
-                isActive
-                  ? "text-[var(--brand-primary)]"
-                  : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"
-              }`}
+              className="relative flex flex-col items-center gap-0.5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] transition active:scale-95"
             >
-              <Icon className={`h-5 w-5 transition-transform ${isActive ? "scale-110" : ""}`} />
-              {label}
+              {isActive && (
+                <span className="absolute inset-x-1 top-0.5 bottom-1 rounded-full bg-[var(--brand-primary)]/10" />
+              )}
+              <Icon className={`relative h-5 w-5 transition-transform ${isActive ? "scale-110 text-[var(--brand-primary)]" : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"}`} />
+              <span className={`relative ${isActive ? "text-[var(--brand-primary)]" : "text-[var(--ink-600)]"}`}>{label}</span>
+              {isActive && (
+                <span className="nav-active-dot absolute -bottom-px left-1/2 h-1 w-5 -translate-x-1/2 rounded-full bg-[var(--brand-primary)]" />
+              )}
             </Link>
           );
         })}

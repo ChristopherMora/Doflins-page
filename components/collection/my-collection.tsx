@@ -63,6 +63,41 @@ const RARITY_COLORS: Record<string, string> = {
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHUlEQVQIW2NkYGD4z8BQDwIMjIz1DEDMSNMAACb9Av9aFEHzAAAAAElFTkSuQmCC";
 
+// ── Circular progress ring (SVG) ─────────────────────────────────────────────
+function CircularRing({ pct, size = 88 }: { pct: number; size?: number }) {
+  const r = (size - 12) / 2;
+  const circ = 2 * Math.PI * r;
+  const fill = circ * (1 - pct / 100);
+  return (
+    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`} aria-label={`${pct}% completado`}>
+      <circle
+        cx={size / 2} cy={size / 2} r={r}
+        fill="none" stroke="#d8dfc5" strokeWidth="7"
+      />
+      <circle
+        cx={size / 2} cy={size / 2} r={r}
+        fill="none"
+        stroke={pct === 100 ? "#D59A1A" : "#4e6f2a"}
+        strokeWidth="7"
+        strokeLinecap="round"
+        strokeDasharray={circ}
+        strokeDashoffset={fill}
+        transform={`rotate(-90 ${size / 2} ${size / 2})`}
+        style={{ transition: "stroke-dashoffset 0.9s cubic-bezier(0.34,1.1,0.64,1)" }}
+      />
+      <text
+        x={size / 2} y={size / 2 + 6}
+        textAnchor="middle"
+        fontSize="17"
+        fontWeight="800"
+        fill={pct === 100 ? "#D59A1A" : "#4e6f2a"}
+      >
+        {pct}%
+      </text>
+    </svg>
+  );
+}
+
 export function MyCollection() {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
@@ -405,12 +440,12 @@ export function MyCollection() {
               <p className="text-xs font-semibold uppercase tracking-[0.1em] text-[var(--ink-600)]">
                 Progreso total
               </p>
-              <p className="font-title text-4xl text-[var(--ink-900)]">
+              <p className="font-title text-4xl text-[var(--ink-900)] animate-count-up">
                 {totalOwned}
                 <span className="text-xl text-[var(--ink-600)]">/{totalDoflins}</span>
               </p>
             </div>
-            <p className="font-title text-5xl text-[#4e6f2a]">{pct}%</p>
+            <CircularRing pct={pct} />
           </div>
           <div className="h-3 rounded-full bg-[#d8dfc5] overflow-hidden">
             <div
@@ -429,7 +464,7 @@ export function MyCollection() {
                   className="rounded-2xl border border-[#d8d2b4] bg-white/70 px-3 py-2 space-y-1"
                 >
                   <div className="flex items-center justify-between">
-                    <Badge className={`text-xs px-2 py-0.5 rounded-full ${RARITY_COLORS[rarity]}`}>
+                    <Badge className={`text-xs px-2 py-0.5 rounded-full ${RARITY_COLORS[rarity]} ${["LEGENDARY","ULTRA","MYTHIC"].includes(rarity) ? "rarity-foil" : ""}`}>
                       {RARITY_LABELS[rarity] ?? rarity}
                     </Badge>
                     <span className="text-xs font-bold text-[var(--ink-800)]">
