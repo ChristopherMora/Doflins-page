@@ -99,6 +99,37 @@ const SUPPORT_WHATSAPP_URL =
 const PROMO_EXPIRES_ENV = process.env.NEXT_PUBLIC_PROMO_EXPIRES?.trim() ?? "";
 const QTY_HISTORY_KEY = "doflins_qty_history_v1";
 const WISHLIST_KEY = "doflins_wishlist_v1";
+
+/** Isolated countdown so only this tiny node re-renders every second */
+function PromoCountdown(): React.JSX.Element | null {
+  const [timeLeft, setTimeLeft] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!PROMO_EXPIRES_ENV) return;
+    const expiresAt = new Date(PROMO_EXPIRES_ENV).getTime();
+    if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) return;
+    const update = () => {
+      const diff = expiresAt - Date.now();
+      if (diff <= 0) { setTimeLeft(null); return; }
+      const d = Math.floor(diff / 86_400_000);
+      const h = Math.floor((diff % 86_400_000) / 3_600_000);
+      const m = Math.floor((diff % 3_600_000) / 60_000);
+      const s = Math.floor((diff % 60_000) / 1_000);
+      setTimeLeft(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${s}s`);
+    };
+    update();
+    const id = setInterval(update, 1_000);
+    return () => clearInterval(id);
+  }, []);
+
+  if (!timeLeft) return null;
+  return (
+    <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shop-promo-timer-bg)] px-1.5 py-0.5 text-[var(--shop-promo-timer-text)]">
+      <ClockIcon className="h-3 w-3" />{timeLeft}
+    </span>
+  );
+}
+
 // 4×4 blurry greenish placeholder para next/image con imágenes externas
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHUlEQVQIW2NkYGD4z8BQDwIMjIz1DEDMSNMAACb9Av9aFEHzAAAAAElFTkSuQmCC";
@@ -576,7 +607,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const [giftNote, setGiftNote] = useState("");
   const [shopSearch, setShopSearch] = useState("");
   const [mutatingLineIds, setMutatingLineIds] = useState<Set<string>>(new Set());
-  const [promoTimeLeft, setPromoTimeLeft] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   const [gridView, setGridView] = useState<"grid" | "list">("grid");
   const [showWishlistOnly, setShowWishlistOnly] = useState(false);
@@ -971,25 +1001,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         }
       }
     } catch { /* ignore */ }
-  }, []);
-
-  // Promo countdown
-  useEffect(() => {
-    if (!PROMO_EXPIRES_ENV || !FREE_GIFT_MIN_SUBTOTAL) return;
-    const expiresAt = new Date(PROMO_EXPIRES_ENV).getTime();
-    if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) return;
-    const update = () => {
-      const diff = expiresAt - Date.now();
-      if (diff <= 0) { setPromoTimeLeft(null); return; }
-      const d = Math.floor(diff / 86_400_000);
-      const h = Math.floor((diff % 86_400_000) / 3_600_000);
-      const m = Math.floor((diff % 3_600_000) / 60_000);
-      const s = Math.floor((diff % 60_000) / 1_000);
-      setPromoTimeLeft(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${s}s`);
-    };
-    update();
-    const id = setInterval(update, 1_000);
-    return () => clearInterval(id);
   }, []);
 
   useEffect(() => {
@@ -1877,11 +1888,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             {FREE_GIFT_PROMO_LABEL || FREE_GIFT_MIN_SUBTOTAL ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
                 🎁 {FREE_GIFT_PROMO_LABEL || `Regalo gratis desde ${formatCurrencyAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, pricingCurrencyCode)}`}
-                {promoTimeLeft ? (
-                  <span className="inline-flex items-center gap-0.5 rounded-full bg-[var(--shop-promo-timer-bg)] px-1.5 py-0.5 text-[var(--shop-promo-timer-text)]">
-                    <ClockIcon className="h-3 w-3" />{promoTimeLeft}
-                  </span>
-                ) : null}
+                <PromoCountdown />
               </span>
             ) : null}
 
@@ -2208,16 +2215,15 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     }
                   >
                     <article
-                    className={`group flex h-full cursor-pointer overflow-hidden rounded-3xl border transition hover:-translate-y-0.5 ${
+                    className={`shop-product-card group flex h-full cursor-pointer overflow-hidden rounded-3xl border transition-transform hover:-translate-y-0.5 ${
                       gridView === "list" ? "flex-row" : "flex-col hover:-translate-y-1.5"
                     } ${isBestSeller ? "ring-2 ring-[#e6c676] ring-offset-1" : ""}`}
                     style={{
                       background: "var(--shop-card-bg)",
                       borderColor: isBestSeller ? "#d4a84b" : "var(--shop-card-border)",
                       boxShadow: "var(--shop-card-shadow)",
+                      willChange: "transform",
                     }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shop-card-hover-shadow)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shop-card-shadow)"; }}
                     role="button"
                     tabIndex={0}
                     aria-label={`Ver detalle rápido de ${product.title}`}
@@ -2316,13 +2322,14 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         </div>
                       </div>
 
-                      <h4 className={`font-title leading-tight text-[var(--ink-900)] ${ gridView === "list" ? "text-base sm:text-lg" : "text-2xl sm:text-[2rem]" }`}>{product.title}</h4>
-                      {gridView !== "list" ? <p className="min-h-[3rem] text-sm leading-relaxed text-[var(--ink-700)]">{getProductDescription(product, activeUniverse)}</p> : null}
+                      <h4 className={`font-title leading-tight text-[var(--ink-900)] ${ gridView === "list" ? "text-base sm:text-lg" : "text-xl sm:text-2xl" }`}>{product.title}</h4>
+                      {gridView !== "list" ? <p className="text-sm leading-relaxed text-[var(--ink-600)]">{getProductDescription(product, activeUniverse)}</p> : null}
 
                       {gridView === "list" ? (
                         /* ── Lista: precio + CTA inline ── */
                         <div className="mt-auto flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
                           <span className="font-title text-lg font-bold text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</span>
+                          {(() => { const estPts = Math.floor(parseFloat((selectedVariant?.price ?? product.price).amount) / 100) * 5; return estPts > 0 ? <span className="rounded-full bg-[#eef5df] px-2 py-0.5 text-[10px] font-bold text-[#4e6f2a]">~{estPts} pts</span> : null; })()}
                           {isSoldOut ? (
                             <span className="ml-auto rounded-full bg-[#f5f4ef] px-3 py-1.5 text-xs font-medium text-[var(--ink-500)]">Agotado</span>
                           ) : (
@@ -2337,9 +2344,15 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         </div>
                       ) : (
                       <div className="mt-auto space-y-3">
-                        <div className="rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-card-bg)" }}>
-                          <p className="text-xs uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
-                          <p className="font-title text-[2rem] leading-none text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</p>
+                        <div className="flex items-end justify-between gap-2 rounded-2xl border px-4 py-3" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-card-bg)" }}>
+                          <div>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-[var(--ink-500)]">Precio</p>
+                            <p className="font-title text-3xl leading-none text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</p>
+                            {(() => { const estPts = Math.floor(parseFloat((selectedVariant?.price ?? product.price).amount) / 100) * 5; return estPts > 0 ? <span className="mt-1 inline-block rounded-full bg-[#eef5df] px-2 py-0.5 text-[10px] font-bold text-[#4e6f2a]">~{estPts} pts al comprar</span> : null; })()}
+                          </div>
+                          {!isSoldOut && product.variants.length === 1 ? (
+                            <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">Disponible</span>
+                          ) : null}
                         </div>
 
                         {product.variants.length > 1 ? (

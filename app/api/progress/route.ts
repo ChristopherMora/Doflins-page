@@ -108,6 +108,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   try {
     // Guardar nombre de Google silenciosamente al marcar cualquier sticker
+    let pointsEarned = 0;
     if (user.displayName) {
       void getDb()
         .insert(userProfiles)
@@ -150,7 +151,9 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       // Otorgar puntos solo la primera vez que se marca como obtenida
       if (isNewFigure) {
-        void awardRevealPoints(user.id, payload.doflinId).catch(() => { /* no bloquear */ });
+        try {
+          pointsEarned = await awardRevealPoints(user.id, payload.doflinId);
+        } catch { /* no bloquear */ }
       }
     } else {
       await getDb()
@@ -166,6 +169,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json(
       {
         status: "ok",
+        pointsEarned,
       },
       { status: 200 },
     );

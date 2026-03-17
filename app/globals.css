@@ -189,11 +189,17 @@ html {
   transform: rotateY(180deg);
 }
 
+/* Product card hover shadow — pure CSS, no JS handler needed */
+.shop-product-card:hover {
+  box-shadow: var(--shop-card-hover-shadow) !important;
+}
+
 /* Lazy section reveal on scroll */
 .section-reveal {
   opacity: 0;
   transform: translateY(22px);
   transition: opacity 0.55s ease, transform 0.55s ease;
+  will-change: transform, opacity;
 }
 
 .section-reveal[data-revealed] {

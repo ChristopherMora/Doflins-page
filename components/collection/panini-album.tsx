@@ -122,11 +122,21 @@ export function PaniniAlbum(): React.JSX.Element {
     });
     setJustMarked(id);
     setTimeout(() => setJustMarked(null), 600);
-    await fetch("/api/progress", {
+    const res = await fetch("/api/progress", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ doflinId: id, owned: !wasOwned }),
     }).catch(console.error);
+
+    if (!wasOwned && res && res.ok) {
+      const data = await res.json().catch(() => null) as { pointsEarned?: number } | null;
+      if (data?.pointsEarned && data.pointsEarned > 0) {
+        toast.success(`+${data.pointsEarned} pts ganados ⭐`, {
+          description: "¡Figura nueva en tu colección!",
+          duration: 3500,
+        });
+      }
+    }
   };
 
   const handleShareAlbum = async () => {

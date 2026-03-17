@@ -72,6 +72,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       discountPercent: existing.discountPercent,
       usesCount,
       active: existing.active,
+      pointsPerUse: 50,
       shareUrl: `${BASE_URL}?ref=${existing.code}`,
       shopifyCode: existing.code,
       uses: uses.map((u) => ({
@@ -114,6 +115,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     discountPercent: 10,
     usesCount: 0,
     active: true,
+    pointsPerUse: 50,
     shareUrl: `${BASE_URL}?ref=${code}`,
     shopifyCode: code,
     uses: [],

@@ -51,17 +51,15 @@ async function tryAwardPurchasePoints(order: ShopifyOrderPayload): Promise<void>
   if (isNaN(amountMxn) || amountMxn <= 0) return;
 
   try {
-    const { userProfiles } = await import("@/lib/db/schema");
-    const { like } = await import("drizzle-orm");
     const db = getDb();
 
-    // Buscar usuario por email (Supabase auth email === userProfiles no tiene email,
-    // pero sí en userCollectionProgress — usamos esa tabla)
+    // Buscar usuario por email de forma case-insensitive
     const { userCollectionProgress } = await import("@/lib/db/schema");
+    const normalizedEmail = order.email.toLowerCase();
     const [row] = await db
       .select({ supabaseUserId: userCollectionProgress.supabaseUserId })
       .from(userCollectionProgress)
-      .where(like(userCollectionProgress.userEmail, order.email))
+      .where(sql`LOWER(${userCollectionProgress.userEmail}) = ${normalizedEmail}`)
       .limit(1);
 
     if (!row) return;
@@ -173,12 +171,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       void (async () => {
         try {
           const { userCollectionProgress } = await import("@/lib/db/schema");
-          const { like } = await import("drizzle-orm");
           const db = getDb();
+          const buyerEmail = order.email.toLowerCase();
           const [buyer] = await db
             .select({ supabaseUserId: userCollectionProgress.supabaseUserId })
             .from(userCollectionProgress)
-            .where(like(userCollectionProgress.userEmail, order.email))
+            .where(sql`LOWER(${userCollectionProgress.userEmail}) = ${buyerEmail}`)
             .limit(1);
           if (buyer) {
             await awardPoints(buyer.supabaseUserId, 25, "referral_used", {

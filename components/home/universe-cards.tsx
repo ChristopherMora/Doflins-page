@@ -51,13 +51,13 @@ export function UniverseCards(): React.JSX.Element {
     <div className="grid gap-4 md:grid-cols-2">
       {/* ── Animals ── */}
       <TiltCard cardClassName="group relative border border-[#bfd196] bg-[linear-gradient(180deg,#f8ffe7,#e5f4c4)] shadow-[0_16px_34px_rgba(74,114,39,0.2)] hover:shadow-[0_24px_44px_rgba(74,114,39,0.3)]">
-        <CardContent className="space-y-3 p-4">
+        <CardContent className="space-y-4 p-5 sm:p-6">
           <Badge className="w-fit bg-[#dcf0b4] text-[#1b2b13]">
             <Squares2X2Icon className="h-4 w-4" /> Universo Animals
           </Badge>
 
-          <div className="space-y-1">
-            <h2 className="font-title text-2xl text-[#1b2b13] sm:text-3xl">Doflins Animals</h2>
+          <div className="space-y-2">
+            <h2 className="font-title text-3xl text-[#1b2b13] sm:text-4xl">Doflins Animals</h2>
             <p className="text-sm leading-relaxed text-[#335027]">
               Explora criaturas del universo Animals, revisa rarezas y avanza tu colección oficial.
             </p>
@@ -94,13 +94,13 @@ export function UniverseCards(): React.JSX.Element {
 
       {/* ── Multiverse ── */}
       <TiltCard cardClassName="group border border-[#b7c7fb] bg-[linear-gradient(180deg,#edf3ff,#d9e5ff)] shadow-[0_16px_34px_rgba(66,86,174,0.2)] hover:shadow-[0_24px_44px_rgba(66,86,174,0.32)]">
-        <CardContent className="space-y-3 p-4">
+        <CardContent className="space-y-4 p-5 sm:p-6">
           <Badge className="w-fit bg-[#d2deff] text-[#1a2b7e]">
             <BoltIcon className="h-4 w-4" /> Universo Multiverse
           </Badge>
 
-          <div className="space-y-1">
-            <h2 className="font-title text-2xl text-[#1a2b7a] sm:text-3xl">Doflins Multiverse</h2>
+          <div className="space-y-2">
+            <h2 className="font-title text-3xl text-[#1a2b7a] sm:text-4xl">Doflins Multiverse</h2>
             <p className="text-sm leading-relaxed text-[#2f4490]">
               Entra al universo de variantes intensas con estética sci-fi y rarezas de alto impacto.
             </p>

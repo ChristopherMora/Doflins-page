@@ -36,7 +36,7 @@ export default function Home(): React.JSX.Element {
 
             {/* ── Hero ── */}
             <Card className="home-hero-card w-full overflow-hidden border">
-              <CardContent className="relative p-4 text-center sm:p-6">
+              <CardContent className="relative p-5 text-center sm:p-8">
 
                 {/* Subtle floating leaf decorations */}
                 <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden">
@@ -47,7 +47,7 @@ export default function Home(): React.JSX.Element {
                 </div>
 
                 {/* Main hero content */}
-                <div className="relative z-[1] space-y-4">
+                <div className="relative z-[1] space-y-5">
                   {/* live badge */}
                   <div className="home-hero-live inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold">
                     <span
@@ -57,31 +57,35 @@ export default function Home(): React.JSX.Element {
                     Animals &amp; Multiverse
                   </div>
 
-                  <h1 className="home-hero-title font-title text-4xl leading-tight sm:text-5xl">
+                  <h1 className="home-hero-title font-title text-4xl leading-tight sm:text-5xl md:text-6xl">
                     Colecciona. Explora. Completa.
                   </h1>
-                  <p className="home-hero-copy mx-auto max-w-sm text-sm">
-                    Dos universos, cientos de figuras con rareza oficial.
+                  <p className="home-hero-copy mx-auto max-w-lg text-base leading-relaxed">
+                    Dos universos, cientos de figuras con rareza oficial. Completa tu álbum y compite en el ranking.
                   </p>
 
-                  <div className="flex flex-wrap items-center justify-center gap-2">
-                    <Button asChild size="lg" className="home-hero-primary-btn">
+                  <div className="flex flex-wrap items-center justify-center gap-3">
+                    <Button asChild size="lg" className="home-hero-primary-btn px-6">
                       <Link href="#compras">
                         <ShoppingCartIcon className="h-5 w-5" /> Ver packs disponibles
                       </Link>
                     </Button>
-                    <Button asChild variant="secondary" size="lg" className="home-hero-secondary-btn">
+                    <Button asChild variant="secondary" size="lg" className="home-hero-secondary-btn px-6">
                       <Link href="/reveal?universe=animals">
                         <Squares2X2Icon className="h-5 w-5" /> Explorar catálogo
                       </Link>
                     </Button>
                   </div>
 
-                  {/* Trust — una sola fila compacta */}
-                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] text-[var(--ink-500)]">
-                    <span className="inline-flex items-center gap-1"><ShieldCheckIcon className="h-3 w-3" /> Pago seguro</span>
-                    <span className="inline-flex items-center gap-1"><FireIcon className="h-3 w-3 text-orange-400" /> 4 rarezas</span>
-                    <LiveFigureCount className="inline-flex items-center gap-1" countClassName="" />
+                  {/* Trust — pills visuales */}
+                  <div className="flex flex-wrap items-center justify-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--home-pill-border)] bg-[var(--home-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--home-stats-text)]">
+                      <ShieldCheckIcon className="h-3.5 w-3.5 text-[var(--home-pill-icon)]" /> Pago seguro
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--home-pill-border)] bg-[var(--home-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--home-stats-text)]">
+                      <FireIcon className="h-3.5 w-3.5 text-orange-400" /> 4 rarezas oficiales
+                    </span>
+                    <LiveFigureCount className="inline-flex items-center gap-1.5 rounded-full border border-[var(--home-pill-border)] bg-[var(--home-pill-bg)] px-3 py-1 text-xs font-medium text-[var(--home-stats-text)]" countClassName="font-bold text-[var(--home-pill-icon)]" />
                   </div>
 
                   {/* Activity feed — reveals recientes */}

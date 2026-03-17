@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { StarIcon } from "@heroicons/react/24/solid";
-import { getLevel } from "@/lib/server/levels";
+import { getLevel, getNextLevel, getLevelProgress } from "@/lib/server/levels";
 
 export function PointsBalanceBadge() {
   const [data, setData] = useState<{ balance: number; totalEarned: number } | null>(null);
@@ -21,29 +21,48 @@ export function PointsBalanceBadge() {
   if (data === null) return null;
 
   const level = getLevel(data.totalEarned);
+  const next = getNextLevel(data.totalEarned);
+  const progress = getLevelProgress(data.totalEarned);
 
   return (
     <Link
       href="/recompensas"
-      className="flex items-center justify-between rounded-2xl border border-[#b8d493] bg-[#eef5df] px-4 py-3 transition hover:bg-[#e4f0d0] active:scale-[.99]"
+      className="flex flex-col gap-3 rounded-2xl border border-[#b8d493] bg-[#eef5df] px-4 py-3 transition hover:bg-[#e4f0d0] active:scale-[.99]"
     >
-      <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#4e6f2a]">
-          <StarIcon className="h-5 w-5 text-white" />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#4e6f2a]">
+            <StarIcon className="h-5 w-5 text-white" />
+          </div>
+          <div>
+            <p className="flex items-center gap-1.5 text-xs font-semibold text-[#4e6f2a]">
+              Tus puntos DOFLINS
+              <span className="rounded-full bg-[#4e6f2a]/10 px-2 py-0.5 text-xs font-bold text-[#2d4915]">
+                {level.emoji} {level.label}
+              </span>
+            </p>
+            <p className="font-title text-xl font-black text-[#2d4915]">
+              {data.balance.toLocaleString("es-MX")} pts
+            </p>
+          </div>
         </div>
-        <div>
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-[#4e6f2a]">
-            Tus puntos DOFLINS
-            <span className="rounded-full bg-[#4e6f2a]/10 px-2 py-0.5 text-xs font-bold text-[#2d4915]">
-              {level.emoji} {level.label}
-            </span>
-          </p>
-          <p className="font-title text-xl font-black text-[#2d4915]">
-            {data.balance.toLocaleString("es-MX")} pts
-          </p>
-        </div>
+        <span className="text-xs font-semibold text-[#4e6f2a]">Ver tienda →</span>
       </div>
-      <span className="text-xs font-semibold text-[#4e6f2a]">Ver tienda →</span>
+
+      {next && (
+        <div>
+          <div className="mb-1 flex items-center justify-between text-xs text-[#4e6f2a]">
+            <span>{next.emoji} {next.label}</span>
+            <span className="font-bold">{progress}%</span>
+          </div>
+          <div className="h-1.5 w-full overflow-hidden rounded-full bg-[#4e6f2a]/15">
+            <div
+              className="h-full rounded-full bg-[#4e6f2a] transition-all duration-700"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+      )}
     </Link>
   );
 }

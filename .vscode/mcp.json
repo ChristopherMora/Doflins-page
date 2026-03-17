@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "playwright": {
+      "type": "stdio",
+      "command": "/home/mora/.local/bin/playwright-mcp",
+      "args": ["--browser", "chromium"]
+    }
+  }
+}

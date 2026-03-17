@@ -30,6 +30,8 @@ export function LiveFigureCount({ className, countClassName }: LiveFigureCountPr
     </span>
   );
 
+  if (count === 0) return <span />;
+
   return (
     <span className={cn("inline-flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 ring-1 ring-[#cad89e]", className)}>
       <span className={cn("font-bold text-[var(--brand-primary)]", countClassName)}>{count}</span> figuras activas

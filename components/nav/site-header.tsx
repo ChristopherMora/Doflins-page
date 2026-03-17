@@ -6,10 +6,6 @@ import { motion } from "framer-motion";
 import {
   ArrowRightStartOnRectangleIcon,
   GiftIcon,
-  GlobeAltIcon,
-  HomeIcon,
-  InformationCircleIcon,
-  QuestionMarkCircleIcon,
   RectangleStackIcon,
   ShieldCheckIcon,
   ShoppingBagIcon,
@@ -23,6 +19,7 @@ import { DarkModeToggle } from "@/components/ui/dark-mode-toggle";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import { getStoredUniverse, onUniverseChange, type Universe } from "@/lib/universe-store";
 import { CART_SNAPSHOT_STORAGE_KEY } from "@/lib/constants/shop";
+import { DESKTOP_NAV_ITEMS } from "@/lib/constants/nav";
 
 function useDarkMode(): boolean {
   const [dark, setDark] = useState(false);
@@ -169,14 +166,16 @@ export function SiteHeader(): React.JSX.Element {
       ? dark ? "0 8px 20px rgba(76,122,41,0.34)" : "0 4px 14px rgba(78,111,42,0.35)"
       : dark ? "0 8px 20px rgba(57,102,153,0.35)" : "0 4px 14px rgba(58,109,153,0.33)";
 
-  const navLinks = [
-    { href: "/", Icon: HomeIcon, label: "Inicio" },
-    { href: "/reveal?universe=animals", Icon: Squares2X2Icon, label: "Catálogo" },
-    { href: "/#compras", Icon: ShoppingCartIcon, label: "Tienda", isAnchor: true },
-    { href: "/coleccion", Icon: RectangleStackIcon, label: "Colección" },
-    { href: "/faq", Icon: QuestionMarkCircleIcon, label: "FAQ" },
-    { href: "/acerca", Icon: InformationCircleIcon, label: "Acerca" },
-  ];
+  const NAV_ICON_MAP: Record<string, React.ElementType> = {
+    "Catálogo": Squares2X2Icon,
+    "Tienda": ShoppingCartIcon,
+    "Colección": RectangleStackIcon,
+    "Recompensas": GiftIcon,
+  };
+  const navLinks = DESKTOP_NAV_ITEMS.map((item) => ({
+    ...item,
+    Icon: NAV_ICON_MAP[item.label] ?? Squares2X2Icon,
+  }));
 
   const linkHandlers = {
     onMouseEnter: (e: React.MouseEvent<HTMLElement>) => {
@@ -220,7 +219,7 @@ export function SiteHeader(): React.JSX.Element {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-1 text-sm font-semibold sm:flex" aria-label="Navegación principal">
+        <nav className="hidden items-center gap-1 text-sm font-semibold md:flex" aria-label="Navegación principal">
           {navLinks.map(({ href, Icon, label, isAnchor }) => {
             const cls = "flex items-center gap-1.5 rounded-full px-3 py-1.5 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2";
             const style: React.CSSProperties = { color: navColor };
@@ -244,7 +243,7 @@ export function SiteHeader(): React.JSX.Element {
           {isAdmin ? (
             <Link
               href="/admin/doflins"
-              className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-amber-600"
+              className="hidden md:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 bg-amber-600"
             >
               <ShieldCheckIcon className="h-4 w-4" />
               Admin
@@ -278,6 +277,15 @@ export function SiteHeader(): React.JSX.Element {
                     >
                       <UserCircleIcon className="h-4 w-4 shrink-0" />
                       Mi Perfil
+                    </Link>
+                    <Link
+                      href="/recompensas"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors hover:bg-[#f0f8e0]"
+                      style={{ color: dark ? "#c8e0a8" : "#3a5a18" }}
+                    >
+                      <GiftIcon className="h-4 w-4 shrink-0" />
+                      Recompensas
                     </Link>
                     <Link
                       href="/coleccion"
@@ -359,7 +367,7 @@ export function SiteHeader(): React.JSX.Element {
 
           <Link
             href="/#compras"
-            className="hidden sm:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
+            className="hidden xl:inline-flex h-9 items-center gap-1.5 rounded-full px-4 text-sm font-semibold text-white transition-all duration-300 hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
             style={{ background: ctaGradient, boxShadow: ctaShadow }}
           >
             <GlobeAltIcon className="h-4 w-4" />

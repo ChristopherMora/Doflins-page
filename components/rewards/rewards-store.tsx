@@ -21,6 +21,7 @@ interface Transaction {
   id: number;
   amount: number;
   label: string;
+  reason: string;
   createdAt: string;
 }
 
@@ -35,6 +36,16 @@ const TYPE_LABEL: Record<string, string> = {
   physical: "📦 Producto físico",
   digital: "💾 Entrega digital",
   custom: "⭐ Recompensa especial",
+};
+
+const REASON_ICON: Record<string, { emoji: string; bg: string; text: string }> = {
+  reveal_scan:   { emoji: "🐾", bg: "bg-[#eef5df]", text: "text-[#3a5a18]" },
+  rarity_bonus:  { emoji: "💎", bg: "bg-[#fdf3df]", text: "text-[#7a4a10]" },
+  purchase:      { emoji: "🛒", bg: "bg-[#e8f0fe]", text: "text-[#2a3f97]" },
+  referral_used: { emoji: "🎁", bg: "bg-[#fde8f5]", text: "text-[#9b1fae]" },
+  achievement:   { emoji: "🏆", bg: "bg-[#fffbe6]", text: "text-[#8a6200]" },
+  manual_award:  { emoji: "⭐", bg: "bg-[#fffbe6]", text: "text-[#8a6200]" },
+  redeem:        { emoji: "🏷️", bg: "bg-[#fff0f0]", text: "text-[#8b1a1a]" },
 };
 
 function formatDate(d: string) {
@@ -138,40 +149,58 @@ export function RewardsStore() {
       </div>
 
       {/* Balance card */}
-      <div
-        className="relative overflow-hidden rounded-2xl p-5"
-        style={{ background: "linear-gradient(135deg, #2e5c1b 0%, #4e6f2a 60%, #8ab84a 100%)" }}
-      >
-        <div className="relative z-10">
-          <div className="mb-2 flex items-center gap-2">
-            {(() => {
-              const level = getLevel(points.totalEarned);
-              const next = getNextLevel(points.totalEarned);
-              const progress = getLevelProgress(points.totalEarned);
-              return (
-                <>
-                  <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-bold text-white">
-                    {level.emoji} {level.label}
-                  </span>
-                  {next && (
-                    <span className="text-xs text-[#c8f08a]">
-                      → {next.emoji} {next.label} ({progress}%)
-                    </span>
-                  )}
-                </>
-              );
-            })()}
+      {(() => {
+        const level = getLevel(points.totalEarned);
+        const next = getNextLevel(points.totalEarned);
+        const progress = getLevelProgress(points.totalEarned);
+        return (
+          <div
+            className="relative overflow-hidden rounded-2xl p-5"
+            style={{ background: "linear-gradient(135deg, #2e5c1b 0%, #4e6f2a 60%, #8ab84a 100%)" }}
+          >
+            <div className="relative z-10">
+              <div className="mb-3 flex items-center gap-2">
+                <span className="rounded-full bg-white/20 px-3 py-0.5 text-xs font-bold text-white">
+                  {level.emoji} {level.label}
+                </span>
+                {next && (
+                  <span className="text-xs text-[#c8f08a]">→ {next.emoji} {next.label}</span>
+                )}
+              </div>
+              <p className="text-xs font-semibold uppercase tracking-widest text-[#c8f08a]">Tus puntos</p>
+              <p className="mt-1 font-title text-5xl font-black text-white">
+                {points.balance.toLocaleString("es-MX")}
+              </p>
+              <p className="mt-0.5 text-sm text-[#a8d870]">
+                Total acumulado: {points.totalEarned.toLocaleString("es-MX")} pts
+              </p>
+              {next && (
+                <div className="mt-4">
+                  <div className="mb-1.5 flex items-center justify-between text-xs text-[#c8f08a]">
+                    <span>Hacia {next.emoji} {next.label}</span>
+                    <span className="font-bold">{progress}%</span>
+                  </div>
+                  <div className="h-2 w-full overflow-hidden rounded-full bg-white/20">
+                    <div
+                      className="h-full rounded-full bg-white transition-all duration-700"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <p className="mt-1 text-xs text-[#a8d870]">
+                    {(next.min - points.totalEarned).toLocaleString("es-MX")} pts más para subir de nivel
+                  </p>
+                </div>
+              )}
+              {!next && (
+                <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white">
+                  👑 Nivel máximo alcanzado
+                </div>
+              )}
+            </div>
+            <StarIcon className="absolute right-4 top-4 h-20 w-20 text-white/10" />
           </div>
-          <p className="text-xs font-semibold uppercase tracking-widest text-[#c8f08a]">Tus puntos</p>
-          <p className="mt-1 font-title text-5xl font-black text-white">
-            {points.balance.toLocaleString("es-MX")}
-          </p>
-          <p className="mt-0.5 text-sm text-[#a8d870]">
-            Total acumulado: {points.totalEarned.toLocaleString("es-MX")} pts
-          </p>
-        </div>
-        <StarIcon className="absolute right-4 top-4 h-20 w-20 text-white/10" />
-      </div>
+        );
+      })()}
 
       {/* Cómo ganar puntos */}
       <details className="rounded-xl border border-[var(--surface-200)] bg-[var(--surface-50)]">
@@ -226,14 +255,28 @@ export function RewardsStore() {
       {/* Tienda */}
       {tab === "store" && (
         rewards.length === 0 ? (
-          <div className="rounded-xl border border-[var(--surface-200)] bg-[var(--surface-50)] px-4 py-10 text-center text-sm text-[var(--ink-400)]">
-            <SparklesIcon className="mx-auto mb-2 h-8 w-8 opacity-40" />
-            Pronto habrá recompensas disponibles. ¡Sigue coleccionando!
+          <div className="rounded-xl border border-[var(--surface-200)] bg-[var(--surface-50)] px-5 py-8 text-center">
+            <SparklesIcon className="mx-auto mb-3 h-10 w-10 text-[#8ab84a] opacity-70" />
+            <p className="font-bold text-[var(--ink-800)]">Recompensas próximamente</p>
+            <p className="mt-1 text-sm text-[var(--ink-500)]">
+              Mientras tanto, sigue coleccionando y acumula tus puntos.
+            </p>
+            <div className="mt-4 rounded-xl bg-[#eef5df] px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-widest text-[#4e6f2a]">Puntos acumulados</p>
+              <p className="font-title text-2xl font-black text-[#2d4915]">
+                {points.balance.toLocaleString("es-MX")} pts
+              </p>
+            </div>
+            <p className="mt-3 text-xs text-[var(--ink-400)]">
+              Cada figura nueva que obtienes vale puntos — ¡no dejes de coleccionar!
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {rewards.map((r) => {
               const canAfford = points.balance >= r.pointsCost;
+              const missingPts = r.pointsCost - points.balance;
+              const affordProgress = Math.min(100, Math.round((points.balance / r.pointsCost) * 100));
               return (
                 <div
                   key={r.id}
@@ -258,24 +301,39 @@ export function RewardsStore() {
                     <p className="mt-1 text-xs text-[var(--ink-500)]">{r.description}</p>
                   )}
 
-                  <div className="mt-3 flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <StarIcon className="h-4 w-4 text-[#8ab84a]" />
-                      <span className="font-title text-sm font-black text-[#4e6f2a]">
-                        {r.pointsCost.toLocaleString("es-MX")} pts
-                      </span>
+                  <div className="mt-3 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <StarIcon className="h-4 w-4 text-[#8ab84a]" />
+                        <span className="font-title text-sm font-black text-[#4e6f2a]">
+                          {r.pointsCost.toLocaleString("es-MX")} pts
+                        </span>
+                      </div>
+                      <button
+                        disabled={!canAfford || redeeming === r.id}
+                        onClick={() => void redeem(r.id)}
+                        className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
+                          canAfford
+                            ? "bg-[#4e6f2a] text-white hover:bg-[#3d5a20]"
+                            : "cursor-not-allowed bg-[var(--surface-200)] text-[var(--ink-400)]"
+                        }`}
+                      >
+                        {redeeming === r.id ? "Canjeando…" : "Canjear"}
+                      </button>
                     </div>
-                    <button
-                      disabled={!canAfford || redeeming === r.id}
-                      onClick={() => void redeem(r.id)}
-                      className={`rounded-xl px-3 py-1.5 text-xs font-bold transition-all active:scale-95 ${
-                        canAfford
-                          ? "bg-[#4e6f2a] text-white hover:bg-[#3d5a20]"
-                          : "cursor-not-allowed bg-[var(--surface-200)] text-[var(--ink-400)]"
-                      }`}
-                    >
-                      {redeeming === r.id ? "Canjeando…" : canAfford ? "Canjear" : "Puntos insuficientes"}
-                    </button>
+                    {!canAfford && (
+                      <div className="space-y-1">
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-[var(--surface-200)]">
+                          <div
+                            className="h-full rounded-full bg-[#8ab84a] transition-all"
+                            style={{ width: `${affordProgress}%` }}
+                          />
+                        </div>
+                        <p className="text-xs text-[var(--ink-400)]">
+                          Te faltan {missingPts.toLocaleString("es-MX")} pts
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {r.stock !== null && (
@@ -304,9 +362,16 @@ export function RewardsStore() {
                 key={tx.id}
                 className="flex items-center justify-between rounded-xl border border-[var(--surface-200)] bg-[var(--surface-50)] px-4 py-3"
               >
-                <div>
-                  <p className="text-sm font-semibold text-[var(--ink-800)]">{tx.label}</p>
-                  <p className="text-xs text-[var(--ink-400)]">{formatDate(tx.createdAt)}</p>
+                <div className="flex items-center gap-3">
+                  <span className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-base ${
+                    REASON_ICON[tx.reason]?.bg ?? "bg-[var(--surface-100)]"
+                  }`}>
+                    {REASON_ICON[tx.reason]?.emoji ?? "⭐"}
+                  </span>
+                  <div>
+                    <p className="text-sm font-semibold text-[var(--ink-800)]">{tx.label}</p>
+                    <p className="text-xs text-[var(--ink-400)]">{formatDate(tx.createdAt)}</p>
+                  </div>
                 </div>
                 <span
                   className={`font-title text-base font-black ${
