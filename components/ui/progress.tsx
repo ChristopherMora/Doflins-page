@@ -1,3 +1,8 @@
+"use client";
+
+import { useRef } from "react";
+import { motion, useInView } from "framer-motion";
+
 interface ProgressProps {
   value: number;
   className?: string;
@@ -8,18 +13,23 @@ interface ProgressProps {
 
 export function Progress({ value, className, barClassName, animated = true }: ProgressProps): React.JSX.Element {
   const clamped = Math.max(0, Math.min(100, value));
+  const ref = useRef<HTMLDivElement>(null);
+  const inView = useInView(ref, { once: true, margin: "-20px" });
 
   return (
     <div
+      ref={ref}
       className={`relative h-2.5 w-full overflow-hidden rounded-full bg-black/10 ${className ?? ""}`}
       role="progressbar"
       aria-valuenow={clamped}
       aria-valuemin={0}
       aria-valuemax={100}
     >
-      <div
-        className={`h-full rounded-full transition-[width] duration-700 ease-out ${barClassName ?? "bg-[var(--brand-primary)]"}`}
-        style={{ width: `${clamped}%` }}
+      <motion.div
+        className={`relative h-full rounded-full ${barClassName ?? "bg-[var(--brand-primary)]"}`}
+        initial={{ width: "0%" }}
+        animate={{ width: inView ? `${clamped}%` : "0%" }}
+        transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
       >
         {animated && clamped > 0 ? (
           <span
@@ -31,7 +41,7 @@ export function Progress({ value, className, barClassName, animated = true }: Pr
             }}
           />
         ) : null}
-      </div>
+      </motion.div>
     </div>
   );
 }

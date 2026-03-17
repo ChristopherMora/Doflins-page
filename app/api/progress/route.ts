@@ -4,6 +4,7 @@ import { z } from "zod";
 
 import { getDb } from "@/lib/db/client";
 import { userCollectionProgress, userProfiles } from "@/lib/db/schema";
+import { awardRevealPoints } from "@/lib/server/points";
 import { hasSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 
@@ -116,6 +117,21 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     }
 
     if (payload.owned) {
+      // Verificar si es una figura nueva antes del upsert (para puntos)
+      const existing = await getDb()
+        .select({ id: userCollectionProgress.id })
+        .from(userCollectionProgress)
+        .where(
+          and(
+            eq(userCollectionProgress.supabaseUserId, user.id),
+            eq(userCollectionProgress.doflinId, payload.doflinId),
+            eq(userCollectionProgress.owned, true),
+          ),
+        )
+        .limit(1);
+
+      const isNewFigure = existing.length === 0;
+
       await getDb()
         .insert(userCollectionProgress)
         .values({
@@ -131,6 +147,11 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             updatedAt: new Date(),
           },
         });
+
+      // Otorgar puntos solo la primera vez que se marca como obtenida
+      if (isNewFigure) {
+        void awardRevealPoints(user.id, payload.doflinId).catch(() => { /* no bloquear */ });
+      }
     } else {
       await getDb()
         .delete(userCollectionProgress)

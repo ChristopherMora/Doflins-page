@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getDb } from "@/lib/db/client";
 import { referralCodes, referralUses } from "@/lib/db/schema";
+import { awardPurchasePoints, awardPoints } from "@/lib/server/points";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -35,7 +36,40 @@ interface ShopifyOrderPayload {
   email: string;
   discount_codes: Array<{ code: string; amount: string; type: string }>;
   total_discounts: string;
+  total_price: string;
   financial_status: string;
+  customer?: { id: number; email: string };
+}
+
+/**
+ * Intenta otorgar puntos de compra al usuario si podemos encontrar su userId
+ * por email en la tabla user_profiles. Fire-and-forget.
+ */
+async function tryAwardPurchasePoints(order: ShopifyOrderPayload): Promise<void> {
+  if (!order.email || !order.total_price) return;
+  const amountMxn = parseFloat(order.total_price);
+  if (isNaN(amountMxn) || amountMxn <= 0) return;
+
+  try {
+    const { userProfiles } = await import("@/lib/db/schema");
+    const { like } = await import("drizzle-orm");
+    const db = getDb();
+
+    // Buscar usuario por email (Supabase auth email === userProfiles no tiene email,
+    // pero sí en userCollectionProgress — usamos esa tabla)
+    const { userCollectionProgress } = await import("@/lib/db/schema");
+    const [row] = await db
+      .select({ supabaseUserId: userCollectionProgress.supabaseUserId })
+      .from(userCollectionProgress)
+      .where(like(userCollectionProgress.userEmail, order.email))
+      .limit(1);
+
+    if (!row) return;
+
+    await awardPurchasePoints(row.supabaseUserId, amountMxn, String(order.id));
+  } catch {
+    // No bloquear el webhook si falla la búsqueda
+  }
 }
 
 /**
@@ -79,6 +113,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   }
 
   if (!order.discount_codes?.length) {
+    // Sin cupones — igual otorgar puntos por la compra si tenemos el email del usuario
+    await tryAwardPurchasePoints(order);
     return NextResponse.json({ ok: true, message: "Sin cupones" });
   }
 
@@ -125,7 +161,39 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       .update(referralCodes)
       .set({ usesCount: sql`${referralCodes.usesCount} + 1` })
       .where(eq(referralCodes.id, referral.id));
+
+    // Otorgar puntos al dueño del código de referido
+    void awardPoints(referral.supabaseUserId, 50, "referral_used", {
+      shopifyOrderId: orderId,
+      usedByEmail: order.email ?? null,
+    }).catch(() => { /* no bloquear */ });
+
+    // Otorgar bonus de referido al comprador que usó el código
+    if (order.email) {
+      void (async () => {
+        try {
+          const { userCollectionProgress } = await import("@/lib/db/schema");
+          const { like } = await import("drizzle-orm");
+          const db = getDb();
+          const [buyer] = await db
+            .select({ supabaseUserId: userCollectionProgress.supabaseUserId })
+            .from(userCollectionProgress)
+            .where(like(userCollectionProgress.userEmail, order.email))
+            .limit(1);
+          if (buyer) {
+            await awardPoints(buyer.supabaseUserId, 25, "referral_used", {
+              shopifyOrderId: orderId,
+              referralCode: code,
+              role: "buyer",
+            });
+          }
+        } catch { /* no bloquear */ }
+      })();
+    }
   }
+
+  // Otorgar puntos por la compra al comprador
+  await tryAwardPurchasePoints(order);
 
   return NextResponse.json({ ok: true });
 }

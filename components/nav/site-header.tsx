@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
 import {
   ArrowRightStartOnRectangleIcon,
   GiftIcon,
@@ -42,7 +43,22 @@ export function SiteHeader(): React.JSX.Element {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
+  const [headerHidden, setHeaderHidden] = useState(false);
+  const lastScrollY = useRef(0);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  // Ocultar header al bajar, mostrar al subir
+  useEffect(() => {
+    const handleScroll = () => {
+      const y = window.scrollY;
+      const diff = y - lastScrollY.current;
+      if (Math.abs(diff) < 6) return;
+      setHeaderHidden(diff > 0 && y > 100);
+      lastScrollY.current = y;
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -174,7 +190,10 @@ export function SiteHeader(): React.JSX.Element {
   };
 
   return (
-    <header
+    <motion.header
+      initial={{ y: -72, opacity: 0 }}
+      animate={{ y: headerHidden ? "-100%" : 0, opacity: headerHidden ? 0 : 1 }}
+      transition={{ duration: 0.3, ease: "easeInOut" }}
       className="sticky top-0 z-40 w-full border-b backdrop-blur-md transition-colors duration-300"
       style={{ background: headerBg, borderColor: headerBorder }}
     >
@@ -348,6 +367,6 @@ export function SiteHeader(): React.JSX.Element {
           </Link>
         </div>
       </div>
-    </header>
+    </motion.header>
   );
 }

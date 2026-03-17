@@ -24,6 +24,7 @@ import {
   WifiIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 
 import { pushDataLayerEvent } from "@/lib/analytics";
@@ -181,6 +182,20 @@ const MULTIVERSE_PACKS: PackOption[] = [
   },
 ];
 
+const RARITY_GLOW_CSS: Partial<Record<string, string>> = {
+  LEGENDARY: "0 0 18px rgba(213,154,26,0.55), 0 0 38px rgba(213,154,26,0.22)",
+  ULTRA:     "0 0 18px rgba(179,58,44,0.55),  0 0 38px rgba(179,58,44,0.20)",
+  MYTHIC:    "0 0 22px rgba(212,175,55,0.65), 0 0 52px rgba(212,175,55,0.28)",
+  EPIC:      "0 0 12px rgba(180,106,45,0.40)",
+  RARE:      "0 0 10px rgba(46,122,78,0.30)",
+};
+
+const PARTICLE_COLOR: Partial<Record<string, string>> = {
+  LEGENDARY: "rgba(213,154,26,0.75)",
+  ULTRA:     "rgba(220,80,60,0.75)",
+  MYTHIC:    "rgba(212,175,55,0.85)",
+};
+
 const RARITY_FILTER_OPTIONS: { value: RarityFilter; label: string }[] = [
   { value: "all", label: "Todas" },
   ...CATALOG_RARITY_ORDER.map((rarity) => ({
@@ -325,6 +340,39 @@ const MODEL_CONFIG_BY_COLLECTION: Partial<Record<number, DoflinModelConfig>> = {
 };
 
 const CATALOG_PAGE_SIZE = 10;
+function RarityParticles({ rarity }: { rarity: string }): React.JSX.Element {
+  const color = PARTICLE_COLOR[rarity] ?? "rgba(213,154,26,0.75)";
+  return (
+    <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2rem]" aria-hidden="true">
+      {Array.from({ length: 6 }, (_, i) => (
+        <motion.span
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            width: 3 + (i % 3),
+            height: 3 + (i % 3),
+            backgroundColor: color,
+            left: `${10 + i * 15}%`,
+            bottom: "8%",
+          }}
+          animate={{
+            y: [0, -(50 + i * 14), -(80 + i * 18)],
+            x: [0, i % 2 === 0 ? 8 : -8, 0],
+            opacity: [0, 0.9, 0],
+            scale: [0.5, 1, 0.3],
+          }}
+          transition={{
+            duration: 2.4 + i * 0.35,
+            repeat: Infinity,
+            delay: i * 0.45,
+            ease: "easeOut",
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
 function RarityPill({ rarity }: { rarity: Rarity }): React.JSX.Element {
   const catalogRarity = toCatalogRarity(rarity);
   const config = CATALOG_RARITY_CONFIG[catalogRarity];
@@ -1650,8 +1698,19 @@ export function RevealExperience({
       <div className={`pointer-events-none absolute inset-0 -z-20 ${activeTheme.pageGradient}`} />
 
 
-      <section className="mx-auto w-full max-w-6xl px-5 pb-10 pt-10 sm:px-8 lg:px-10">
-        <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-end">
+      <div className="relative">
+        {/* Subtle floating leaf decorations — Animals only */}
+        {activeUniverse === "animals" ? (
+          <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden">
+            <span className="home-deco catalog-deco--1">🍃</span>
+            <span className="home-deco catalog-deco--2">✦</span>
+            <span className="home-deco catalog-deco--3">🌿</span>
+            <span className="home-deco catalog-deco--4">✦</span>
+          </div>
+        ) : null}
+
+        <section className="mx-auto w-full max-w-6xl px-5 pb-6 pt-10 sm:px-8 lg:px-10">
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-end">
           <div className="space-y-6">
             <Badge className={activeTheme.heroBadge}>{activeTheme.heroTag}</Badge>
             <h1 className="font-title text-5xl leading-[0.95] tracking-tight text-[var(--ink-900)] sm:text-6xl">
@@ -1744,10 +1803,21 @@ export function RevealExperience({
             </CardContent>
           </Card>
         </div>
-      </section>
+        </section>
 
+      </div>
 
-      <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10" id="universo-activo">
+      {/* Animals — elegant botanical section separator */}
+      {activeUniverse === "animals" ? (
+        <div aria-hidden className="animals-section-sep mx-6 sm:mx-10">
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden>
+            <path d="M9 2 C9 2 4 5 4 10 C4 14 9 16 9 16 C9 16 14 14 14 10 C14 5 9 2 9 2Z" fill="rgba(75,120,40,0.35)"/>
+            <path d="M9 16 L9 5" stroke="rgba(75,120,40,0.45)" strokeWidth="1" strokeLinecap="round"/>
+          </svg>
+        </div>
+      ) : null}
+
+      <section className="mx-auto w-full max-w-6xl px-5 pt-4 pb-8 sm:px-8 lg:px-10" id="universo-activo">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <h3 className="font-title text-3xl text-[var(--ink-900)]">{activeConfig.sectionTitle}</h3>
           <div className="flex flex-wrap items-center gap-2">
@@ -1874,26 +1944,40 @@ export function RevealExperience({
                   aria-selected={activeUniverse === "animals"}
                   type="button"
                   onClick={() => switchUniverse("animals", "catalog_toggle")}
-                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
+                  className={`relative rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
                     activeUniverse === "animals"
-                      ? `${activeTheme.primaryButton} text-white shadow-sm`
+                      ? "text-white"
                       : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"
                   }`}
                 >
-                  🌿 Animals
+                  {activeUniverse === "animals" ? (
+                    <motion.span
+                      layoutId="universe-tab-pill"
+                      className={`absolute inset-0 rounded-full shadow-sm ${activeTheme.primaryButton}`}
+                      transition={{ type: "spring", stiffness: 400, damping: 36 }}
+                    />
+                  ) : null}
+                  <span className="relative z-10">🌿 Animals</span>
                 </button>
                 <button
                   role="tab"
                   aria-selected={activeUniverse === "multiverse"}
                   type="button"
                   onClick={() => switchUniverse("multiverse", "catalog_toggle")}
-                  className={`rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
+                  className={`relative rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
                     activeUniverse === "multiverse"
-                      ? `${activeTheme.primaryButton} text-white shadow-sm`
+                      ? "text-white"
                       : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"
                   }`}
                 >
-                  ⚡ Multiverse
+                  {activeUniverse === "multiverse" ? (
+                    <motion.span
+                      layoutId="universe-tab-pill"
+                      className={`absolute inset-0 rounded-full shadow-sm ${activeTheme.primaryButton}`}
+                      transition={{ type: "spring", stiffness: 400, damping: 36 }}
+                    />
+                  ) : null}
+                  <span className="relative z-10">⚡ Multiverse</span>
                 </button>
               </div>
               {/* Search */}
@@ -1939,15 +2023,24 @@ export function RevealExperience({
                     aria-selected={isActive}
                     size="sm"
                     variant={isActive ? "primary" : "secondary"}
-                    className={`shrink-0 ${isActive ? activeTheme.primaryButton : ""}`}
+                    className={`relative shrink-0 overflow-hidden ${isActive ? activeTheme.primaryButton : ""}`}
                     onClick={() => applyRarityFilter(option.value, "catalog_rarity")}
                   >
+                    {isActive ? (
+                      <motion.span
+                        layoutId="rarity-active-pill"
+                        className="absolute inset-0 rounded-[inherit]"
+                        transition={{ type: "spring", stiffness: 380, damping: 34 }}
+                      />
+                    ) : null}
+                    <span className="relative z-10 flex items-center gap-1">
                     {option.label}
                     {count > 0 ? (
                       <span className="ml-1 rounded-full bg-black/15 px-1.5 py-0.5 text-[10px] font-bold leading-none">
                         {count}
                       </span>
                     ) : null}
+                    </span>
                   </Button>
                 );
               })}
@@ -1969,13 +2062,16 @@ export function RevealExperience({
         ) : null}
 
         <div
-          key={catalogAnimKey}
-          className="mt-5 grid animate-catalog-fadein gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]"
+          className="mt-5 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]"
         >
+          <AnimatePresence mode="popLayout" initial={false}>
           {isLoadingCollection
             ? Array.from({ length: 8 }, (_, skI) => (
-                <div
+                <motion.div
                   key={`skel-${skI}`}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.25, delay: skI * 0.04 }}
                   className={`space-y-3 overflow-hidden rounded-[2rem] border p-3.5 ${activeConfig.cardClass}`}
                 >
                   <div className="h-[132px] animate-pulse rounded-xl bg-black/[0.07] sm:h-[145px]" />
@@ -1986,7 +2082,7 @@ export function RevealExperience({
                     <div className="h-5 w-12 animate-pulse rounded-full bg-black/[0.05]" />
                   </div>
                   <div className="mt-2 h-8 animate-pulse rounded-full bg-black/[0.07]" />
-                </div>
+                </motion.div>
               ))
             : visibleCards.map((item, index) => {
             const modelConfig = MODEL_CONFIG_BY_COLLECTION[item.collectionNumber];
@@ -1996,11 +2092,31 @@ export function RevealExperience({
             const itemVariantLabel = variantLabel(item.variantName);
 
             return (
-              <Card
+              <motion.div
                 key={item.id}
-                style={{ contentVisibility: 'auto', containIntrinsicSize: '0 280px' }}
-                className={`overflow-hidden rounded-[2rem] border ${activeConfig.cardClass} ${isOwned ? "ring-2 ring-[var(--brand-primary)]/40 shadow-[0_12px_26px_rgba(29,50,103,0.2)]" : ""}`}
+                layout
+                initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
+                transition={{
+                  duration: 0.32,
+                  delay: Math.min(index, 11) * 0.045,
+                  ease: [0.22, 1, 0.36, 1],
+                }}
+                whileHover={{ y: -6, scale: 1.025, transition: { duration: 0.18, ease: "easeOut" } }}
+                whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
               >
+              <Card
+                style={{
+                  contentVisibility: "auto",
+                  containIntrinsicSize: "0 280px",
+                  boxShadow: RARITY_GLOW_CSS[item.rarity] ?? undefined,
+                }}
+                className={`relative overflow-hidden rounded-[2rem] border ${activeConfig.cardClass} ${isOwned ? "ring-2 ring-[var(--brand-primary)]/40" : ""}`}
+              >
+                {item.rarity === "LEGENDARY" || item.rarity === "ULTRA" || item.rarity === "MYTHIC" ? (
+                  <RarityParticles rarity={item.rarity} />
+                ) : null}
                 <CardContent className="flex h-full flex-col space-y-3 p-3.5">
                   <button
                     type="button"
@@ -2084,8 +2200,10 @@ export function RevealExperience({
                   </div>
                 </CardContent>
               </Card>
+              </motion.div>
             );
           })}
+          </AnimatePresence>
         </div>
 
         {hasMoreCards ? <div ref={loadMoreRef} className="mt-4 h-1 w-full" /> : null}

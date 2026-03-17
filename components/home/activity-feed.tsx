@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const RARITY_LABELS: Record<string, string> = {
   COMMON: "Común",
@@ -60,18 +61,24 @@ export function ActivityFeed(): React.JSX.Element | null {
   const item = items[idx % items.length]!;
 
   return (
-    <div
-      key={idx}
-      className="inline-flex items-center gap-1.5 rounded-full border border-[#d8d2b4] bg-[var(--surface-100)] px-3 py-1 text-[11px] text-[var(--ink-600)] animate-catalog-fadein"
-    >
-      <span>{RARITY_EMOJI[item.rareza] ?? "📦"}</span>
-      <span>
-        <span className="font-semibold text-[var(--ink-800)]">{item.nombre}</span>
-        {" · "}
-        <span className="opacity-75">{RARITY_LABELS[item.rareza] ?? item.rareza}</span>
-        {" · "}
-        <span className="opacity-60">{item.timeAgo}</span>
-      </span>
-    </div>
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={idx}
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={{ opacity: 0, y: 8 }}
+        transition={{ duration: 0.28, ease: "easeOut" }}
+        className="inline-flex items-center gap-1.5 rounded-full border border-[#d8d2b4] bg-[var(--surface-100)] px-3 py-1 text-[11px] text-[var(--ink-600)]"
+      >
+        <span>{RARITY_EMOJI[item.rareza] ?? "📦"}</span>
+        <span>
+          <span className="font-semibold text-[var(--ink-800)]">{item.nombre}</span>
+          {" · "}
+          <span className="opacity-75">{RARITY_LABELS[item.rareza] ?? item.rareza}</span>
+          {" · "}
+          <span className="opacity-60">{item.timeAgo}</span>
+        </span>
+      </motion.div>
+    </AnimatePresence>
   );
 }

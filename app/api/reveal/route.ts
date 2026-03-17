@@ -3,6 +3,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { getClientIp, hashIp } from "@/lib/server/request";
 import { RevealServiceError, logScanEvent, revealDoflin } from "@/lib/server/reveal-service";
+import { awardRevealPoints } from "@/lib/server/points";
+import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 import { normalizeRevealCode } from "@/lib/validation/reveal";
 
 export const dynamic = "force-dynamic";
@@ -78,6 +80,24 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       ipHash,
       userAgent,
     });
+
+    // Si el usuario está autenticado y es el primer scan, otorgar puntos
+    // por cada figura revelada (fire-and-forget, sin bloquear la respuesta)
+    if (reveal.firstScan && reveal.doflins.length > 0) {
+      void (async () => {
+        try {
+          const supabase = createSupabaseServerClientForRoute(request);
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            for (const doflin of reveal.doflins) {
+              await awardRevealPoints(user.id, doflin.id);
+            }
+          }
+        } catch {
+          // No bloquear el reveal si falla la autenticación o los puntos
+        }
+      })();
+    }
 
     return NextResponse.json(reveal, {
       status: 200,

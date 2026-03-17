@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { EyeIcon, ShoppingCartIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { AnimatePresence, motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { BolsaSaveWidget } from "@/components/bolsa/bolsa-save-widget";
@@ -206,16 +207,26 @@ export function BolsaRevealExperience({
   if (!started) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6 px-4 py-12 text-center">
-        <div className="relative">
+        <motion.div
+          initial={{ scale: 0.4, rotate: -15, opacity: 0 }}
+          animate={{ scale: 1, rotate: 0, opacity: 1 }}
+          transition={{ type: "spring", stiffness: 280, damping: 18 }}
+          className="relative"
+        >
           <div className="flex h-28 w-28 items-center justify-center rounded-3xl bg-[#eaf5d8] text-5xl shadow-lg ring-4 ring-[#9acd42]/30">
             🎴
           </div>
           <span className="absolute -right-2 -top-2 flex h-8 w-8 items-center justify-center rounded-full bg-[#4e6f2a] text-sm font-black text-white shadow">
             {items.length}
           </span>
-        </div>
+        </motion.div>
 
-        <div className="space-y-2">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2, ease: "easeOut" }}
+          className="space-y-2"
+        >
           <h1 className="font-title text-3xl font-black text-[var(--ink-900)]">
             ¡Tu bolsa está lista!
           </h1>
@@ -229,16 +240,24 @@ export function BolsaRevealExperience({
               <span className="uppercase tracking-wide">{RARITY_LABELS[topRarity]}</span>!
             </p>
           ) : null}
-        </div>
+        </motion.div>
 
-        <Button
-          size="lg"
-          className="bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] px-8 text-base font-bold shadow-lg"
-          onClick={() => setStarted(true)}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.35, ease: "easeOut" }}
         >
-          <SparklesIcon className="h-5 w-5" />
-          Comenzar a abrir →
-        </Button>
+          <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
+            <Button
+              size="lg"
+              className="bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] px-8 text-base font-bold shadow-lg"
+              onClick={() => setStarted(true)}
+            >
+              <SparklesIcon className="h-5 w-5" />
+              Comenzar a abrir →
+            </Button>
+          </motion.div>
+        </motion.div>
 
         <p className="text-xs text-[var(--ink-400)]">Toca cada carta para revelarla</p>
       </div>
@@ -266,11 +285,17 @@ export function BolsaRevealExperience({
 
       {/* Cards grid */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-        {items.map((item) => {
+        <AnimatePresence>
+        {items.map((item, cardIndex) => {
           const isFlipped = revealed.has(item.id);
           return (
-            <div
+            <motion.div
               key={item.id}
+              initial={{ opacity: 0, y: 20, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.36, delay: cardIndex * 0.06, ease: [0.22, 1, 0.36, 1] }}
+            >
+            <div
               className="card-3d-wrap"
               style={{ height: "228px" }}
               onClick={() => {
@@ -329,8 +354,10 @@ export function BolsaRevealExperience({
                 </div>
               </div>
             </div>
+            </motion.div>
           );
         })}
+        </AnimatePresence>
       </div>
 
       {/* Reveal all button / done state */}

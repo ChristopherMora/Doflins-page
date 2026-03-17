@@ -265,6 +265,14 @@ export function MyCollection() {
         body: JSON.stringify({ doflinId, owned: !wasOwned }),
       });
       if (!res.ok) throw new Error("Error al actualizar");
+
+      // Mostrar toast con puntos ganados al agregar una figura nueva
+      if (!wasOwned) {
+        const json = await res.json() as { ok: boolean; pointsEarned?: number };
+        if (json.pointsEarned && json.pointsEarned > 0) {
+          toast.success(`+${json.pointsEarned} puntos ganados 🌟`, { duration: 3000 });
+        }
+      }
     } catch {
       // Revertir actualización optimista si falla la red
       setData((prev) => {
@@ -300,6 +308,19 @@ export function MyCollection() {
             description: ach.description,
             duration: 5000,
           });
+          // Otorgar puntos por el logro (fuego y olvido — el server deduplica)
+          void fetch("/api/points/achievement", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ achievementId: ach.id }),
+          }).then(async (r) => {
+            if (r.ok) {
+              const data = await r.json() as { pointsEarned?: number };
+              if (data.pointsEarned && data.pointsEarned > 0) {
+                toast(`+${data.pointsEarned} pts por el logro 🏆`, { duration: 2500 });
+              }
+            }
+          }).catch(() => undefined);
         }
       }
     }

@@ -6,6 +6,7 @@ import {
   ChartBarIcon,
   QrCodeIcon,
   SparklesIcon,
+  StarIcon,
   TicketIcon,
 } from "@heroicons/react/24/solid";
 
@@ -13,6 +14,7 @@ const NAV_ITEMS = [
   { href: "/admin/doflins", label: "Alta figuras", icon: SparklesIcon },
   { href: "/admin/bolsas", label: "Bolsas / QR", icon: QrCodeIcon },
   { href: "/admin/codigos", label: "Códigos", icon: TicketIcon },
+  { href: "/admin/rewards", label: "Recompensas", icon: StarIcon },
   { href: "/admin/dashboard", label: "Dashboard", icon: ChartBarIcon },
 ] as const;
 

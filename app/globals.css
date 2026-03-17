@@ -319,6 +319,52 @@ html {
   --ink-300: #c5d4bc !important;
 }
 
+/* ── Home hero: floating nature decorations ── */
+@keyframes float-deco {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  25%       { transform: translateY(-13px) rotate(11deg); }
+  50%       { transform: translateY(-6px) rotate(-6deg); }
+  75%       { transform: translateY(-19px) rotate(15deg); }
+}
+
+.home-deco {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  animation: float-deco var(--deco-dur, 4s) ease-in-out infinite;
+  animation-delay: var(--deco-delay, 0s);
+  will-change: transform;
+  line-height: 1;
+}
+.home-deco--1 { top:  8%; left:  4%; opacity: 0.22; font-size: 1.85rem; --deco-dur: 3.9s; }
+.home-deco--2 { top: 14%; right: 5%; opacity: 0.17; font-size: 1.15rem; --deco-dur: 5.2s; --deco-delay: -1.8s; }
+.home-deco--3 { top: 52%; left:  2%; opacity: 0.18; font-size: 2.1rem;  --deco-dur: 4.7s; --deco-delay: -2.6s; }
+.home-deco--4 { top: 32%; right: 3%; opacity: 0.19; font-size: 1.6rem;  --deco-dur: 4.2s; --deco-delay: -0.9s; }
+.home-deco--5 { top: 65%; right: 7%; opacity: 0.16; font-size: 1.35rem; --deco-dur: 5.9s; --deco-delay: -3.1s; }
+.home-deco--6 { top: 55%; left:  7%; opacity: 0.17; font-size: 2rem;    --deco-dur: 3.6s; --deco-delay: -1.2s; }
+
+/* Catalog-specific deco position variants (reuse .home-deco animation base) */
+.catalog-deco--1 { top:  8%; left:  2%; opacity: 0.13; font-size: 1.8rem;  --deco-dur: 4.1s; }
+.catalog-deco--2 { top: 15%; right: 3%; opacity: 0.10; font-size: 1.1rem;  --deco-dur: 5.5s; --deco-delay: -2s; }
+.catalog-deco--3 { top: 55%; left:  1%; opacity: 0.12; font-size: 2rem;    --deco-dur: 4.8s; --deco-delay: -3s; }
+.catalog-deco--4 { top: 38%; right: 2%; opacity: 0.10; font-size: 1.5rem;  --deco-dur: 4.4s; --deco-delay: -1s; }
+
+/* Animals catalog — elegant botanical section separator */
+.animals-section-sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0.5rem;
+  margin: 0.5rem 0 1.5rem;
+}
+.animals-section-sep::before,
+.animals-section-sep::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(75,120,40,0.22), transparent);
+}
+
 /* Home visual system */
 .home-page-shell {
   --home-shell-bg:
@@ -326,9 +372,9 @@ html {
     radial-gradient(circle at 92% 20%, rgba(112, 170, 97, 0.16), transparent 35%),
     radial-gradient(circle at 52% 88%, rgba(216, 151, 62, 0.14), transparent 35%),
     linear-gradient(180deg, #f8f3e9 0%, #f0ece2 100%);
-  --home-hero-border: #d5c9b3;
-  --home-hero-bg: linear-gradient(145deg, #fffef9 0%, #f7f1e6 52%, #ece7dc 100%);
-  --home-hero-shadow: 0 24px 56px rgba(88, 74, 48, 0.22);
+  --home-hero-border: #c8dab0;
+  --home-hero-bg: linear-gradient(155deg, #fdfff5 0%, #eef7dc 52%, #d8edba 100%);
+  --home-hero-shadow: 0 24px 56px rgba(50, 90, 30, 0.22);
   --home-live-border: #d8c8ad;
   --home-live-bg: rgba(255, 255, 255, 0.86);
   --home-live-text: #474238;

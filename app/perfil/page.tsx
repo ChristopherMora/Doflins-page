@@ -6,12 +6,14 @@ import {
   ShoppingBagIcon,
   GiftIcon,
   BookOpenIcon,
+  StarIcon,
 } from "@heroicons/react/24/solid";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { NicknameEditor } from "@/components/collection/nickname-editor";
 import { ReferralCard } from "@/components/ui/referral-card";
 import { AcquisitionHistory } from "@/components/perfil/acquisition-history";
+import { PointsBalanceBadge } from "@/components/rewards/points-balance-badge";
 
 export const metadata: Metadata = {
   title: "Mi Perfil · DOFLINS",
@@ -26,6 +28,13 @@ const LINKS = [
     label: "Mi Colección",
     desc: "Registra las figuras que tienes",
     color: "bg-[#eaf5d8] text-[#4e6f2a]",
+  },
+  {
+    href: "/recompensas",
+    icon: StarIcon,
+    label: "Tienda de Puntos",
+    desc: "Canjea tus puntos por recompensas",
+    color: "bg-[#fffbe6] text-[#8a6200]",
   },
   {
     href: "/ranking",
@@ -75,6 +84,11 @@ export default function PerfilPage(): React.JSX.Element {
             Nombre en el ranking
           </h2>
           <NicknameEditor />
+        </section>
+
+        {/* Balance de puntos */}
+        <section className="mb-6">
+          <PointsBalanceBadge />
         </section>
 
         {/* Accesos rápidos */}

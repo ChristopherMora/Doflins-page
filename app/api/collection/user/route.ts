@@ -1,8 +1,9 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getDb } from "@/lib/db/client";
 import { doflins, userCollectionProgress } from "@/lib/db/schema";
+import { awardRevealPoints } from "@/lib/server/points";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -74,6 +75,20 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
   const db = getDb();
 
   if (owned) {
+    // Verificar si la figura es nueva (primera vez) para otorgar puntos
+    const [existing] = await db
+      .select({ doflinId: userCollectionProgress.doflinId })
+      .from(userCollectionProgress)
+      .where(
+        and(
+          eq(userCollectionProgress.supabaseUserId, user.id),
+          eq(userCollectionProgress.doflinId, doflinId),
+        ),
+      )
+      .limit(1);
+
+    const isNewFigure = !existing;
+
     await db
       .insert(userCollectionProgress)
       .values({
@@ -83,13 +98,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
         owned: true,
       })
       .onDuplicateKeyUpdate({ set: { owned: true } });
+
+    let pointsEarned = 0;
+    if (isNewFigure) {
+      pointsEarned = await awardRevealPoints(user.id, doflinId);
+    }
+
+    return NextResponse.json({ ok: true, pointsEarned });
   } else {
     await db
       .delete(userCollectionProgress)
       .where(
-        eq(userCollectionProgress.supabaseUserId, user.id),
+        and(
+          eq(userCollectionProgress.supabaseUserId, user.id),
+          eq(userCollectionProgress.doflinId, doflinId),
+        ),
       );
   }
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, pointsEarned: 0 });
 }

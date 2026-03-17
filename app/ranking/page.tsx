@@ -5,6 +5,7 @@ import { TrophyIcon } from "@heroicons/react/24/solid";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { NicknameEditor } from "@/components/collection/nickname-editor";
 import { MyRankBanner } from "@/components/ranking/my-rank-banner";
+import { RankingPodium, RankingTable } from "@/components/ranking/ranking-board";
 import { getDb } from "@/lib/db/client";
 import { userCollectionProgress, userProfiles } from "@/lib/db/schema";
 
@@ -113,61 +114,12 @@ export default async function RankingPage(): Promise<React.JSX.Element> {
 
         {/* Podio olímpico [2°, 1°, 3°] */}
         {first ? (
-          <div className="mb-8 flex items-end justify-center gap-3">
-            {podioOrdered.map((row) => {
-              const pos = row.rank;
-              const isFirst = pos === 1;
-              const isSecond = pos === 2;
-
-              const medal = pos === 1 ? "🥇" : pos === 2 ? "🥈" : "🥉";
-              const heightClass = isFirst ? "pb-6 pt-5" : isSecond ? "pb-4 pt-4" : "pb-3 pt-3";
-              const bgClass = isFirst
-                ? "bg-gradient-to-b from-[#fff9e6] to-[#fef0a0] border-[#f0c020]"
-                : isSecond
-                  ? "bg-gradient-to-b from-[#f4f8fc] to-[#dde8f0] border-[#aabecb]"
-                  : "bg-gradient-to-b from-[#fdf4ef] to-[#f0ddd0] border-[#c8977a]";
-              const widthClass = isFirst ? "w-[38%]" : "w-[28%]";
-
-              return (
-                <div
-                  key={row.supabaseUserId}
-                  className={`flex flex-col items-center gap-1 rounded-2xl border-2 text-center shadow-sm ${bgClass} ${heightClass} ${widthClass} px-2`}
-                >
-                  <span className="text-2xl">{medal}</span>
-                  <p className="mt-0.5 w-full truncate text-xs font-bold text-[var(--ink-800)]">
-                    {displayLabel(row)}
-                  </p>
-                  <p className="font-title text-2xl font-black text-[#4e6f2a]">{row.total}</p>
-                  <p className="text-[10px] text-[var(--ink-400)]">figuras</p>
-                </div>
-              );
-            })}
-          </div>
+          <RankingPodium rows={podioOrdered} />
         ) : null}
 
         {/* Tabla del puesto 4 en adelante */}
         {rest.length > 0 ? (
-          <div className="overflow-hidden rounded-2xl border border-[var(--surface-200)] bg-[var(--background)]">
-            {rest.map((row, i) => (
-              <div
-                key={row.supabaseUserId}
-                className={`flex items-center gap-3 px-4 py-3 ${
-                  i % 2 === 0 ? "bg-[var(--background)]" : "bg-[var(--surface-50)]"
-                } ${i < rest.length - 1 ? "border-b border-[var(--surface-100)]" : ""}`}
-              >
-                <span className="w-6 shrink-0 text-center text-xs font-bold text-[var(--ink-300)]">
-                  {row.rank}
-                </span>
-                <span className="flex-1 truncate text-sm font-medium text-[var(--ink-800)]">
-                  {displayLabel(row)}
-                </span>
-                <div className="flex shrink-0 items-baseline gap-1">
-                  <span className="font-title font-black text-[#4e6f2a]">{row.total}</span>
-                  <span className="text-xs text-[var(--ink-400)]">figs</span>
-                </div>
-              </div>
-            ))}
-          </div>
+          <RankingTable rows={rest} />
         ) : null}
 
         {ranking.length > 0 ? (

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import {
   CheckCircleIcon,
   LockClosedIcon,
@@ -368,15 +369,22 @@ function AlbumSection({
               </p>
             </div>
             <div className="grid grid-cols-3 gap-2 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-              {items.map((d) => (
-                <StickerCard
+              {items.map((d, stickerIndex) => (
+                <motion.div
                   key={d.id}
+                  initial={{ opacity: 0, scale: 0.85 }}
+                  whileInView={{ opacity: 1, scale: 1 }}
+                  viewport={{ once: true, margin: "-30px" }}
+                  transition={{ duration: 0.25, delay: Math.min(stickerIndex, 10) * 0.03, ease: "easeOut" }}
+                >
+                <StickerCard
                   doflin={d}
                   owned={ownedSet.has(d.id)}
                   isNew={justMarked === d.id}
                   rarityConfig={cfg}
                   onPress={() => void onSticker(d.id)}
                 />
+                </motion.div>
               ))}
             </div>
           </div>
@@ -402,12 +410,14 @@ function StickerCard({
   onPress: () => void;
 }) {
   return (
-    <button
+    <motion.button
       type="button"
       onClick={onPress}
-      className={`group relative flex flex-col overflow-hidden rounded-xl text-left transition-all duration-200 ${
-        isNew ? "scale-110" : "hover:-translate-y-0.5 hover:shadow-md active:scale-95"
-      } ${!owned ? "opacity-55 hover:opacity-75" : ""}`}
+      whileHover={{ y: -4, scale: 1.06, transition: { duration: 0.15 } }}
+      whileTap={{ scale: 0.93, transition: { duration: 0.1 } }}
+      className={`group relative flex flex-col overflow-hidden rounded-xl text-left ${
+        isNew ? "scale-110" : ""
+      } ${!owned ? "opacity-55 hover:opacity-80" : ""}`}
       style={{
         background: owned
           ? `linear-gradient(145deg,${rarityConfig.soft},white)`
@@ -478,6 +488,6 @@ function StickerCard({
           {owned ? doflin.nombre : `#${String(doflin.numeroColeccion).padStart(2, "0")}`}
         </p>
       </div>
-    </button>
+    </motion.button>
   );
 }

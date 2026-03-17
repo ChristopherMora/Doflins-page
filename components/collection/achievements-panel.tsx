@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { computeAchievements, type AchievementInput } from "@/lib/achievements";
 
 interface AchievementsPanelProps {
@@ -46,15 +47,20 @@ export function AchievementsPanel({ input }: AchievementsPanelProps) {
       </div>
 
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-        {achievements.map((ach) => {
+        {achievements.map((ach, achIndex) => {
           const progressFn = !ach.unlocked ? PROGRESS_MAP[ach.id] : null;
           const progress = progressFn ? progressFn(input) : null;
           const progressPct = progress ? Math.round((progress.current / progress.target) * 100) : 0;
 
           return (
-            <div
+            <motion.div
               key={ach.id}
-              className="rounded-xl border p-3 flex flex-col gap-1.5 transition-all"
+              initial={{ opacity: 0, y: 12, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
+              viewport={{ once: true, margin: "-40px" }}
+              transition={{ duration: 0.3, delay: achIndex * 0.05, ease: "easeOut" }}
+              whileHover={ach.unlocked ? { scale: 1.03, transition: { duration: 0.15 } } : undefined}
+              className="rounded-xl border p-3 flex flex-col gap-1.5 transition-colors"
               style={
                 ach.unlocked
                   ? {
@@ -95,7 +101,11 @@ export function AchievementsPanel({ input }: AchievementsPanelProps) {
               )}
 
               {ach.unlocked && (
-                <span
+                <motion.span
+                  initial={{ scale: 0.7, opacity: 0 }}
+                  whileInView={{ scale: 1, opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ type: "spring", stiffness: 400, damping: 18, delay: achIndex * 0.05 + 0.15 }}
                   className="mt-0.5 self-start text-xs font-bold uppercase tracking-wide rounded px-1.5 py-0.5"
                   style={{
                     color: "var(--brand-primary)",
@@ -103,9 +113,9 @@ export function AchievementsPanel({ input }: AchievementsPanelProps) {
                   }}
                 >
                   ✓ Desbloqueado
-                </span>
+                </motion.span>
               )}
-            </div>
+            </motion.div>
           );
         })}
       </div>
