@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import {
   ArrowRightStartOnRectangleIcon,
   GiftIcon,
+  GlobeAltIcon,
   RectangleStackIcon,
   ShieldCheckIcon,
   ShoppingBagIcon,
