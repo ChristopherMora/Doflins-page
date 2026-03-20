@@ -68,7 +68,7 @@ export function ActivityFeed(): React.JSX.Element | null {
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 8 }}
         transition={{ duration: 0.28, ease: "easeOut" }}
-        className="inline-flex items-center gap-1.5 rounded-full border border-[#d8d2b4] bg-[var(--surface-100)] px-3 py-1 text-[11px] text-[var(--ink-600)]"
+        className="inline-flex items-center gap-1.5 rounded-full border border-[#c0d4b0] bg-[var(--surface-100)] px-3 py-1 text-[11px] text-[var(--ink-600)]"
       >
         <span>{RARITY_EMOJI[item.rareza] ?? "📦"}</span>
         <span>

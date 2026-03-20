@@ -125,46 +125,61 @@ export function SiteHeader(): React.JSX.Element {
 
   const isMultiverse = universe === "multiverse";
   const isAnimals = universe === "animals";
+  const isMega = universe === "mega";
 
   const headerBg = isMultiverse
     ? dark ? "rgba(10, 14, 36, 0.92)" : "rgba(238, 243, 255, 0.92)"
-    : isAnimals
-      ? dark ? "rgba(17, 27, 14, 0.92)" : "rgba(249, 247, 237, 0.92)"
-      : dark ? "rgba(10, 18, 30, 0.92)" : "rgba(250, 247, 240, 0.92)";
+    : isMega
+      ? dark ? "rgba(30, 20, 8, 0.92)" : "rgba(255, 251, 240, 0.92)"
+      : isAnimals
+        ? dark ? "rgba(12, 22, 14, 0.92)" : "rgba(242, 250, 238, 0.92)"
+        : dark ? "rgba(14, 20, 16, 0.92)" : "rgba(244, 250, 240, 0.92)";
 
   const headerBorder = isMultiverse
     ? dark ? "rgba(44, 61, 104, 0.82)" : "rgba(197, 208, 255, 0.8)"
-    : isAnimals
-      ? dark ? "rgba(58, 89, 36, 0.8)" : "rgba(211, 222, 187, 0.8)"
-      : dark ? "rgba(77, 103, 141, 0.72)" : "rgba(218, 208, 190, 0.82)";
+    : isMega
+      ? dark ? "rgba(120, 80, 20, 0.8)" : "rgba(232, 204, 144, 0.8)"
+      : isAnimals
+        ? dark ? "rgba(50, 90, 50, 0.8)" : "rgba(176, 212, 160, 0.8)"
+        : dark ? "rgba(50, 85, 55, 0.72)" : "rgba(180, 210, 164, 0.78)";
 
   const navColor = isMultiverse
     ? dark ? "#bfcdff" : "#2d3f8a"
-    : isAnimals
-      ? dark ? "#d5e8ba" : "#445538"
-      : dark ? "#deebff" : "#3f4347";
+    : isMega
+      ? dark ? "#f0d888" : "#7a4e14"
+      : isAnimals
+        ? dark ? "#c8e8c0" : "#2a4a22"
+        : dark ? "#c4e0bc" : "#2a4a22";
 
   const hoverBg = isMultiverse
     ? dark ? "rgba(97, 122, 232, 0.28)" : "rgba(75, 95, 192, 0.1)"
-    : isAnimals
-      ? dark ? "rgba(121, 183, 78, 0.26)" : "rgba(78, 111, 42, 0.1)"
-      : dark ? "rgba(104, 146, 199, 0.24)" : "rgba(91, 101, 115, 0.12)";
+    : isMega
+      ? dark ? "rgba(196, 124, 32, 0.26)" : "rgba(196, 124, 32, 0.1)"
+      : isAnimals
+        ? dark ? "rgba(70, 140, 60, 0.24)" : "rgba(60, 120, 40, 0.1)"
+        : dark ? "rgba(70, 140, 60, 0.22)" : "rgba(60, 120, 40, 0.08)";
   const hoverColor = isMultiverse
     ? dark ? "#f0f4ff" : "#3950ba"
-    : isAnimals
-      ? dark ? "#f0fae2" : "#3e6722"
-      : dark ? "#f4f8ff" : "#3f5b7e";
+    : isMega
+      ? dark ? "#ffe8a0" : "#a06020"
+      : isAnimals
+        ? dark ? "#d8f0d0" : "#1f4018"
+        : dark ? "#d4ecc8" : "#1f4018";
 
   const ctaGradient = isMultiverse
     ? dark ? "linear-gradient(135deg,#5a73e0,#86a4ff)" : "linear-gradient(135deg,#4b5fc0,#687ff1)"
-    : isAnimals
-      ? dark ? "linear-gradient(135deg,#5d9138,#84b95a)" : "linear-gradient(135deg,#4e6f2a,#6d8a3a)"
-      : dark ? "linear-gradient(135deg,#4b7eb7,#6ea8dc)" : "linear-gradient(135deg,#3a6d99,#5a96c3)";
+    : isMega
+      ? dark ? "linear-gradient(135deg,#c47c20,#e8a830)" : "linear-gradient(135deg,#b87018,#d89828)"
+      : isAnimals
+        ? dark ? "linear-gradient(135deg,#3a8a28,#58a840)" : "linear-gradient(135deg,#3a7a28,#58a040)"
+        : dark ? "linear-gradient(135deg,#348a24,#4ea038)" : "linear-gradient(135deg,#3a7a28,#58a040)";
   const ctaShadow = isMultiverse
     ? dark ? "0 8px 20px rgba(70,95,206,0.38)" : "0 4px 14px rgba(75,95,192,0.35)"
-    : isAnimals
-      ? dark ? "0 8px 20px rgba(76,122,41,0.34)" : "0 4px 14px rgba(78,111,42,0.35)"
-      : dark ? "0 8px 20px rgba(57,102,153,0.35)" : "0 4px 14px rgba(58,109,153,0.33)";
+    : isMega
+      ? dark ? "0 8px 20px rgba(196,124,32,0.38)" : "0 4px 14px rgba(196,124,32,0.35)"
+      : isAnimals
+        ? dark ? "0 8px 20px rgba(50,120,40,0.34)" : "0 4px 14px rgba(50,120,40,0.30)"
+        : dark ? "0 8px 20px rgba(50,120,40,0.30)" : "0 4px 14px rgba(50,120,40,0.25)";
 
   const NAV_ICON_MAP: Record<string, React.ElementType> = {
     "Catálogo": Squares2X2Icon,

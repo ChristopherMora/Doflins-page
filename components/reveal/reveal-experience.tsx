@@ -52,10 +52,10 @@ import { Progress } from "@/components/ui/progress";
 import { LazySection } from "@/components/ui/lazy-section";
 
 const FALLBACK_DOFLIN_IMAGE = "/images/placeholders/doflin-placeholder.svg";
-const ACTIVE_SERIES = ["Animals", "Multiverse"] as const;
+const ACTIVE_SERIES = ["Animals", "Multiverse", "MegaAnimals"] as const;
 const UNIVERSE_STORAGE_KEY = "doflins_last_universe_v1";
 
-type Universe = "animals" | "multiverse";
+type Universe = "animals" | "multiverse" | "mega";
 type RarityFilter = "all" | CatalogRarity;
 
 interface CollectionPayload {
@@ -182,6 +182,33 @@ const MULTIVERSE_PACKS: PackOption[] = [
   },
 ];
 
+const MEGA_PACKS: PackOption[] = [
+  {
+    name: "Cachorros",
+    pieces: 5,
+    detail: "Primer encuentro con los Mega Animals",
+    icon: MapIcon,
+    cardClassName:
+      "bg-[linear-gradient(135deg,#fdf0e0,#f9dfc0,#f3ca90)] shadow-[0_18px_34px_rgba(170,100,30,0.22)]",
+  },
+  {
+    name: "Manada",
+    pieces: 15,
+    detail: "Balance ideal para coleccionar Megas",
+    icon: GlobeAltIcon,
+    cardClassName:
+      "bg-[linear-gradient(135deg,#fde8d0,#f8d0a8,#f0b870)] shadow-[0_18px_34px_rgba(180,90,20,0.22)]",
+  },
+  {
+    name: "Alfa",
+    pieces: 30,
+    detail: "La experiencia completa Mega Animals",
+    icon: FireIcon,
+    cardClassName:
+      "bg-[linear-gradient(135deg,#fdddc8,#f8c898,#f0a858)] shadow-[0_18px_34px_rgba(190,80,20,0.24)]",
+  },
+];
+
 const RARITY_GLOW_CSS: Partial<Record<string, string>> = {
   LEGENDARY: "0 0 18px rgba(213,154,26,0.55), 0 0 38px rgba(213,154,26,0.22)",
   ULTRA:     "0 0 18px rgba(179,58,44,0.55),  0 0 38px rgba(179,58,44,0.20)",
@@ -253,6 +280,30 @@ const UNIVERSE_THEME_LIGHT: Record<Universe, UniverseTheme> = {
     heroTag: "Universo Multiverse",
     qrNarrative: "Desde aquí puedes cambiar de universo y guardar tu avance.",
   },
+  mega: {
+    pageGlow:
+      "bg-[radial-gradient(circle_at_8%_10%,rgba(210,130,40,0.26),transparent_34%),radial-gradient(circle_at_90%_8%,rgba(220,160,60,0.22),transparent_32%),radial-gradient(circle_at_50%_90%,rgba(185,100,30,0.2),transparent_34%)]",
+    pageGradient: "bg-[linear-gradient(180deg,#fdf4e3,#f5e8cb_42%,#eddbb0)]",
+    headerShell: "border-[#e8cc90]/85 bg-[#fff8e8]/90 shadow-[0_10px_26px_rgba(120,80,20,0.2)]",
+    logoGradient: "bg-[linear-gradient(135deg,#8b5e1a,#c4883a)]",
+    primaryButton: "bg-[linear-gradient(135deg,#a06820,#c4883a)]",
+    pillButton: "bg-[linear-gradient(135deg,#a06820,#c4883a)] text-white",
+    heroBadge: "border-[#e8cc90] bg-[#fff8e4] text-[#7a4e14] ring-1 ring-[#d6b870]",
+    heroChip: "border-[#e8d090] bg-[#fff8e4]",
+    heroStateCard: "border-[#e8cc90]/80 bg-[#fff8e4]/90 shadow-[0_18px_45px_rgba(120,80,20,0.18)]",
+    heroStateInfo: "bg-white/90",
+    panelCard: "border-[#e8cc90] bg-[#fff8e4]/90",
+    rarityInfoChip: "bg-[#fff4d8] ring-1 ring-[#d8b870]",
+    rarityCard: "border-[#e8cc90] bg-[#fff8e4]/88",
+    platformCard: "border-[#e0b870] bg-[#fff8e4]/90",
+    ctaCard: "bg-[linear-gradient(135deg,#6b3f0e,#a06828,#c47820)] shadow-[0_25px_50px_rgba(100,60,10,0.5)]",
+    ctaPrimaryText: "text-[#5a3410]",
+    heroTitle: "Catálogo Mega Animals",
+    heroDescription:
+      "Las versiones grandes y poderosas de los Animals. Figuras imponentes con presencia XL para los coleccionistas más ambiciosos.",
+    heroTag: "Universo Mega Animals",
+    qrNarrative: "Escanea para ver los Mega Animals disponibles y tu progreso de colección.",
+  },
 };
 
 const UNIVERSE_THEME_DARK: Record<Universe, UniverseTheme> = {
@@ -303,6 +354,30 @@ const UNIVERSE_THEME_DARK: Record<Universe, UniverseTheme> = {
       "Paleta fría, vibe futurista y variantes de alto impacto. Es un universo más agresivo para cazadores de rareza.",
     heroTag: "Universo Multiverse",
     qrNarrative: "Desde aquí puedes cambiar de universo y guardar tu avance.",
+  },
+  mega: {
+    pageGlow:
+      "bg-[radial-gradient(circle_at_8%_10%,rgba(200,120,30,0.28),transparent_34%),radial-gradient(circle_at_90%_8%,rgba(220,150,40,0.25),transparent_32%),radial-gradient(circle_at_50%_90%,rgba(190,100,20,0.2),transparent_34%)]",
+    pageGradient: "bg-[linear-gradient(180deg,#1c0e00,#271500_42%,#301a00)]",
+    headerShell: "border-[#7a4f1a]/85 bg-[#1c1000]/90 shadow-[0_10px_26px_rgba(8,4,0,0.5)]",
+    logoGradient: "bg-[linear-gradient(135deg,#c08030,#e0a050)]",
+    primaryButton: "bg-[linear-gradient(135deg,#b07028,#d89040)]",
+    pillButton: "bg-[linear-gradient(135deg,#b07028,#d89040)] text-white",
+    heroBadge: "ink-light border-[#e8cc90] bg-[#fff8e4] text-[#7a4e14] ring-1 ring-[#d6b870]",
+    heroChip: "ink-light border-[#e8d090] bg-[#fff8e4] text-[#7a4e14]",
+    heroStateCard: "ink-light border-[#e8cc90]/80 bg-[#fff8e4]/90 shadow-[0_18px_45px_rgba(120,80,20,0.18)]",
+    heroStateInfo: "bg-white/90",
+    panelCard: "ink-light border-[#e8cc90] bg-[#fff8e4]/90",
+    rarityInfoChip: "ink-light bg-[#fff4d8] text-[#7a4e14] ring-1 ring-[#d8b870]",
+    rarityCard: "ink-light border-[#e8cc90] bg-[#fff8e4]/88",
+    platformCard: "ink-light border-[#e0b870] bg-[#fff8e4]/90",
+    ctaCard: "bg-[linear-gradient(135deg,#4a2808,#7a4818,#b06828)] shadow-[0_25px_50px_rgba(30,12,0,0.65)]",
+    ctaPrimaryText: "text-[#5a3410]",
+    heroTitle: "Catálogo Mega Animals",
+    heroDescription:
+      "Las versiones grandes y poderosas de los Animals. Figuras imponentes con presencia XL para los coleccionistas más ambiciosos.",
+    heroTag: "Universo Mega Animals",
+    qrNarrative: "Escanea para ver los Mega Animals disponibles y tu progreso de colección.",
   },
 };
 
@@ -423,7 +498,7 @@ function toUniverse(value: string | null): Universe | null {
     return null;
   }
 
-  return value === "animals" || value === "multiverse" ? value : null;
+  return value === "animals" || value === "multiverse" || value === "mega" ? value : null;
 }
 
 function toRarityFilter(value: string | null): RarityFilter | null {
@@ -444,7 +519,10 @@ function toRarityFilter(value: string | null): RarityFilter | null {
 }
 
 function universeFromSeries(series: string): Universe {
-  return normalizeSeries(series) === "multiverse" ? "multiverse" : "animals";
+  const n = normalizeSeries(series);
+  if (n === "multiverse") return "multiverse";
+  if (n === "megaanimals") return "mega";
+  return "animals";
 }
 
 function withPurchaseQuery(baseUrl: string, options: { packSize: PackSize; universe: Universe }): string {
@@ -509,7 +587,7 @@ interface DoflinModalProps {
   onNavigate: (item: CollectionItemDTO) => void;
   has3DModel: boolean;
   modelConfig: DoflinModelConfig | undefined;
-  purchaseUniverse: "animals" | "multiverse";
+  purchaseUniverse: Universe;
   rarityConfig: { color: string; softColor: string; label: string; probability: number } | null;
   isOriginal: boolean;
   isOwned: boolean;
@@ -574,8 +652,10 @@ function DoflinModal({
                 <div className={`relative flex min-h-[260px] items-center justify-center overflow-hidden md:min-h-[400px] ${
                   purchaseUniverse === "multiverse"
                     ? "bg-[linear-gradient(145deg,#111028,#1e1c48,#262450)]"
+                    : purchaseUniverse === "mega"
+                    ? "bg-[linear-gradient(145deg,#1a1208,#2a1e08,#3a2c10)]"
                     : "bg-[linear-gradient(145deg,#101410,#182018,#1e2a1e)]"
-                }`}>
+                }>`}>
                   {catalog.length > 1 ? (
                     <>
                       <button type="button" aria-label="Doflin anterior"
@@ -593,10 +673,10 @@ function DoflinModal({
                     </>
                   ) : null}
                   <div className={`pointer-events-none absolute left-1/2 top-1/2 h-64 w-64 -translate-x-1/2 -translate-y-1/2 rounded-full blur-[100px] opacity-25 ${
-                    purchaseUniverse === "multiverse" ? "bg-indigo-400" : "bg-emerald-600"
+                    purchaseUniverse === "multiverse" ? "bg-indigo-400" : purchaseUniverse === "mega" ? "bg-amber-500" : "bg-emerald-600"
                   }`} />
                   <span className="absolute left-4 top-4 z-10 inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white backdrop-blur-md ring-1 ring-white/20">
-                    {purchaseUniverse === "multiverse" ? "⚡ Multiverse" : "🌿 Animals"}
+                    {purchaseUniverse === "multiverse" ? "⚡ Multiverse" : purchaseUniverse === "mega" ? "🦣 Mega Animals" : "🌿 Animals"}
                   </span>
                   {has3DModel ? (
                     <model-viewer
@@ -928,12 +1008,18 @@ export function RevealExperience({
     [featuredCollection],
   );
 
+  const megaCollection = useMemo(
+    () => featuredCollection.filter((item) => normalizeSeries(item.series) === "megaanimals"),
+    [featuredCollection],
+  );
+
   const collectionCounts = useMemo(
     () => ({
       animals: animalsCollection.length,
       multiverse: multiverseCollection.length,
+      mega: megaCollection.length,
     }),
-    [animalsCollection.length, multiverseCollection.length],
+    [animalsCollection.length, multiverseCollection.length, megaCollection.length],
   );
 
   const filteredCollection = useMemo(() => {
@@ -968,10 +1054,15 @@ export function RevealExperience({
     [filteredCollection],
   );
 
+  const megaFiltered = useMemo(
+    () => filteredCollection.filter((item) => normalizeSeries(item.series) === "megaanimals"),
+    [filteredCollection],
+  );
+
   const activeConfig = useMemo(
-    () =>
-      activeUniverse === "animals"
-        ? {
+    () => {
+      if (activeUniverse === "animals") {
+        return {
             label: "Animals",
             sectionTitle: "Sección Doflins Animals",
             packs: ANIMALS_PACKS,
@@ -984,8 +1075,25 @@ export function RevealExperience({
               ? "ink-light border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)]"
               : "border-[#d8ca9e] bg-[linear-gradient(180deg,#fff9e8,#f3f6e4)]",
             ctaTitle: "Colecciona la fauna completa",
-          }
-        : {
+        };
+      }
+      if (activeUniverse === "mega") {
+        return {
+            label: "Mega Animals",
+            sectionTitle: "Sección Mega Animals",
+            packs: MEGA_PACKS,
+            cards: megaFiltered,
+            count: collectionCounts.mega,
+            badgeClass: dark
+              ? "bg-[#fff4d8] text-[#7a4e14] ring-1 ring-[#d8b870]"
+              : "bg-[#fff4d8] text-[#7a4e14] ring-1 ring-[#d8b870]",
+            cardClass: dark
+              ? "ink-light border-[#e8cc90] bg-[linear-gradient(180deg,#fff8e4,#f8ead0)]"
+              : "border-[#e8cc90] bg-[linear-gradient(180deg,#fff8e4,#f8ead0)]",
+            ctaTitle: "Completa tu colección Mega Animals",
+        };
+      }
+      return {
             label: "Multiverse",
             sectionTitle: "Sección Doflins Multiverse",
             packs: MULTIVERSE_PACKS,
@@ -998,13 +1106,17 @@ export function RevealExperience({
               ? "ink-light-blue border-[#ccd2e8] bg-[linear-gradient(180deg,#eff3ff,#e4e9fb)]"
               : "border-[#ccd2e8] bg-[linear-gradient(180deg,#eff3ff,#e4e9fb)]",
             ctaTitle: "Activa tu salto Multiverse",
-          },
-    [activeUniverse, animalsFiltered, collectionCounts.animals, collectionCounts.multiverse, dark, multiverseFiltered],
+      };
+    },
+    [activeUniverse, animalsFiltered, collectionCounts.animals, collectionCounts.multiverse, collectionCounts.mega, dark, multiverseFiltered, megaFiltered],
   );
 
   const activeTheme = (dark ? UNIVERSE_THEME_DARK : UNIVERSE_THEME_LIGHT)[activeUniverse];
   const ownedSet = useMemo(() => new Set(ownedIds), [ownedIds]);
-  const activeUniverseCollection = activeUniverse === "animals" ? animalsCollection : multiverseCollection;
+  const activeUniverseCollection =
+    activeUniverse === "animals" ? animalsCollection :
+    activeUniverse === "mega" ? megaCollection :
+    multiverseCollection;
   const activeBaseModelStats = useMemo(() => {
     const map = new Map<
       string,
@@ -1076,7 +1188,7 @@ export function RevealExperience({
   const selectedDoflinIsOriginal = selectedDoflin ? isOriginalVariant(selectedDoflin.variantName) : false;
   const selectedPurchaseUniverse = selectedDoflin ? universeFromSeries(selectedDoflin.series) : activeUniverse;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const selectedPurchaseUniverseLabel = selectedPurchaseUniverse === "animals" ? "Animals" : "Multiverse";
+  const selectedPurchaseUniverseLabel = selectedPurchaseUniverse === "animals" ? "Animals" : selectedPurchaseUniverse === "mega" ? "Mega Animals" : "Multiverse";
   const selectedDoflinImageSrc =
     selectedDoflin && brokenModalImageIds.includes(selectedDoflin.id)
       ? FALLBACK_DOFLIN_IMAGE
@@ -1750,10 +1862,15 @@ export function RevealExperience({
           <Card className={`overflow-hidden ${activeTheme.heroStateCard}`}>
             <CardContent className="space-y-4 p-6">
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[var(--ink-600)]">Estado de colección</p>
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-3 gap-3">
                 <div className="rounded-2xl bg-[linear-gradient(135deg,#edf4d9,#d8eaaf)] p-4">
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">Animals</p>
                   <p className="mt-1 text-3xl font-black text-[var(--ink-900)]">{collectionCounts.animals}</p>
+                  <p className="text-xs text-[var(--ink-700)]">modelos activos</p>
+                </div>
+                <div className="rounded-2xl bg-[linear-gradient(135deg,#fff8e0,#fce8b0)] p-4">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-700)]">Mega</p>
+                  <p className="mt-1 text-3xl font-black text-[var(--ink-900)]">{collectionCounts.mega}</p>
                   <p className="text-xs text-[var(--ink-700)]">modelos activos</p>
                 </div>
                 <div className="rounded-2xl bg-[linear-gradient(135deg,#e8efff,#d3e0ff)] p-4">
@@ -1958,6 +2075,26 @@ export function RevealExperience({
                     />
                   ) : null}
                   <span className="relative z-10">🌿 Animals</span>
+                </button>
+                <button
+                  role="tab"
+                  aria-selected={activeUniverse === "mega"}
+                  type="button"
+                  onClick={() => switchUniverse("mega", "catalog_toggle")}
+                  className={`relative rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
+                    activeUniverse === "mega"
+                      ? "text-white"
+                      : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"
+                  }`}
+                >
+                  {activeUniverse === "mega" ? (
+                    <motion.span
+                      layoutId="universe-tab-pill"
+                      className={`absolute inset-0 rounded-full shadow-sm ${activeTheme.primaryButton}`}
+                      transition={{ type: "spring", stiffness: 400, damping: 36 }}
+                    />
+                  ) : null}
+                  <span className="relative z-10">🦣 Mega Animals</span>
                 </button>
                 <button
                   role="tab"

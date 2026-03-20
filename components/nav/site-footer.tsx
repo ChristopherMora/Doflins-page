@@ -12,7 +12,7 @@ export function SiteFooter(): React.JSX.Element {
             </h3>
             <p className="text-sm text-[#3d5230]">
               Colección oficial de figuras con rareza verificada. 
-              Dos universos, infinitas posibilidades.
+              Tres universos, infinitas posibilidades.
             </p>
             <p className="mt-4 text-xs text-[#3d5230]">
               🛠️ Creado por <strong>DOFER</strong>

@@ -48,7 +48,7 @@ interface FormValues {
   variantMode: VariantMode;
   baseModel: string;
   variantName: string;
-  series: "Animals" | "Multiverse";
+  series: "Animals" | "Multiverse" | "MegaAnimals";
   collectionNumber: string;
   rarity: Rarity;
   probability: string;
@@ -56,7 +56,7 @@ interface FormValues {
 }
 
 interface BulkValues {
-  series: "Animals" | "Multiverse";
+  series: "Animals" | "Multiverse" | "MegaAnimals";
   baseModel: string;
   startCollectionNumber: string;
   rarity: Rarity;
@@ -68,7 +68,7 @@ interface EditValues {
   name: string;
   baseModel: string;
   variantName: string;
-  series: "Animals" | "Multiverse";
+  series: "Animals" | "Multiverse" | "MegaAnimals";
   collectionNumber: string;
   rarity: Rarity;
   probability: string;
@@ -253,7 +253,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
   // ── CSV import state ─────────────────────────────────────────────────────────
   interface CsvRow {
     nombre: string;
-    serie: "Animals" | "Multiverse";
+    serie: "Animals" | "Multiverse" | "MegaAnimals";
     rareza: Rarity;
     probabilidad: string;
     numeroColeccion: string;
@@ -269,6 +269,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
     () => ({
       animals: adminItems.filter((item) => item.series.toLowerCase() === "animals").length,
       multiverse: adminItems.filter((item) => item.series.toLowerCase() === "multiverse").length,
+      megaAnimals: adminItems.filter((item) => item.series.toLowerCase() === "megaanimals").length,
     }),
     [adminItems],
   );
@@ -276,25 +277,28 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
   const nextCollectionBySeries = useMemo(() => {
     const maxBySeries = adminItems.reduce(
       (accumulator, item) => {
-        const series = item.series === "Multiverse" ? "Multiverse" : "Animals";
+        const series =
+          item.series === "Multiverse" ? "Multiverse" : item.series === "MegaAnimals" ? "MegaAnimals" : "Animals";
         accumulator[series] = Math.max(accumulator[series], item.collectionNumber);
         return accumulator;
       },
-      { Animals: 0, Multiverse: 0 },
+      { Animals: 0, Multiverse: 0, MegaAnimals: 0 },
     );
 
     return {
       Animals: maxBySeries.Animals + 1,
       Multiverse: maxBySeries.Multiverse + 1,
+      MegaAnimals: maxBySeries.MegaAnimals + 1,
     };
   }, [adminItems]);
 
   const baseModelsBySeries = useMemo(() => {
-    const bySeries: Record<FormValues["series"], string[]> = { Animals: [], Multiverse: [] };
-    const seen: Record<FormValues["series"], Set<string>> = { Animals: new Set(), Multiverse: new Set() };
+    const bySeries: Record<FormValues["series"], string[]> = { Animals: [], Multiverse: [], MegaAnimals: [] };
+    const seen: Record<FormValues["series"], Set<string>> = { Animals: new Set(), Multiverse: new Set(), MegaAnimals: new Set() };
 
     for (const item of adminItems) {
-      const series = item.series === "Multiverse" ? "Multiverse" : "Animals";
+      const series =
+        item.series === "Multiverse" ? "Multiverse" : item.series === "MegaAnimals" ? "MegaAnimals" : "Animals";
       const normalizedBase = item.baseModel.trim();
       if (!normalizedBase) {
         continue;
@@ -311,6 +315,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
 
     bySeries.Animals.sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
     bySeries.Multiverse.sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
+    bySeries.MegaAnimals.sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
     return bySeries;
   }, [adminItems]);
 
@@ -1126,6 +1131,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                     >
                       <option value="Animals">Animals</option>
                       <option value="Multiverse">Multiverse</option>
+                      <option value="MegaAnimals">Mega Animals 🦣</option>
                     </select>
                   </label>
 
@@ -1307,6 +1313,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                     >
                       <option value="Animals">Animals</option>
                       <option value="Multiverse">Multiverse</option>
+                      <option value="MegaAnimals">Mega Animals 🦣</option>
                     </select>
                   </label>
 
@@ -1482,6 +1489,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
               <h2 className="font-title text-2xl text-[var(--ink-900)]">Resumen</h2>
               <div className="flex flex-wrap gap-2">
                 <Badge className="bg-[#edf4d8] text-[var(--ink-900)]">Animals: {seriesCount.animals}</Badge>
+                <Badge className="bg-[#fff4d8] text-[var(--ink-900)]">Mega Animals: {seriesCount.megaAnimals}</Badge>
                 <Badge className="bg-[#e9efff] text-[var(--ink-900)]">Multiverse: {seriesCount.multiverse}</Badge>
                 <Badge className="bg-white text-[var(--ink-900)]">Total: {adminItems.length}</Badge>
               </div>
@@ -1758,6 +1766,7 @@ export function DoflinAdminForm({ requireToken = false }: DoflinAdminFormProps):
                   >
                     <option value="Animals">Animals</option>
                     <option value="Multiverse">Multiverse</option>
+                    <option value="MegaAnimals">Mega Animals 🦣</option>
                   </select>
                 </label>
 

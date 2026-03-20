@@ -16,7 +16,7 @@ export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 const DEFAULT_SILHOUETTE_URL = "/images/placeholders/doflin-placeholder.svg";
-const ALLOWED_SERIES = new Set(["Animals", "Multiverse"]);
+const ALLOWED_SERIES = new Set(["Animals", "Multiverse", "MegaAnimals"]);
 const ALLOWED_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp", "svg"]);
 const MAX_FILE_SIZE_BYTES = 8 * 1024 * 1024;
 
@@ -291,7 +291,7 @@ function parseOptionalRarity(rawValue: FormDataEntryValue | null): Rarity | null
   return RARITY_ORDER.includes(rarity) ? rarity : null;
 }
 
-function parseOptionalSeries(rawValue: FormDataEntryValue | null): "Animals" | "Multiverse" | null {
+function parseOptionalSeries(rawValue: FormDataEntryValue | null): "Animals" | "Multiverse" | "MegaAnimals" | null {
   if (rawValue === null) {
     return null;
   }

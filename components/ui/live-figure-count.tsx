@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface CollectionPayload {
@@ -13,8 +13,33 @@ interface LiveFigureCountProps {
   countClassName?: string;
 }
 
+/** Animates a number from 0 to `target` over `duration` ms */
+function useAnimatedCount(target: number | null, duration = 800): number | null {
+  const [display, setDisplay] = useState<number | null>(null);
+  const rafRef = useRef<number>(0);
+
+  useEffect(() => {
+    if (target === null) return;
+    const start = performance.now();
+    const from = 0;
+    const tick = (now: number) => {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out quad
+      const eased = 1 - (1 - progress) * (1 - progress);
+      setDisplay(Math.round(from + (target - from) * eased));
+      if (progress < 1) rafRef.current = requestAnimationFrame(tick);
+    };
+    rafRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [target, duration]);
+
+  return display;
+}
+
 export function LiveFigureCount({ className, countClassName }: LiveFigureCountProps): React.JSX.Element {
   const [count, setCount] = useState<number | null>(null);
+  const animatedCount = useAnimatedCount(count);
 
   useEffect(() => {
     fetch("/api/collection", { cache: "no-store" })
@@ -23,7 +48,7 @@ export function LiveFigureCount({ className, countClassName }: LiveFigureCountPr
       .catch(() => null);
   }, []);
 
-  if (count === null) return (
+  if (animatedCount === null) return (
     <span className="inline-flex items-center gap-1.5 rounded-full bg-black/5 px-3 py-1">
       <span className="h-3 w-6 animate-pulse rounded bg-black/10" />
       <span className="h-3 w-16 animate-pulse rounded bg-black/[0.08]" />
@@ -34,7 +59,7 @@ export function LiveFigureCount({ className, countClassName }: LiveFigureCountPr
 
   return (
     <span className={cn("inline-flex items-center gap-1.5 rounded-full bg-white/60 px-3 py-1 ring-1 ring-[#cad89e]", className)}>
-      <span className={cn("font-bold text-[var(--brand-primary)]", countClassName)}>{count}</span> figuras activas
+      <span className={cn("font-bold text-[var(--brand-primary)]", countClassName)}>{animatedCount}</span> figuras activas
     </span>
   );
 }

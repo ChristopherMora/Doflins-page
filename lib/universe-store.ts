@@ -4,7 +4,7 @@
  * Works without any React Context or Zustand.
  */
 
-export type Universe = "neutral" | "animals" | "multiverse";
+export type Universe = "neutral" | "animals" | "multiverse" | "mega";
 
 const STORAGE_KEY = "doflins_universe";
 const EVENT_NAME = "doflins:universe";
@@ -15,6 +15,7 @@ export function getStoredUniverse(): Universe {
   if (v === "neutral") return "neutral";
   if (v === "animals") return "animals";
   if (v === "multiverse") return "multiverse";
+  if (v === "mega") return "mega";
   return "neutral";
 }
 
