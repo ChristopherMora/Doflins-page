@@ -184,9 +184,7 @@ export function SiteHeader(): React.JSX.Element {
 
   const NAV_ICON_MAP: Record<string, React.ElementType> = {
     "Catálogo": Squares2X2Icon,
-    "Tienda": ShoppingCartIcon,
     "Colección": RectangleStackIcon,
-    "Recompensas": GiftIcon,
   };
   const navLinks = DESKTOP_NAV_ITEMS.map((item) => ({
     ...item,

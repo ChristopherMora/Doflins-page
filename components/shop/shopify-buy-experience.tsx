@@ -82,6 +82,13 @@ const UNIVERSE_LABELS: Record<UniverseFilter, string> = {
   multiverse: "Multiverse",
 };
 const BEST_SELLER_HANDLES = new Set(["safari-15"]);
+
+/** Emotional tier label for packs based on price. */
+function getPackTier(price: number): { label: string; highlight: boolean } {
+  if (price <= 200) return { label: "Entrada", highlight: false };
+  if (price <= 400) return { label: "Recomendado", highlight: true };
+  return { label: "Coleccionista", highlight: false };
+}
 const BUNDLE_PROMO_CODE = process.env.NEXT_PUBLIC_BUNDLE_PROMO_CODE?.trim() ?? "";
 const DEFAULT_LIVE_REFRESH_MS = 15_000;
 const LIVE_REFRESH_MS_ENV = Number(process.env.NEXT_PUBLIC_SHOPIFY_LIVE_REFRESH_MS ?? DEFAULT_LIVE_REFRESH_MS);
@@ -1540,6 +1547,16 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
   return (
     <section id="compras" ref={comprasSectionRef} className="space-y-5 pb-28 lg:pb-6" style={universeThemeVars}>
+      {/* ── Section header ── */}
+      <div className="space-y-2 text-center">
+        <h2 className="font-title text-2xl font-bold tracking-tight text-[var(--ink-900)] sm:text-3xl">
+          Elige tu pack
+        </h2>
+        <p className="text-sm text-[var(--ink-500)]">
+          Cada pack incluye figuras con rareza oficial. Elige el que más te guste.
+        </p>
+      </div>
+
       <Card
         className={`${visualTheme.shellClassName} border`}
         style={{
@@ -2332,7 +2349,17 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
                     <div className={`flex flex-1 flex-col space-y-3 ${ gridView === "list" ? "justify-center p-3 sm:p-4" : "p-5" }`}>
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-700)]">{UNIVERSE_LABELS[activeUniverse]}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-700)]">{UNIVERSE_LABELS[activeUniverse]}</p>
+                          {(() => {
+                            const tier = getPackTier(Number(product.price.amount));
+                            return (
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${tier.highlight ? "bg-amber-100 text-amber-800 ring-1 ring-amber-300" : "bg-[var(--surface-200)] text-[var(--ink-600)]"}`}>
+                                {tier.label}
+                              </span>
+                            );
+                          })()}
+                        </div>
                         <div className="flex items-center gap-1.5">
                           {rarityTag && gridView !== "list" ? (
                             <span className="rounded-full bg-[#fdf3df] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#7a4a10] ring-1 ring-[#e6c676]">
