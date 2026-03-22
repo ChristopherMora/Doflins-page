@@ -49,17 +49,17 @@ export function UniverseCards(): React.JSX.Element {
           Tres universos. Una colección única.
         </h2>
       </div>
-      <div className="grid gap-5 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-3">
         {UNIVERSES.map((u) => (
           <Link
             key={u.key}
             href={u.href}
             onClick={() => broadcastUniverse(u.key)}
-            className={`group flex flex-col items-center gap-4 rounded-3xl border bg-gradient-to-b ${u.gradient} ${u.border} p-8 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg`}
+            className={`group flex flex-col items-center gap-4 rounded-3xl border bg-gradient-to-b ${u.gradient} ${u.border} p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-lg active:scale-[0.98] sm:p-8`}
           >
-            <h3 className={`font-title text-2xl font-bold ${u.titleColor}`}>{u.title}</h3>
+            <h3 className={`font-title text-xl font-bold sm:text-2xl ${u.titleColor}`}>{u.title}</h3>
             <p className={`text-sm leading-relaxed ${u.tagColor}`}>{u.tagline}</p>
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-5 py-2 text-sm font-semibold text-white transition-colors ${u.btnClass}`}>
+            <span className={`inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-6 py-2.5 text-sm font-semibold text-white transition-colors ${u.btnClass}`}>
               Explorar <ArrowRightIcon className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </span>
           </Link>

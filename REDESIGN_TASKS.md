@@ -14,13 +14,13 @@
 ## Sprint 2 — Packs + Catálogo + Testimonios
 
 - [x] 2.1 Packs como sección protagonista (header "Elige tu pack", tier labels Entrada/Recomendado/Coleccionista)
-- [ ] 2.2 Catálogo curado en home (6-8 productos, skeleton loaders, sin filtros avanzados)
+- [x] 2.2 Catálogo curado en home (limitado a 6 figuras, skeleton shimmer loaders)
 - [x] 2.3 Testimonios premium (avatares iniciales, más aire, copy limpio, nueva sección)
 - [x] 2.4 HowItWorks elevado (icons grandes, 1 línea por paso, horizontal limpio)
 
 ## Sprint 3 — Mobile + Animaciones + Performance
 
-- [ ] 3.1 Mobile polish (touch targets, spacing, hero responsive)
-- [ ] 3.2 Animaciones suaves (transiciones lentas, scroll reveal)
-- [ ] 3.3 Skeleton loaders (reemplazar "Cargando..." por skeletons)
+- [x] 3.1 Mobile polish (touch targets 48px bottom nav, CTA 44px mín, active:scale cards, spacing)
+- [x] 3.2 Animaciones suaves (stagger-fade-in hero, section-reveal cubic-bezier 0.7s)
+- [x] 3.3 Skeleton loaders (shimmer effect CSS, reemplazados todos los "Cargando..." por skeletons)
 - [x] 3.4 Footer premium (quitar emojis, tipografía editorial, más aire, CSS variables)
