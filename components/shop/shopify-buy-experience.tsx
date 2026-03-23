@@ -82,6 +82,13 @@ const UNIVERSE_LABELS: Record<UniverseFilter, string> = {
   multiverse: "Multiverse",
 };
 const BEST_SELLER_HANDLES = new Set(["safari-15"]);
+
+/** Emotional tier label for packs based on price. */
+function getPackTier(price: number): { label: string; highlight: boolean } {
+  if (price <= 200) return { label: "Entrada", highlight: false };
+  if (price <= 400) return { label: "Recomendado", highlight: true };
+  return { label: "Coleccionista", highlight: false };
+}
 const BUNDLE_PROMO_CODE = process.env.NEXT_PUBLIC_BUNDLE_PROMO_CODE?.trim() ?? "";
 const DEFAULT_LIVE_REFRESH_MS = 15_000;
 const LIVE_REFRESH_MS_ENV = Number(process.env.NEXT_PUBLIC_SHOPIFY_LIVE_REFRESH_MS ?? DEFAULT_LIVE_REFRESH_MS);
@@ -1502,7 +1509,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       }
       return a.collectionNumber - b.collectionNumber;
     });
-    return sortedItems.slice(0, 12);
+    return sortedItems.slice(0, 6);
   }, [activeUniverse, collectionByUniverse]);
   const activeCollectionShowcaseRemaining = Math.max(
     0,
@@ -1529,6 +1536,16 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
   return (
     <section id="compras" ref={comprasSectionRef} className="space-y-5 pb-28 lg:pb-6" style={universeThemeVars}>
+      {/* ── Section header ── */}
+      <div className="space-y-2 text-center">
+        <h2 className="font-title text-2xl font-bold tracking-tight text-[var(--ink-900)] sm:text-3xl">
+          Elige tu pack
+        </h2>
+        <p className="text-sm text-[var(--ink-500)]">
+          Cada pack incluye figuras con rareza oficial. Elige el que más te guste.
+        </p>
+      </div>
+
       <Card
         className={`${visualTheme.shellClassName} border`}
         style={{
@@ -1581,7 +1598,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   {isLoadingCart ? (
                     <div className="flex items-center gap-2 text-sm text-[var(--ink-700)]">
                       <ArrowPathIcon className="h-4 w-4 animate-spin text-[var(--shop-primary-from)]" />
-                      Cargando carrito...
+                      <span className="skeleton-shimmer inline-block h-4 w-28 rounded" style={{ background: 'var(--shop-skeleton-base)' }} />
                     </div>
                   ) : null}
 
@@ -2070,15 +2087,14 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
           {isLoadingProducts ? (
             <div className="space-y-3">
-              <p className="text-sm text-[var(--ink-700)]">Cargando catálogo de {UNIVERSE_LABELS[activeUniverse]}...</p>
-              <div className="grid gap-3 md:grid-cols-3">
+              <div className="grid gap-4 md:grid-cols-3">
                 {[0, 1, 2].map((index) => (
-                  <div key={index} className="overflow-hidden rounded-2xl border border-[#d9d2b7] bg-white/80 p-4">
-                    <div className="h-36 animate-pulse rounded-xl bg-[#ebecd9]" />
-                    <div className="mt-3 h-3 w-16 animate-pulse rounded bg-[#e2e4cf]" />
-                    <div className="mt-2 h-7 w-4/5 animate-pulse rounded bg-[#dfe2cb]" />
-                    <div className="mt-4 h-4 w-full animate-pulse rounded bg-[#e6e8d3]" />
-                    <div className="mt-3 h-12 animate-pulse rounded-full bg-[#d9dec0]" />
+                  <div key={index} className="overflow-hidden rounded-2xl border p-4" style={{ borderColor: 'var(--shop-card-border)', background: 'var(--shop-card-bg)' }}>
+                    <div className="skeleton-shimmer h-36 rounded-xl" style={{ background: 'var(--shop-skeleton-base)' }} />
+                    <div className="mt-3 skeleton-shimmer h-3 w-16 rounded" style={{ background: 'var(--shop-skeleton-hi)' }} />
+                    <div className="mt-2 skeleton-shimmer h-7 w-4/5 rounded" style={{ background: 'var(--shop-skeleton-hi)' }} />
+                    <div className="mt-4 skeleton-shimmer h-4 w-full rounded" style={{ background: 'var(--shop-skeleton-base)' }} />
+                    <div className="mt-3 skeleton-shimmer h-12 rounded-full" style={{ background: 'var(--shop-skeleton-base)' }} />
                   </div>
                 ))}
               </div>
@@ -2321,7 +2337,17 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
                     <div className={`flex flex-1 flex-col space-y-3 ${ gridView === "list" ? "justify-center p-3 sm:p-4" : "p-5" }`}>
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-700)]">{UNIVERSE_LABELS[activeUniverse]}</p>
+                        <div className="flex items-center gap-2">
+                          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-700)]">{UNIVERSE_LABELS[activeUniverse]}</p>
+                          {(() => {
+                            const tier = getPackTier(Number(product.price.amount));
+                            return (
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${tier.highlight ? "bg-amber-100 text-amber-800 ring-1 ring-amber-300" : "bg-[var(--surface-200)] text-[var(--ink-600)]"}`}>
+                                {tier.label}
+                              </span>
+                            );
+                          })()}
+                        </div>
                         <div className="flex items-center gap-1.5">
                           {rarityTag && gridView !== "list" ? (
                             <span className="rounded-full bg-[#fdf3df] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#7a4a10] ring-1 ring-[#e6c676]">
@@ -2557,10 +2583,20 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               </div>
 
               {isLoadingCollectionPreview ? (
-                <p className="text-sm text-[var(--ink-700)]">Cargando personajes del catálogo...</p>
+                <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                  {[0,1,2,3,4,5].map((i) => (
+                    <div key={i} className="overflow-hidden rounded-2xl border" style={{ borderColor: 'var(--shop-card-border)', background: 'var(--shop-control-bg)' }}>
+                      <div className="skeleton-shimmer aspect-square" style={{ background: 'var(--shop-skeleton-base)' }} />
+                      <div className="space-y-1.5 px-2.5 py-2">
+                        <div className="skeleton-shimmer h-3 w-3/4 rounded" style={{ background: 'var(--shop-skeleton-hi)' }} />
+                        <div className="skeleton-shimmer h-3 w-1/2 rounded" style={{ background: 'var(--shop-skeleton-base)' }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
               ) : activeCollectionShowcaseItems.length > 0 ? (
                 <>
-                  <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
                     {activeCollectionShowcaseItems.map((item) => {
                       const tier = toDropTier(item.rarity);
                       const itemLabel = formatCollectionPreviewName(item);

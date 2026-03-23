@@ -2,15 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { GiftIcon, RectangleStackIcon, ShoppingCartIcon, Squares2X2Icon, UserCircleIcon } from "@heroicons/react/24/solid";
+import { HomeIcon, RectangleStackIcon, Squares2X2Icon, UserCircleIcon } from "@heroicons/react/24/solid";
 
 import { MOBILE_NAV_ITEMS } from "@/lib/constants/nav";
 
 const ICON_MAP: Record<string, React.ElementType> = {
+  "Inicio": HomeIcon,
   "Catálogo": Squares2X2Icon,
-  "Tienda": ShoppingCartIcon,
   "Colección": RectangleStackIcon,
-  "Recompensas": GiftIcon,
   "Perfil": UserCircleIcon,
 };
 
@@ -22,41 +21,21 @@ export function BottomNav(): React.JSX.Element {
       className="fixed inset-x-0 bottom-0 z-50 border-t border-[var(--surface-200)] bg-[var(--background)]/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-md sm:hidden"
       aria-label="Navegación inferior"
     >
-      <div className="flex items-center justify-around py-1.5">
-        {MOBILE_NAV_ITEMS.map(({ href, label, isAnchor }) => {
+      <div className="flex items-center justify-around py-1">
+        {MOBILE_NAV_ITEMS.map(({ href, label }) => {
           const Icon = ICON_MAP[label] ?? Squares2X2Icon;
-          const isActive = !isAnchor && pathname === href.split("?")[0];
-          const isShopActive = isAnchor && pathname === "/";
-
-          if (isAnchor) {
-            return (
-              <a
-                key={href}
-                href={href}
-                className="relative flex flex-col items-center gap-0.5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] transition active:scale-95"
-              >
-                {isShopActive && (
-                  <span className="absolute inset-x-1 top-0.5 bottom-1 rounded-full bg-[var(--brand-primary)]/10" />
-                )}
-                <Icon className={`relative h-5 w-5 transition-transform ${isShopActive ? "scale-110 text-[var(--brand-primary)]" : "text-[var(--ink-600)]"}`} />
-                <span className={`relative ${isShopActive ? "text-[var(--brand-primary)]" : "text-[var(--ink-600)]"}`}>{label}</span>
-                {isShopActive && (
-                  <span className="nav-active-dot absolute -bottom-px left-1/2 h-1 w-5 -translate-x-1/2 rounded-full bg-[var(--brand-primary)]" />
-                )}
-              </a>
-            );
-          }
+          const isActive = label === "Inicio" ? pathname === "/" : pathname === href.split("?")[0];
 
           return (
             <Link
               key={href}
               href={href}
-              className="relative flex flex-col items-center gap-0.5 px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.1em] transition active:scale-95"
+              className="relative flex min-h-[48px] min-w-[48px] flex-col items-center justify-center gap-0.5 px-5 text-[10px] font-bold uppercase tracking-[0.1em] transition active:scale-95"
             >
               {isActive && (
                 <span className="absolute inset-x-1 top-0.5 bottom-1 rounded-full bg-[var(--brand-primary)]/10" />
               )}
-              <Icon className={`relative h-5 w-5 transition-transform ${isActive ? "scale-110 text-[var(--brand-primary)]" : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"}`} />
+              <Icon className={`relative h-5 w-5 transition-transform ${isActive ? "scale-110 text-[var(--brand-primary)]" : "text-[var(--ink-600)]"}`} />
               <span className={`relative ${isActive ? "text-[var(--brand-primary)]" : "text-[var(--ink-600)]"}`}>{label}</span>
               {isActive && (
                 <span className="nav-active-dot absolute -bottom-px left-1/2 h-1 w-5 -translate-x-1/2 rounded-full bg-[var(--brand-primary)]" />
