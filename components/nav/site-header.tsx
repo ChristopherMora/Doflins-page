@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -384,15 +383,8 @@ export function SiteHeader(): React.JSX.Element {
 }
 
 function CartIconButton({ cartCount, navColor }: { cartCount: number; navColor: string }) {
-  const pathname = usePathname();
-  const router = useRouter();
-
   const handleClick = () => {
-    if (pathname === "/") {
-      window.dispatchEvent(new CustomEvent("doflins:open-cart"));
-    } else {
-      router.push("/?openCart=1");
-    }
+    window.dispatchEvent(new CustomEvent("doflins:open-cart"));
   };
 
   return (

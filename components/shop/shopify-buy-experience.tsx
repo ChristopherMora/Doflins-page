@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "sonner";
 import {
@@ -1078,24 +1077,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
     };
   }, [activeUniverse, loadProducts]);
 
-  const router = useRouter();
-  const searchParams = useSearchParams();
-
   useEffect(() => {
     const onOpenCart = () => setIsCartOpen(true);
     window.addEventListener("doflins:open-cart", onOpenCart);
     return () => window.removeEventListener("doflins:open-cart", onOpenCart);
   }, []);
-
-  useEffect(() => {
-    if (searchParams.get("openCart") === "1") {
-      setIsCartOpen(true);
-      const params = new URLSearchParams(searchParams.toString());
-      params.delete("openCart");
-      const newUrl = params.size > 0 ? `/?${params.toString()}` : "/";
-      router.replace(newUrl, { scroll: false });
-    }
-  }, [searchParams, router]);
 
   useEffect(() => {
     if (isLoadingCart) {

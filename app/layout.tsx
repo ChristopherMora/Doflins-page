@@ -4,6 +4,7 @@ import { Manrope, Sora } from "next/font/google";
 import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/gtm";
 import { SiteFooter } from "@/components/nav/site-footer";
 import { SiteHeader } from "@/components/nav/site-header";
+import { GlobalCartDrawer } from "@/components/shop/global-cart-drawer";
 import { BackToTop } from "@/components/ui/back-to-top";
 import { PwaInstallPrompt } from "@/components/ui/pwa-install-prompt";
 import { ReferralBanner } from "@/components/ui/referral-banner";
@@ -158,6 +159,7 @@ export default function RootLayout({
         <GoogleTagManager />
         <SiteHeader />
         {children}
+        <GlobalCartDrawer />
         <SiteFooter />
         <BackToTop />
         <PwaInstallPrompt />
