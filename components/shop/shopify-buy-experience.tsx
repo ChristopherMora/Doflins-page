@@ -1290,10 +1290,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const goToCheckout = useCallback(async () => {
     setIsMutatingCart(true);
     setFeedbackMessage(null);
-    // Abrir la ventana ANTES del await para preservar el "user gesture".
-    // En iOS/Android, window.open() después de un await es bloqueado por el
-    // pop-up blocker porque ya no cuenta como acción directa del usuario.
-    const checkoutWin = window.open("", "_blank", "noopener,noreferrer");
     try {
       const response = await fetch("/api/cart/checkout", {
         method: "POST",
@@ -1303,16 +1299,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       if (giftNote.trim()) {
         url += (url.includes("?") ? "&" : "?") + `note=${encodeURIComponent(giftNote.trim())}`;
       }
-      if (checkoutWin) {
-        checkoutWin.location.href = url;
-      } else {
-        // Fallback: navegar en la misma pestaña si el pop-up fue bloqueado
-        window.location.href = url;
-      }
       setIsCartOpen(false);
+      window.location.href = url;
     } catch (error) {
-      // Si hubo error, cerrar la pestaña vacía que abrimos
-      checkoutWin?.close();
       setFeedbackMessage(error instanceof Error ? error.message : "No se pudo abrir checkout.");
     } finally {
       setIsMutatingCart(false);
