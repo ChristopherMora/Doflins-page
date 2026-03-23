@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -365,19 +366,7 @@ export function SiteHeader(): React.JSX.Element {
 
           {/* Badge contador de carrito */}
           {cartCount > 0 ? (
-            <button
-              type="button"
-              onClick={() => window.dispatchEvent(new CustomEvent("doflins:open-cart"))}
-              className="relative hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:brightness-110 active:scale-95"
-              style={{ color: navColor, borderColor: `${navColor}55` }}
-              title={`${cartCount} item${cartCount !== 1 ? "s" : ""} en el carrito`}
-              aria-label={`Carrito: ${cartCount} item${cartCount !== 1 ? "s" : ""}`}
-            >
-              <ShoppingCartIcon className="h-4 w-4" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white leading-none">
-                {cartCount > 9 ? "9+" : cartCount}
-              </span>
-            </button>
+            <CartIconButton cartCount={cartCount} navColor={navColor} />
           ) : null}
 
           <Link
@@ -391,5 +380,34 @@ export function SiteHeader(): React.JSX.Element {
         </div>
       </div>
     </motion.header>
+  );
+}
+
+function CartIconButton({ cartCount, navColor }: { cartCount: number; navColor: string }) {
+  const pathname = usePathname();
+  const router = useRouter();
+
+  const handleClick = () => {
+    if (pathname === "/") {
+      window.dispatchEvent(new CustomEvent("doflins:open-cart"));
+    } else {
+      router.push("/?openCart=1");
+    }
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      className="relative hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:brightness-110 active:scale-95"
+      style={{ color: navColor, borderColor: `${navColor}55` }}
+      title={`${cartCount} item${cartCount !== 1 ? "s" : ""} en el carrito`}
+      aria-label={`Carrito: ${cartCount} item${cartCount !== 1 ? "s" : ""}`}
+    >
+      <ShoppingCartIcon className="h-4 w-4" />
+      <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white leading-none">
+        {cartCount > 9 ? "9+" : cartCount}
+      </span>
+    </button>
   );
 }
