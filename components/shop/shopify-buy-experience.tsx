@@ -1067,19 +1067,21 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       }
     };
 
-    const onOpenCart = () => setIsCartOpen(true);
-
     window.addEventListener("focus", onWindowFocus);
     document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("doflins:open-cart", onOpenCart);
 
     return () => {
       window.clearInterval(intervalId);
       window.removeEventListener("focus", onWindowFocus);
       document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("doflins:open-cart", onOpenCart);
     };
   }, [activeUniverse, loadProducts]);
+
+  useEffect(() => {
+    const onOpenCart = () => setIsCartOpen(true);
+    window.addEventListener("doflins:open-cart", onOpenCart);
+    return () => window.removeEventListener("doflins:open-cart", onOpenCart);
+  }, []);
 
   useEffect(() => {
     if (isLoadingCart) {
