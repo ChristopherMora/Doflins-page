@@ -365,8 +365,9 @@ export function SiteHeader(): React.JSX.Element {
 
           {/* Badge contador de carrito */}
           {cartCount > 0 ? (
-            <Link
-              href="/#compras"
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent("doflins:open-cart"))}
               className="relative hidden sm:inline-flex h-9 w-9 items-center justify-center rounded-full border transition-all duration-300 hover:brightness-110 active:scale-95"
               style={{ color: navColor, borderColor: `${navColor}55` }}
               title={`${cartCount} item${cartCount !== 1 ? "s" : ""} en el carrito`}
@@ -376,7 +377,7 @@ export function SiteHeader(): React.JSX.Element {
               <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[9px] font-black text-white leading-none">
                 {cartCount > 9 ? "9+" : cartCount}
               </span>
-            </Link>
+            </button>
           ) : null}
 
           <Link
