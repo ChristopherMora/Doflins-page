@@ -14,6 +14,8 @@ import { LazySection } from "@/components/ui/lazy-section";
 import { LiveFigureCount } from "@/components/ui/live-figure-count";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { Testimonials } from "@/components/home/testimonials";
+import { HeroFloatingFigures } from "@/components/home/hero-floating-figures";
+import { RecentFigures } from "@/components/home/recent-figures";
 
 export const metadata: Metadata = {
   title: "DOFLINS | Figuras Coleccionables con Rareza Oficial",
@@ -33,7 +35,8 @@ export default function Home(): React.JSX.Element {
           <div className="relative w-full space-y-14 sm:space-y-20">
 
             {/* ── Hero ── */}
-            <section className="flex flex-col items-center gap-6 pt-10 text-center sm:pt-20">
+            <section className="relative flex flex-col items-center gap-6 pt-10 text-center sm:pt-20">
+              <HeroFloatingFigures />
               <div className="stagger-fade-in space-y-4">
                 <h1 className="font-title text-[2.75rem] leading-[1.05] tracking-tight text-[var(--ink-900)] sm:text-6xl md:text-7xl">
                   Colecciona<br />DOFLINS
@@ -64,6 +67,11 @@ export default function Home(): React.JSX.Element {
                 <span className="inline-flex items-center gap-1.5">Hecho en México</span>
               </div>
             </section>
+
+            {/* ── Últimas incorporaciones ── */}
+            <LazySection>
+              <RecentFigures />
+            </LazySection>
 
             {/* ── Universos ── */}
             <LazySection>
