@@ -15,7 +15,6 @@ import { LiveFigureCount } from "@/components/ui/live-figure-count";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { Testimonials } from "@/components/home/testimonials";
 import { HeroFloatingFigures } from "@/components/home/hero-floating-figures";
-import { RecentFigures } from "@/components/home/recent-figures";
 
 export const metadata: Metadata = {
   title: "DOFLINS | Figuras Coleccionables con Rareza Oficial",
@@ -67,11 +66,6 @@ export default function Home(): React.JSX.Element {
                 <span className="inline-flex items-center gap-1.5">Hecho en México</span>
               </div>
             </section>
-
-            {/* ── Últimas incorporaciones ── */}
-            <LazySection>
-              <RecentFigures />
-            </LazySection>
 
             {/* ── Universos ── */}
             <LazySection>
