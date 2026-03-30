@@ -78,6 +78,42 @@ export async function POST(
     (user.user_metadata?.name as string | undefined) ??
     null;
 
+  // ── Actualizar racha de reveals ────────────────────────────────────────────
+  const todayStr = new Date().toISOString().split("T")[0]!; // "YYYY-MM-DD"
+  const yesterdayStr = new Date(Date.now() - 86_400_000).toISOString().split("T")[0]!;
+
+  void (async () => {
+    try {
+      const [profile] = await db
+        .select({
+          currentStreak: userProfiles.currentStreak,
+          longestStreak: userProfiles.longestStreak,
+          lastRevealDate: userProfiles.lastRevealDate,
+        })
+        .from(userProfiles)
+        .where(eq(userProfiles.supabaseUserId, user.id))
+        .limit(1);
+
+      if (profile) {
+        let newStreak = profile.currentStreak;
+        if (profile.lastRevealDate === todayStr) {
+          // misma jornada, sin cambio en la racha
+        } else if (profile.lastRevealDate === yesterdayStr) {
+          newStreak++;
+        } else {
+          newStreak = 1;
+        }
+        const newLongest = Math.max(newStreak, profile.longestStreak);
+        await db
+          .update(userProfiles)
+          .set({ currentStreak: newStreak, longestStreak: newLongest, lastRevealDate: todayStr })
+          .where(eq(userProfiles.supabaseUserId, user.id));
+      }
+    } catch {
+      // No bloquear el flujo principal
+    }
+  })();
+
   // Guardar nombre de Google silenciosamente (se actualiza en cada scan)
   if (displayName) {
     void db

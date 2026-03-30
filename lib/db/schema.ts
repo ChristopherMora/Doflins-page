@@ -132,6 +132,9 @@ export const userProfiles = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
     displayName: varchar("display_name", { length: 50 }).notNull(),
+    currentStreak: int("current_streak").notNull().default(0),
+    longestStreak: int("longest_streak").notNull().default(0),
+    lastRevealDate: varchar("last_reveal_date", { length: 10 }), // "YYYY-MM-DD"
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { mode: "date" })
       .notNull()

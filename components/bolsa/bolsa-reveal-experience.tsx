@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { EyeIcon, ShoppingCartIcon, SparklesIcon } from "@heroicons/react/24/solid";
+import { EyeIcon, ShoppingCartIcon, SparklesIcon, PlayIcon } from "@heroicons/react/24/solid";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
@@ -173,6 +173,8 @@ export function BolsaRevealExperience({
   const [started, setStarted] = useState(false);
   const [revealed, setRevealed] = useState<Set<number>>(new Set());
   const [showCelebration, setShowCelebration] = useState(false);
+  const [isAutoRevealing, setIsAutoRevealing] = useState(false);
+  const [highlightId, setHighlightId] = useState<number | null>(null);
 
   const flip = (id: number) =>
     setRevealed((prev) => {
@@ -182,6 +184,18 @@ export function BolsaRevealExperience({
     });
   const revealAll = () => setRevealed(new Set(items.map((i) => i.id)));
   const allDone = revealed.size === items.length;
+
+  const autoReveal = async () => {
+    setIsAutoRevealing(true);
+    for (const item of items) {
+      setHighlightId(item.id);
+      await new Promise<void>((r) => setTimeout(r, 250));
+      flip(item.id);
+      await new Promise<void>((r) => setTimeout(r, 700));
+    }
+    setHighlightId(null);
+    setIsAutoRevealing(false);
+  };
 
   const topRarity = RARITY_ORDER.find((r) => items.some((d) => d.rareza === r)) ?? "COMMON";
   const hasSpecial = topRarity !== "COMMON" && topRarity !== "RARE";
@@ -296,10 +310,10 @@ export function BolsaRevealExperience({
               transition={{ duration: 0.36, delay: cardIndex * 0.06, ease: [0.22, 1, 0.36, 1] }}
             >
             <div
-              className="card-3d-wrap"
+              className={`card-3d-wrap transition-all duration-200 ${highlightId === item.id && !isFlipped ? "scale-105 ring-4 ring-[#9acd42] ring-offset-2 rounded-2xl" : ""}`}
               style={{ height: "228px" }}
               onClick={() => {
-                if (!isFlipped) flip(item.id);
+                if (!isFlipped && !isAutoRevealing) flip(item.id);
               }}
             >
               <div
@@ -362,10 +376,20 @@ export function BolsaRevealExperience({
 
       {/* Reveal all button / done state */}
       {!allDone ? (
-        <div className="flex justify-center pt-2">
-          <Button variant="secondary" size="sm" onClick={revealAll}>
+        <div className="flex justify-center gap-2 pt-2">
+          <Button
+            variant="default"
+            size="sm"
+            disabled={isAutoRevealing}
+            onClick={() => void autoReveal()}
+            className="bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]"
+          >
+            <SparklesIcon className="h-4 w-4" />
+            {isAutoRevealing ? "Revelando…" : "Auto-revelar"}
+          </Button>
+          <Button variant="secondary" size="sm" disabled={isAutoRevealing} onClick={revealAll}>
             <EyeIcon className="h-4 w-4" />
-            Revelar todas de golpe
+            De golpe
           </Button>
         </div>
       ) : (

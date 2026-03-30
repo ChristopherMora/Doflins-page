@@ -14,6 +14,8 @@ import { NicknameEditor } from "@/components/collection/nickname-editor";
 import { ReferralCard } from "@/components/ui/referral-card";
 import { AcquisitionHistory } from "@/components/perfil/acquisition-history";
 import { PointsBalanceBadge } from "@/components/rewards/points-balance-badge";
+import { StreakBadge } from "@/components/perfil/streak-badge";
+import { AchievementsPerfilSection } from "@/components/perfil/achievements-perfil-section";
 
 export const metadata: Metadata = {
   title: "Mi Perfil · DOFLINS",
@@ -89,6 +91,19 @@ export default function PerfilPage(): React.JSX.Element {
         {/* Balance de puntos */}
         <section className="mb-6">
           <PointsBalanceBadge />
+        </section>
+
+        {/* Racha de reveals */}
+        <section className="mb-6">
+          <StreakBadge />
+        </section>
+
+        {/* Logros */}
+        <section className="mb-8">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-[var(--ink-400)]">
+            Logros
+          </h2>
+          <AchievementsPerfilSection />
         </section>
 
         {/* Accesos rápidos */}
