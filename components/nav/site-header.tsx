@@ -42,13 +42,15 @@ export function SiteHeader(): React.JSX.Element {
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
   const [headerHidden, setHeaderHidden] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const lastScrollY = useRef(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Ocultar header al bajar, mostrar al subir
+  // Ocultar header al bajar, mostrar al subir + detectar scroll para glassmorphism
   useEffect(() => {
     const handleScroll = () => {
       const y = window.scrollY;
+      setScrolled(y > 20);
       const diff = y - lastScrollY.current;
       if (Math.abs(diff) < 6) return;
       setHeaderHidden(diff > 0 && y > 100);
@@ -128,21 +130,24 @@ export function SiteHeader(): React.JSX.Element {
   const isAnimals = universe === "animals";
   const isMega = universe === "mega";
 
-  const headerBg = isMultiverse
-    ? dark ? "rgba(10, 14, 36, 0.92)" : "rgba(238, 243, 255, 0.92)"
+  const headerBgScrolled = isMultiverse
+    ? dark ? "rgba(10, 14, 36, 0.82)" : "rgba(238, 243, 255, 0.82)"
     : isMega
-      ? dark ? "rgba(30, 20, 8, 0.92)" : "rgba(255, 251, 240, 0.92)"
+      ? dark ? "rgba(30, 20, 8, 0.82)" : "rgba(255, 251, 240, 0.82)"
       : isAnimals
-        ? dark ? "rgba(12, 22, 14, 0.92)" : "rgba(242, 250, 238, 0.92)"
-        : dark ? "rgba(14, 20, 16, 0.92)" : "rgba(244, 250, 240, 0.92)";
+        ? dark ? "rgba(12, 22, 14, 0.82)" : "rgba(242, 250, 238, 0.82)"
+        : dark ? "rgba(14, 20, 16, 0.82)" : "rgba(244, 250, 240, 0.82)";
+  const headerBg = scrolled ? headerBgScrolled : "transparent";
 
-  const headerBorder = isMultiverse
-    ? dark ? "rgba(44, 61, 104, 0.82)" : "rgba(197, 208, 255, 0.8)"
-    : isMega
-      ? dark ? "rgba(120, 80, 20, 0.8)" : "rgba(232, 204, 144, 0.8)"
-      : isAnimals
-        ? dark ? "rgba(50, 90, 50, 0.8)" : "rgba(176, 212, 160, 0.8)"
-        : dark ? "rgba(50, 85, 55, 0.72)" : "rgba(180, 210, 164, 0.78)";
+  const headerBorder = scrolled
+    ? isMultiverse
+      ? dark ? "rgba(44, 61, 104, 0.82)" : "rgba(197, 208, 255, 0.8)"
+      : isMega
+        ? dark ? "rgba(120, 80, 20, 0.8)" : "rgba(232, 204, 144, 0.8)"
+        : isAnimals
+          ? dark ? "rgba(50, 90, 50, 0.8)" : "rgba(176, 212, 160, 0.8)"
+          : dark ? "rgba(50, 85, 55, 0.72)" : "rgba(180, 210, 164, 0.78)"
+    : "transparent";
 
   const navColor = isMultiverse
     ? dark ? "#bfcdff" : "#2d3f8a"
@@ -207,8 +212,13 @@ export function SiteHeader(): React.JSX.Element {
       initial={{ y: -72, opacity: 0 }}
       animate={{ y: headerHidden ? "-100%" : 0, opacity: headerHidden ? 0 : 1 }}
       transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="sticky top-0 z-40 w-full border-b backdrop-blur-md transition-colors duration-300"
-      style={{ background: headerBg, borderColor: headerBorder }}
+      className="sticky top-0 z-40 w-full border-b transition-all duration-300"
+      style={{
+        background: headerBg,
+        borderColor: headerBorder,
+        backdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
+        WebkitBackdropFilter: scrolled ? "blur(16px) saturate(180%)" : "none",
+      }}
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-8">
         {/* Logo */}
