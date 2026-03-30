@@ -35,7 +35,7 @@ const nextConfig: NextConfig = {
       `script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://checkout.shopify.com`,
       `style-src 'self' 'unsafe-inline' https://fonts.googleapis.com`,
       `font-src 'self' https://fonts.gstatic.com`,
-      `img-src 'self' data: blob: ${shopifyImgHosts.join(" ")} https://api.qrserver.com https://www.google-analytics.com https://www.googletagmanager.com`,
+      `img-src 'self' data: blob: ${shopifyImgHosts.join(" ")} https://*.supabase.co https://api.qrserver.com https://www.google-analytics.com https://www.googletagmanager.com`,
       `connect-src 'self' https://*.supabase.co https://*.myshopify.com https://www.google-analytics.com https://www.googletagmanager.com`,
       `frame-src https://checkout.shopify.com https://www.googletagmanager.com`,
       `object-src 'none'`,
