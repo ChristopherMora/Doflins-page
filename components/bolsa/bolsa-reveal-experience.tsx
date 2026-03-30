@@ -378,7 +378,7 @@ export function BolsaRevealExperience({
       {!allDone ? (
         <div className="flex justify-center gap-2 pt-2">
           <Button
-            variant="default"
+            variant="primary"
             size="sm"
             disabled={isAutoRevealing}
             onClick={() => void autoReveal()}
