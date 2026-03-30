@@ -641,11 +641,14 @@ function DoflinModal({
 }: DoflinModalProps): React.JSX.Element {
   const [showShareSheet, setShowShareSheet] = useState(false);
 
-  const shareUrl =
-    typeof window !== "undefined"
+  const shareUrl = selectedDoflin
+    ? typeof window !== "undefined"
       ? `${window.location.origin}/carta/${selectedDoflin.id}`
-      : `/carta/${selectedDoflin.id}`;
-  const shareText = `¡Acabo de sacar una figura ${rarityConfig?.label ?? selectedDoflin.rarity} 🔥 ${selectedDoflin.name} en @doflins! 🎴 #doflins #coleccionables`;
+      : `/carta/${selectedDoflin.id}`
+    : "";
+  const shareText = selectedDoflin
+    ? `¡Acabo de sacar una figura ${rarityConfig?.label ?? selectedDoflin.rarity} 🔥 ${selectedDoflin.name} en @doflins! 🎴 #doflins #coleccionables`
+    : "";
 
   const handleCopyLink = async () => {
     try {
