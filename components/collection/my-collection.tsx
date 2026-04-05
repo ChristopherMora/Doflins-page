@@ -623,10 +623,10 @@ export function MyCollection() {
                     src={doflin.imagenUrl}
                     alt={doflin.nombre}
                     fill
+                    sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                     placeholder="blur"
                     blurDataURL={BLUR_DATA_URL}
                     className="object-contain p-2 transition-transform duration-300 group-hover:scale-105"
-                    unoptimized
                   />
                 ) : (
                   <div className="relative h-full w-full">
@@ -634,10 +634,10 @@ export function MyCollection() {
                       src={doflin.siluetaUrl}
                       alt={`Silueta ${doflin.nombre}`}
                       fill
+                      sizes="(max-width: 640px) 50vw, (max-width: 768px) 33vw, (max-width: 1024px) 25vw, 20vw"
                       placeholder="blur"
                       blurDataURL={BLUR_DATA_URL}
                       className="object-contain p-2 opacity-30"
-                      unoptimized
                     />
                     <div className="absolute inset-0 flex items-center justify-center">
                       <LockClosedIcon className="h-8 w-8 text-[var(--ink-400)]" />

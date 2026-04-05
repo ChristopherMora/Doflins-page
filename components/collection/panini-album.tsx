@@ -58,6 +58,9 @@ interface CollectionData {
 
 type GroupedBySeries = Record<string, Record<string, DoflinRow[]>>;
 
+const BLUR_DATA_URL =
+  "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHUlEQVQIW2NkYGD4z8BQDwIMjIz1DEDMSNMAACb9Av9aFEHzAAAAAElFTkSuQmCC";
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 
 export function PaniniAlbum(): React.JSX.Element {
@@ -461,8 +464,10 @@ function StickerCard({
             src={doflin.imagenUrl}
             alt={doflin.nombre}
             fill
+            sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
+            placeholder="blur"
+            blurDataURL={BLUR_DATA_URL}
             className="object-contain p-1.5 transition-transform duration-200 group-hover:scale-105"
-            unoptimized
           />
         ) : (
           <>
@@ -470,8 +475,10 @@ function StickerCard({
               src={doflin.siluetaUrl || doflin.imagenUrl}
               alt={`#${doflin.numeroColeccion}`}
               fill
+              sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
+              placeholder="blur"
+              blurDataURL={BLUR_DATA_URL}
               className="object-contain p-1.5 opacity-20"
-              unoptimized
             />
             <div className="absolute inset-0 flex items-center justify-center">
               <LockClosedIcon className="h-6 w-6 text-[#b0a888]" />
