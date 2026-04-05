@@ -3,6 +3,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { CollectionItemDTO } from "@/lib/types/doflin";
 import {
   ArrowPathIcon,
   ArrowRightOnRectangleIcon,
@@ -98,10 +99,29 @@ function CircularRing({ pct, size = 88 }: { pct: number; size?: number }) {
   );
 }
 
-export function MyCollection() {
+export function MyCollection({ initialDoflins }: { initialDoflins?: CollectionItemDTO[] }) {
   const [user, setUser] = useState<User | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [data, setData] = useState<CollectionData | null>(null);
+  // Mapeamos CollectionItemDTO al formato interno DoflinRow para pre-poblar el estado
+  const mappedInitial: CollectionData | null = initialDoflins && initialDoflins.length > 0
+    ? {
+        doflins: initialDoflins.map((item) => ({
+          id: item.id,
+          nombre: item.name,
+          modeloBase: item.baseModel,
+          variante: item.variantName,
+          slug: String(item.id),
+          serie: item.series,
+          numeroColeccion: item.collectionNumber,
+          rareza: item.rarity,
+          probabilidad: item.probability,
+          imagenUrl: item.imageUrl,
+          siluetaUrl: item.silhouetteUrl ?? "",
+        })),
+        ownedIds: [],
+      }
+    : null;
+  const [data, setData] = useState<CollectionData | null>(mappedInitial);
   const [isLoading, setIsLoading] = useState(false);
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
   const [showOwned, setShowOwned] = useState<"all" | "owned" | "missing">("all");
@@ -134,7 +154,11 @@ export function MyCollection() {
   }, [supabase]);
 
   const loadCollection = useCallback(async () => {
-    if (!user) { setData(null); return; }
+    // Si no hay usuario y ya tenemos datos pre-cargados del servidor, no limpiar ni recargar
+    if (!user) {
+      if (!mappedInitial) setData(null);
+      return;
+    }
     setIsLoading(true);
     try {
       const res = await fetch("/api/collection/user");
@@ -146,6 +170,7 @@ export function MyCollection() {
     } finally {
       setIsLoading(false);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   useEffect(() => {

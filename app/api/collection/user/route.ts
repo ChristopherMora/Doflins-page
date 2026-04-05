@@ -47,12 +47,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const ownedIds = ownedRows.map((r) => r.doflinId);
 
-  return NextResponse.json({
-    doflins: allDoflins,
-    ownedIds,
-    userId: user.id,
-    userEmail: user.email ?? "",
-  });
+  return NextResponse.json(
+    { doflins: allDoflins, ownedIds, userId: user.id, userEmail: user.email ?? "" },
+    { headers: { "Cache-Control": "private, max-age=30, stale-while-revalidate=60" } },
+  );
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {

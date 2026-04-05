@@ -1,5 +1,3 @@
-"use client";
-
 import { ShoppingCartIcon, SparklesIcon, TrophyIcon } from "@heroicons/react/24/solid";
 
 const STEPS = [

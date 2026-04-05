@@ -1657,7 +1657,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                                 fill
                                 sizes="56px"
                                 className="object-cover"
-                                unoptimized
                               />
                             </div>
                           ) : null}
@@ -2294,9 +2293,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           fill
                           placeholder="blur"
                           blurDataURL={BLUR_DATA_URL}
+                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
                           className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
                           style={imageFilterStyle}
-                          unoptimized
                         />
                       ) : (
                         <div className="grid h-full w-full place-items-center text-xs text-[var(--ink-600)]">
@@ -2614,8 +2613,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                                 src={item.imageUrl}
                                 alt={item.name}
                                 fill
+                                sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                                 className="object-cover"
-                                unoptimized
                                 onError={() => setBrokenShowcaseIds(prev => new Set(prev).add(item.id))}
                               />
                             ) : (
@@ -2676,7 +2675,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 <div key={line.id} className="flex items-center gap-2 py-1">
                   {line.imageUrl ? (
                     <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-[#ddd9c5] bg-[#f1f2e6]">
-                      <Image src={line.imageUrl} alt={line.productTitle} fill className="object-cover" unoptimized />
+                      <Image src={line.imageUrl} alt={line.productTitle} fill sizes="36px" className="object-cover" />
                     </div>
                   ) : null}
                   <div className="min-w-0 flex-1">
@@ -2777,9 +2776,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       fill
                       placeholder="blur"
                       blurDataURL={BLUR_DATA_URL}
+                      sizes="(max-width: 640px) 100vw, 50vw"
                       className="object-cover transition duration-300"
                       style={imageFilterStyle}
-                      unoptimized
                     />
                   </div>
                 ) : (

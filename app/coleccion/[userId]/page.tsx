@@ -7,6 +7,8 @@ import { cache } from "react";
 import type { Metadata } from "next";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { CollectionCompare } from "@/components/collection/collection-compare";
+import { WantListWrapper } from "@/components/collection/want-list-wrapper";
 import { getDb } from "@/lib/db/client";
 import { doflins, userCollectionProgress } from "@/lib/db/schema";
 
@@ -209,6 +211,25 @@ export default async function PublicCollectionPage({
               );
             })}
           </div>
+        </div>
+
+        {/* Comparación con tu colección */}
+        <div className="mb-8">
+          <CollectionCompare
+            targetUserId={userId}
+            allDoflins={allDoflins.map((d) => ({
+              id: d.id,
+              nombre: d.nombre,
+              imagenUrl: d.imagenUrl ?? "/images/placeholders/doflin.webp",
+              rareza: d.rareza,
+            }))}
+            targetOwnedIds={Array.from(ownedSet)}
+          />
+        </div>
+
+        {/* Want List pública */}
+        <div className="mb-8 rounded-2xl border border-[#d8d2b4] bg-white p-4 sm:p-6">
+          <WantListWrapper isOwner={false} userId={userId} />
         </div>
 
         {/* Grid de figuras */}

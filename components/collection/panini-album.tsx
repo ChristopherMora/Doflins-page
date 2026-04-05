@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import type { CollectionItemDTO } from "@/lib/types/doflin";
 import {
   CheckCircleIcon,
   LockClosedIcon,
@@ -63,11 +64,28 @@ const BLUR_DATA_URL =
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 
-export function PaniniAlbum(): React.JSX.Element {
+export function PaniniAlbum({ initialDoflins }: { initialDoflins?: CollectionItemDTO[] }): React.JSX.Element {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [data, setData] = useState<CollectionData | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const mappedInitial: CollectionData | null = initialDoflins && initialDoflins.length > 0
+    ? {
+        doflins: initialDoflins.map((item) => ({
+          id: item.id,
+          nombre: item.name,
+          modeloBase: item.baseModel,
+          variante: item.variantName,
+          serie: item.series,
+          numeroColeccion: item.collectionNumber,
+          rareza: item.rarity,
+          probabilidad: item.probability,
+          imagenUrl: item.imageUrl,
+          siluetaUrl: item.silhouetteUrl ?? "",
+        })),
+        ownedIds: [],
+      }
+    : null;
+  const [data, setData] = useState<CollectionData | null>(mappedInitial);
+  const [isLoading, setIsLoading] = useState(mappedInitial === null);
   const [activeFilter, setActiveFilter] = useState<string>("ALL");
   const [showMissing, setShowMissing] = useState(false);
   const [justMarked, setJustMarked] = useState<number | null>(null);
@@ -90,6 +108,11 @@ export function PaniniAlbum(): React.JSX.Element {
   useEffect(() => {
     if (user === undefined) return;
     void (async () => {
+      // Si el usuario no está logueado y ya tenemos datos pre-cargados, no hacer fetch
+      if (!user && mappedInitial) {
+        setIsLoading(false);
+        return;
+      }
       setIsLoading(true);
       if (!user) {
         const res = await fetch("/api/collection");
@@ -106,6 +129,7 @@ export function PaniniAlbum(): React.JSX.Element {
       }
       setIsLoading(false);
     })();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   const handleSticker = async (id: number) => {

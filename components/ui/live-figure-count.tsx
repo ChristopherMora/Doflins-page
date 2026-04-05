@@ -42,7 +42,7 @@ export function LiveFigureCount({ className, countClassName }: LiveFigureCountPr
   const animatedCount = useAnimatedCount(count);
 
   useEffect(() => {
-    fetch("/api/collection", { cache: "no-store" })
+    fetch("/api/collection", { next: { revalidate: 60 } } as RequestInit)
       .then((r) => (r.ok ? (r.json() as Promise<CollectionPayload>) : null))
       .then((data) => { if (data) setCount(data.collection.length); })
       .catch(() => null);

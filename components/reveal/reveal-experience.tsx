@@ -749,6 +749,7 @@ function DoflinModal({
                           src={imageSrc}
                           alt={selectedDoflin.name}
                           width={780} height={780}
+                          sizes="(max-width: 768px) 100vw, 50vw"
                           className="h-full w-full object-cover"
                           onError={() => {
                             onImageBroken((prev) => {
@@ -756,7 +757,6 @@ function DoflinModal({
                               return [...prev, selectedDoflin.id];
                             });
                           }}
-                          unoptimized
                         />
                       </div>
                       {rarityConfig ? (
@@ -954,8 +954,8 @@ function DoflinModal({
                               </div>
                             ) : (
                               <Image src={variant.imageUrl} alt={variant.name} fill
+                                sizes="96px"
                                 className="object-cover transition duration-200 group-hover:scale-[1.06]"
-                                unoptimized
                                 onError={() => onVariantImageBroken((prev) => { const next = new Set(prev); next.add(variant.id); return next; })}
                               />
                             )}

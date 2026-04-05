@@ -7,6 +7,8 @@ import {
   GiftIcon,
   BookOpenIcon,
   StarIcon,
+  BellIcon,
+  ArrowsRightLeftIcon,
 } from "@heroicons/react/24/solid";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
@@ -16,6 +18,7 @@ import { AcquisitionHistory } from "@/components/perfil/acquisition-history";
 import { PointsBalanceBadge } from "@/components/rewards/points-balance-badge";
 import { StreakBadge } from "@/components/perfil/streak-badge";
 import { AchievementsPerfilSection } from "@/components/perfil/achievements-perfil-section";
+import { CollectorStats } from "@/components/perfil/collector-stats";
 
 export const metadata: Metadata = {
   title: "Mi Perfil · DOFLINS",
@@ -66,6 +69,20 @@ const LINKS = [
     desc: "Escanea el código de tu bolsa física",
     color: "bg-[#e8faf0] text-[#1a7a4a]",
   },
+  {
+    href: "/intercambios",
+    icon: ArrowsRightLeftIcon,
+    label: "Intercambios",
+    desc: "Troca figuras con otros coleccionistas",
+    color: "bg-[#fef3c7] text-[#92400e]",
+  },
+  {
+    href: "/notificaciones",
+    icon: BellIcon,
+    label: "Notificaciones",
+    desc: "Configura tus preferencias",
+    color: "bg-[#e8f0fe] text-[#3b5bdb]",
+  },
 ];
 
 export default function PerfilPage(): React.JSX.Element {
@@ -86,6 +103,14 @@ export default function PerfilPage(): React.JSX.Element {
             Nombre en el ranking
           </h2>
           <NicknameEditor />
+        </section>
+
+        {/* Estadísticas del coleccionista */}
+        <section className="mb-6">
+          <h2 className="mb-3 text-xs font-bold uppercase tracking-widest text-[var(--ink-400)]">
+            Tu progreso
+          </h2>
+          <CollectorStats />
         </section>
 
         {/* Balance de puntos */}

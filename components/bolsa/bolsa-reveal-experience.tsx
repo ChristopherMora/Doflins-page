@@ -1,14 +1,16 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { EyeIcon, ShoppingCartIcon, SparklesIcon, PlayIcon } from "@heroicons/react/24/solid";
+import { EyeIcon, ShoppingCartIcon, SparklesIcon, PlayIcon, SpeakerWaveIcon, SpeakerXMarkIcon } from "@heroicons/react/24/solid";
 import { AnimatePresence, motion } from "framer-motion";
 
 import { Button } from "@/components/ui/button";
 import { BolsaSaveWidget } from "@/components/bolsa/bolsa-save-widget";
 import { ShareButton } from "@/components/bolsa/share-button";
+import { useRevealSounds } from "@/lib/hooks/use-reveal-sounds";
+import { useConfetti } from "@/lib/hooks/use-confetti";
 
 const RARITY_LABELS: Record<string, string> = {
   COMMON: "Común",
@@ -117,8 +119,8 @@ function CelebrationOverlay({
                 src={item.imagenUrl || item.siluetaUrl}
                 alt={item.nombre}
                 fill
+                sizes="144px"
                 className="object-contain p-2"
-                unoptimized
               />
             </div>
             <div className="bg-black/40 px-3 py-1.5">
@@ -175,14 +177,27 @@ export function BolsaRevealExperience({
   const [showCelebration, setShowCelebration] = useState(false);
   const [isAutoRevealing, setIsAutoRevealing] = useState(false);
   const [highlightId, setHighlightId] = useState<number | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState(true);
 
-  const flip = (id: number) =>
+  const sounds = useRevealSounds();
+  const confetti = useConfetti();
+
+  const flip = useCallback((id: number, rarity: string) => {
     setRevealed((prev) => {
       const s = new Set(prev);
       s.add(id);
       return s;
     });
-  const revealAll = () => setRevealed(new Set(items.map((i) => i.id)));
+    // Play reveal sound based on rarity
+    sounds.playReveal(rarity);
+  }, [sounds]);
+
+  const revealAll = useCallback(() => {
+    setRevealed(new Set(items.map((i) => i.id)));
+    // Play whoosh for reveal all
+    sounds.playWhoosh();
+  }, [items, sounds]);
+
   const allDone = revealed.size === items.length;
 
   const autoReveal = async () => {
@@ -190,7 +205,7 @@ export function BolsaRevealExperience({
     for (const item of items) {
       setHighlightId(item.id);
       await new Promise<void>((r) => setTimeout(r, 250));
-      flip(item.id);
+      flip(item.id, item.rareza);
       await new Promise<void>((r) => setTimeout(r, 700));
     }
     setHighlightId(null);
@@ -209,13 +224,28 @@ export function BolsaRevealExperience({
     return items[0];
   })();
 
+  // Update sound enabled state
+  useEffect(() => {
+    sounds.setEnabled(soundEnabled);
+  }, [soundEnabled, sounds]);
+
+  // Warm up audio on mount
+  useEffect(() => {
+    sounds.warmUp();
+  }, [sounds]);
+
   // Disparar celebración cuando se revelan todas las cartas y hay rareza especial
   useEffect(() => {
     if (allDone && hasSpecial) {
-      const t = window.setTimeout(() => setShowCelebration(true), 450);
+      const t = window.setTimeout(() => {
+        setShowCelebration(true);
+        // Fire confetti and celebration sound
+        confetti.fire({ rarity: topRarity, particleCount: 120, duration: 3500 });
+        sounds.playCelebration(topRarity);
+      }, 450);
       return () => window.clearTimeout(t);
     }
-  }, [allDone, hasSpecial]);
+  }, [allDone, hasSpecial, topRarity, confetti, sounds]);
 
   // ── Intro screen ─────────────────────────────────────────────────────────
   if (!started) {
@@ -260,17 +290,34 @@ export function BolsaRevealExperience({
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.35, ease: "easeOut" }}
+          className="flex flex-col items-center gap-3"
         >
           <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.96 }}>
             <Button
               size="lg"
               className="bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] px-8 text-base font-bold shadow-lg"
-              onClick={() => setStarted(true)}
+              onClick={() => {
+                sounds.warmUp();
+                setStarted(true);
+              }}
             >
               <SparklesIcon className="h-5 w-5" />
               Comenzar a abrir →
             </Button>
           </motion.div>
+
+          {/* Sound toggle */}
+          <button
+            onClick={() => setSoundEnabled(!soundEnabled)}
+            className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs text-[var(--ink-500)] transition hover:bg-black/5"
+          >
+            {soundEnabled ? (
+              <SpeakerWaveIcon className="h-4 w-4" />
+            ) : (
+              <SpeakerXMarkIcon className="h-4 w-4" />
+            )}
+            Sonido {soundEnabled ? "activado" : "desactivado"}
+          </button>
         </motion.div>
 
         <p className="text-xs text-[var(--ink-400)]">Toca cada carta para revelarla</p>
@@ -310,10 +357,10 @@ export function BolsaRevealExperience({
               transition={{ duration: 0.36, delay: cardIndex * 0.06, ease: [0.22, 1, 0.36, 1] }}
             >
             <div
-              className={`card-3d-wrap transition-all duration-200 ${highlightId === item.id && !isFlipped ? "scale-105 ring-4 ring-[#9acd42] ring-offset-2 rounded-2xl" : ""}`}
+              className={`card-3d-wrap cursor-pointer transition-all duration-200 ${highlightId === item.id && !isFlipped ? "scale-105 ring-4 ring-[#9acd42] ring-offset-2 rounded-2xl" : ""}`}
               style={{ height: "228px" }}
               onClick={() => {
-                if (!isFlipped && !isAutoRevealing) flip(item.id);
+                if (!isFlipped && !isAutoRevealing) flip(item.id, item.rareza);
               }}
             >
               <div
@@ -337,8 +384,8 @@ export function BolsaRevealExperience({
                       src={item.imagenUrl || item.siluetaUrl}
                       alt={item.nombre}
                       fill
+                      sizes="(max-width: 640px) 50vw, 33vw"
                       className="object-cover"
-                      unoptimized
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent" />
                     <div className="absolute bottom-2 left-2 right-2">

@@ -21,6 +21,20 @@ export const rarityEnum = mysqlEnum("rareza", [
 
 export const bagCodeStatusEnum = mysqlEnum("status", ["active", "blocked"]);
 
+export const tradeStatusEnum = mysqlEnum("trade_status", [
+  "open",      // Listing is open for offers
+  "pending",   // Has a pending offer
+  "completed", // Trade completed
+  "cancelled", // User cancelled listing
+]);
+
+export const tradeOfferStatusEnum = mysqlEnum("trade_offer_status", [
+  "pending",   // Waiting for response
+  "accepted",  // Offer accepted
+  "rejected",  // Offer rejected
+  "withdrawn", // Offerer cancelled
+]);
+
 export const scanEventTypeEnum = mysqlEnum("event_type", [
   "scan",
   "invalid",
@@ -237,6 +251,8 @@ export const pointReasonEnum = mysqlEnum("point_reason", [
   "achievement",   // logro desbloqueado
   "manual_award",  // otorgado manualmente por el admin
   "redeem",        // canjear recompensa (valor negativo)
+  "daily_claim",   // vio la figura del día
+  "streak_bonus",  // bonus por racha consecutiva
 ]);
 
 export const rewardTypeEnum = mysqlEnum("reward_type", [
@@ -331,5 +347,185 @@ export const rewardRedemptions = mysqlTable(
     index("redemptions_user_idx").on(table.supabaseUserId),
     index("redemptions_reward_idx").on(table.rewardId),
     index("redemptions_status_idx").on(table.status),
+  ],
+);
+
+// ────────────────────────────────────────────────────────────────────────────────
+// NOTIFICATION PREFERENCES
+// ────────────────────────────────────────────────────────────────────────────────
+
+export const notificationPreferences = mysqlTable(
+  "notification_preferences",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
+    // Email notifications
+    emailNewFigure: boolean("email_new_figure").notNull().default(true),
+    emailWeeklyDigest: boolean("email_weekly_digest").notNull().default(true),
+    emailRewardAvailable: boolean("email_reward_available").notNull().default(true),
+    emailTradeRequest: boolean("email_trade_request").notNull().default(true),
+    // Push notifications (for future use)
+    pushEnabled: boolean("push_enabled").notNull().default(false),
+    pushSubscription: text("push_subscription"), // JSON with push subscription data
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  },
+  (table) => [
+    uniqueIndex("notif_prefs_user_unique").on(table.supabaseUserId),
+  ],
+);
+
+// ────────────────────────────────────────────────────────────────────────────────
+// TRADE SYSTEM
+// ────────────────────────────────────────────────────────────────────────────────
+
+export const tradeListings = mysqlTable(
+  "trade_listings",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
+    // What they want to trade away (can be multiple IDs comma-separated for flexibility)
+    offeringDoflinId: int("offering_doflin_id")
+      .notNull()
+      .references(() => doflins.id),
+    // What they want in return (null = open to offers)
+    wantingDoflinId: int("wanting_doflin_id").references(() => doflins.id),
+    wantingRarity: rarityEnum, // Alternative: accept any of this rarity or higher
+    notes: text("notes"), // Optional message
+    status: tradeStatusEnum.notNull().default("open"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  },
+  (table) => [
+    index("trade_listings_user_idx").on(table.supabaseUserId),
+    index("trade_listings_status_idx").on(table.status),
+    index("trade_listings_offering_idx").on(table.offeringDoflinId),
+    index("trade_listings_wanting_idx").on(table.wantingDoflinId),
+  ],
+);
+
+export const tradeOffers = mysqlTable(
+  "trade_offers",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    listingId: int("listing_id")
+      .notNull()
+      .references(() => tradeListings.id),
+    offererUserId: varchar("offerer_user_id", { length: 64 }).notNull(),
+    // What the offerer is offering in return
+    offeredDoflinId: int("offered_doflin_id")
+      .notNull()
+      .references(() => doflins.id),
+    message: text("message"),
+    status: tradeOfferStatusEnum.notNull().default("pending"),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  },
+  (table) => [
+    index("trade_offers_listing_idx").on(table.listingId),
+    index("trade_offers_offerer_idx").on(table.offererUserId),
+    index("trade_offers_status_idx").on(table.status),
+  ],
+);
+
+// ────────────────────────────────────────────────────────────────────────────────
+// DAILY FIGURE & STREAK SYSTEM
+// ────────────────────────────────────────────────────────────────────────────────
+
+export const dailyFigures = mysqlTable(
+  "daily_figures",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    doflinId: int("doflin_id")
+      .notNull()
+      .references(() => doflins.id),
+    date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD format
+    pointsReward: int("points_reward").notNull().default(5),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("daily_figures_date_unique").on(table.date),
+    index("daily_figures_doflin_idx").on(table.doflinId),
+  ],
+);
+
+export const dailyClaims = mysqlTable(
+  "daily_claims",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
+    dailyFigureId: int("daily_figure_id")
+      .notNull()
+      .references(() => dailyFigures.id),
+    pointsAwarded: int("points_awarded").notNull(),
+    streakBonus: int("streak_bonus").notNull().default(0),
+    claimedAt: timestamp("claimed_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("daily_claims_user_figure_unique").on(table.supabaseUserId, table.dailyFigureId),
+    index("daily_claims_user_idx").on(table.supabaseUserId),
+  ],
+);
+
+export const userStreaks = mysqlTable(
+  "user_streaks",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
+    currentStreak: int("current_streak").notNull().default(0),
+    longestStreak: int("longest_streak").notNull().default(0),
+    lastClaimDate: varchar("last_claim_date", { length: 10 }), // YYYY-MM-DD
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  },
+  (table) => [
+    uniqueIndex("user_streaks_user_unique").on(table.supabaseUserId),
+  ],
+);
+
+// ────────────────────────────────────────────────────────────────────────────────
+// PUBLIC WANT LIST - figures users want to collect
+// ────────────────────────────────────────────────────────────────────────────────
+
+export const wantListPriorityEnum = mysqlEnum("want_list_priority", [
+  "low",      // Nice to have
+  "medium",   // Want it
+  "high",     // Really want it
+]);
+
+export const figureWantList = mysqlTable(
+  "figure_want_list",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
+    doflinId: int("doflin_id")
+      .notNull()
+      .references(() => doflins.id),
+    priority: wantListPriorityEnum.notNull().default("medium"),
+    notes: varchar("notes", { length: 200 }), // Short note about why they want it
+    isPublic: boolean("is_public").notNull().default(true),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { mode: "date" })
+      .notNull()
+      .defaultNow()
+      .onUpdateNow(),
+  },
+  (table) => [
+    uniqueIndex("want_list_user_doflin_unique").on(table.supabaseUserId, table.doflinId),
+    index("want_list_user_idx").on(table.supabaseUserId),
+    index("want_list_doflin_idx").on(table.doflinId),
+    index("want_list_public_idx").on(table.isPublic),
   ],
 );

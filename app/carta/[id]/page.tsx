@@ -204,8 +204,8 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
                 src={doflin.imagenUrl}
                 alt={doflin.nombre}
                 fill
+                sizes="(max-width: 640px) 100vw, 384px"
                 className="object-contain card-img-flip"
-                unoptimized
                 priority
               />
             </div>
@@ -245,6 +245,10 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
             <ShareFigureButton
               nombre={doflin.nombre}
               rareza={RARITY_LABEL[rareza] ?? rareza}
+              imagenUrl={doflin.imagenUrl}
+              serie={doflin.serie}
+              numeroColeccion={doflin.numeroColeccion}
+              doflinId={doflin.id}
             />
             <MissingCountCTA serie={doflin.serie} />
             <Button asChild className="w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
@@ -283,7 +287,6 @@ export default async function CartaPage({ params }: CartaPageProps): Promise<Rea
                         alt={r.nombre}
                         fill
                         className="object-contain"
-                        unoptimized
                         sizes="80px"
                       />
                     </div>

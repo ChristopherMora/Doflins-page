@@ -36,7 +36,9 @@ export type PointReason =
   | "referral_used"
   | "achievement"
   | "manual_award"
-  | "redeem";
+  | "redeem"
+  | "daily_claim"
+  | "streak_bonus";
 
 // ─── Función principal ────────────────────────────────────────────────────────
 
@@ -264,4 +266,6 @@ export const REASON_LABEL: Record<PointReason, string> = {
   achievement: "Logro desbloqueado",
   manual_award: "Premio especial",
   redeem: "Canje de recompensa",
+  daily_claim: "Figura del día",
+  streak_bonus: "Bonus por racha",
 };

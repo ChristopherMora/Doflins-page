@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { getCollection } from "@/lib/server/reveal-service";
 import { ColeccionShell } from "@/components/collection/coleccion-shell";
 
 export const metadata: Metadata = {
@@ -10,14 +11,18 @@ export const metadata: Metadata = {
     description: "Lleva el registro de tus figuras DOFLINS, revisa tu progreso por rareza y completa tu colección.",
   },
   robots: {
-    index: false, // No indexar colecciones personales
+    index: false,
   },
 };
 
-export default function ColeccionPage(): React.JSX.Element {
+export default async function ColeccionPage(): Promise<React.JSX.Element> {
+  // Prefetch del catálogo público (ISR 60s) para que los componentes
+  // tengan datos disponibles de inmediato sin esperar fetch cliente
+  const initialDoflins = await getCollection().catch(() => []);
+
   return (
     <main className="mx-auto min-h-screen w-full max-w-5xl px-5 py-8 pb-28 sm:px-8 sm:pb-12">
-      <ColeccionShell />
+      <ColeccionShell initialDoflins={initialDoflins} />
     </main>
   );
 }

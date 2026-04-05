@@ -1,15 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import dynamic from "next/dynamic";
 import { LinkIcon, ListBulletIcon, Squares2X2Icon } from "@heroicons/react/24/solid";
 import { toast } from "sonner";
 
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
-
 import { MyCollection } from "@/components/collection/my-collection";
-import { PaniniAlbum } from "@/components/collection/panini-album";
+import type { CollectionItemDTO } from "@/lib/types/doflin";
 
-export function ColeccionShell(): React.JSX.Element {
+const PaniniAlbum = dynamic(
+  () => import("@/components/collection/panini-album").then((m) => m.PaniniAlbum),
+  { ssr: false, loading: () => <div className="flex min-h-[300px] items-center justify-center"><div className="h-8 w-8 animate-spin rounded-full border-4 border-[#d8d2b4] border-t-[#4e6f2a]" /></div> },
+);
+
+const WantListManager = dynamic(
+  () => import("@/components/collection/want-list-manager").then((m) => m.WantListManager),
+  { ssr: false },
+);
+
+export function ColeccionShell({ initialDoflins }: { initialDoflins?: CollectionItemDTO[] }): React.JSX.Element {
   const [view, setView] = useState<"lista" | "album">("lista");
   const [userId, setUserId] = useState<string | null>(null);
 
@@ -75,9 +85,16 @@ export function ColeccionShell(): React.JSX.Element {
 
       {/* View content */}
       {view === "lista" ? (
-        <MyCollection />
+        <MyCollection initialDoflins={initialDoflins} />
       ) : (
-        <PaniniAlbum />
+        <PaniniAlbum initialDoflins={initialDoflins} />
+      )}
+
+      {/* Want List */}
+      {userId && (
+        <div className="rounded-2xl border border-[#d8d2b4] bg-white p-4 sm:p-6 mt-6">
+          <WantListManager isOwner={true} />
+        </div>
       )}
     </div>
   );

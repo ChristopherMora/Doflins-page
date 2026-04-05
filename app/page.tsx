@@ -5,7 +5,6 @@ import {
   SparklesIcon,
 } from "@heroicons/react/24/solid";
 
-import { ShopifyBuyExperience } from "@/components/shop/shopify-buy-experience";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { UniverseCards } from "@/components/home/universe-cards";
 import { HomeUniverseSync } from "@/components/home/home-universe-sync";
@@ -15,6 +14,8 @@ import { LiveFigureCount } from "@/components/ui/live-figure-count";
 import { HowItWorks } from "@/components/home/how-it-works";
 import { Testimonials } from "@/components/home/testimonials";
 import { HeroFloatingFigures } from "@/components/home/hero-floating-figures";
+import { ShopifyBuyExperienceWrapper } from "@/components/home/shopify-buy-wrapper";
+import { DailyFigureWrapper } from "@/components/home/daily-figure-wrapper";
 
 export const metadata: Metadata = {
   title: "DOFLINS | Figuras Coleccionables con Rareza Oficial",
@@ -77,9 +78,14 @@ export default function Home(): React.JSX.Element {
               <HowItWorks />
             </LazySection>
 
+            {/* ── Figura del Día ── */}
+            <LazySection>
+              <DailyFigureWrapper />
+            </LazySection>
+
             {/* ── Tienda / Packs ── */}
             <LazySection>
-              <ShopifyBuyExperience />
+              <ShopifyBuyExperienceWrapper />
             </LazySection>
 
             {/* ── Testimonios ── */}
