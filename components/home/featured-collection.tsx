@@ -73,7 +73,7 @@ export function FeaturedCollection(): React.JSX.Element {
               <Link
                 key={fig.id}
                 href={`/carta/${fig.id}`}
-                className="group overflow-hidden rounded-[2rem] border border-[var(--surface-200)] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl"
+                className="group overflow-hidden rounded-[2rem] border border-[var(--surface-200)] bg-[var(--surface-50)] ring-1 ring-transparent shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl hover:ring-[var(--surface-200)]"
               >
                 <div className="relative h-56 overflow-hidden bg-[var(--surface-100)]">
                   <Image
@@ -83,36 +83,32 @@ export function FeaturedCollection(): React.JSX.Element {
                     sizes="(min-width: 1280px) 280px, (min-width: 768px) 320px, 100vw"
                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                </div>
-                <div className="space-y-3 p-4">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">
-                        {fig.serie}
-                      </p>
-                      <h3 className="mt-2 text-base font-bold text-[var(--ink-900)]">
-                        {fig.nombre}
-                      </h3>
-                    </div>
-                    <span
-                      className="rounded-full px-2.5 py-1 text-[11px] font-semibold uppercase"
-                      style={{ background: rarity.bg, color: rarity.color }}
-                    >
+
+                  <div className="absolute inset-x-4 top-4 flex items-center justify-between gap-3 rounded-full bg-white/80 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-[var(--ink-700)] shadow-sm backdrop-blur-sm">
+                    <span>Imagen oficial</span>
+                    <span className="rounded-full px-2.5 py-1 text-[10px] font-bold" style={{ background: rarity.bg, color: rarity.color }}>
                       {rarity.label}
                     </span>
                   </div>
+                </div>
+                <div className="space-y-3 p-4">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.14em] text-[var(--brand-primary)]">
+                      {fig.serie}
+                    </p>
+                    <h3 className="mt-2 text-base font-bold text-[var(--ink-900)]">
+                      {fig.nombre}
+                    </h3>
+                  </div>
 
-                  <div className="grid gap-2 text-[11px] text-[var(--ink-600)] sm:grid-cols-2">
-                    <span className="rounded-full border border-[var(--surface-200)] bg-[var(--surface-100)] px-2.5 py-1 font-semibold uppercase tracking-[0.18em]">
-                      Imagen oficial
-                    </span>
+                  <div className="flex flex-wrap gap-2 text-[11px] text-[var(--ink-600)]">
                     <span className="rounded-full border border-[var(--surface-200)] bg-[var(--surface-100)] px-2.5 py-1 font-semibold uppercase tracking-[0.18em] text-[var(--ink-700)]">
                       Pendiente de guardar
                     </span>
+                    <span className="text-xs text-[var(--ink-500)]">#{fig.id}</span>
                   </div>
 
-                  <div className="flex items-center justify-between gap-3 pt-2">
-                    <span className="text-xs text-[var(--ink-500)]">#{fig.id}</span>
+                  <div className="pt-2">
                     <Button asChild variant="ghost" size="sm" className="h-9 rounded-full px-4 text-[var(--ink-900)]">
                       <Link href={`/carta/${fig.id}`}>Ver ficha</Link>
                     </Button>
