@@ -45,7 +45,7 @@ function SkeletonCard(): React.JSX.Element {
   );
 }
 
-export function RecentFigures(): React.JSX.Element {
+export function RecentFigures({ title, viewAllHref }: { title?: string; viewAllHref?: string }): React.JSX.Element {
   const [figures, setFigures] = useState<Figure[]>([]);
   const [loading, setLoading] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -94,11 +94,21 @@ export function RecentFigures(): React.JSX.Element {
 
   return (
     <section className="space-y-4">
-      <div className="flex items-center gap-2">
-        <SparklesIcon className="h-5 w-5 text-[var(--brand-primary)]" />
-        <h2 className="font-title text-xl font-semibold tracking-tight text-[var(--ink-900)]">
-          Últimas incorporaciones
-        </h2>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <SparklesIcon className="h-5 w-5 text-[var(--brand-primary)]" />
+          <h2 className="font-title text-xl font-semibold tracking-tight text-[var(--ink-900)]">
+            {title ?? "Últimas incorporaciones"}
+          </h2>
+        </div>
+        {viewAllHref && (
+          <a
+            href={viewAllHref}
+            className="shrink-0 text-sm font-medium text-[var(--brand-primary)] underline-offset-2 hover:underline"
+          >
+            Ver todas →
+          </a>
+        )}
       </div>
 
       <div

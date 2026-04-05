@@ -1515,7 +1515,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
       }
       return a.collectionNumber - b.collectionNumber;
     });
-    return sortedItems.slice(0, 6);
+    return sortedItems.slice(0, 12);
   }, [activeUniverse, collectionByUniverse]);
   const activeCollectionShowcaseRemaining = Math.max(
     0,
@@ -2589,7 +2589,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
               {isLoadingCollectionPreview ? (
                 <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-                  {[0,1,2,3,4,5].map((i) => (
+                  {[0,1,2,3,4,5,6,7,8,9,10,11].map((i) => (
                     <div key={i} className="overflow-hidden rounded-2xl border" style={{ borderColor: 'var(--shop-card-border)', background: 'var(--shop-control-bg)' }}>
                       <div className="skeleton-shimmer aspect-square" style={{ background: 'var(--shop-skeleton-base)' }} />
                       <div className="space-y-1.5 px-2.5 py-2">

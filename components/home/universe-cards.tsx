@@ -28,6 +28,9 @@ const UNIVERSES = [
     title: "Animals",
     emoji: "🐆",
     tagline: "Naturaleza viva. Rarezas salvajes.",
+    hoverDesc: "Reptiles, mamíferos y aves en 4 niveles de rareza. ¿Atraparás al MYTHIC?",
+    peakLabel: "Mítico",
+    peakColor: "#f59e0b",
     href: "/reveal?universe=animals",
     gradient: "from-[#f0f9e8] via-[#dff0c4] to-[#cce6a8]",
     border: "border-[#a8cc80]",
@@ -43,6 +46,9 @@ const UNIVERSES = [
     title: "Mega",
     emoji: "🦣",
     tagline: "Escala XL. Presencia épica.",
+    hoverDesc: "Figuras de tamaño XL con detalles únicos. Coleccionalas todas antes de que se agoten.",
+    peakLabel: "Legendario",
+    peakColor: "#a855f7",
     href: "/reveal?universe=mega",
     gradient: "from-[#fefae6] via-[#fef0b8] to-[#fde490]",
     border: "border-[#ddc060]",
@@ -58,6 +64,9 @@ const UNIVERSES = [
     title: "Multiverse",
     emoji: "⚡",
     tagline: "Variantes intensas. Energía sci-fi.",
+    hoverDesc: "Versiones alternativas con efectos visuales exclusivos. Energía al máximo.",
+    peakLabel: "Ultra",
+    peakColor: "#f97316",
     href: "/reveal?universe=multiverse",
     gradient: "from-[#edf0ff] via-[#dde4ff] to-[#c8d4ff]",
     border: "border-[#9aaae8]",
@@ -114,6 +123,14 @@ export function UniverseCards(): React.JSX.Element {
                   background: `radial-gradient(ellipse at 50% 0%, ${u.glow} 0%, transparent 70%)`,
                 }}
               />
+
+              {/* Peak rarity badge */}
+              <span
+                className="absolute right-3 top-3 z-10 inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white shadow-sm"
+                style={{ background: u.peakColor }}
+              >
+                ✦ Hasta {u.peakLabel}
+              </span>
 
               {/* Figure fan */}
               <div className="relative h-[116px] w-full shrink-0">
@@ -180,6 +197,9 @@ export function UniverseCards(): React.JSX.Element {
                   {u.title}
                 </h3>
                 <p className={`text-sm leading-relaxed ${u.tagColor}`}>{u.tagline}</p>
+                <p className={`text-xs leading-relaxed transition-all duration-200 ${u.tagColor} opacity-0 group-hover:opacity-80 -mt-0.5`}>
+                  {u.hoverDesc}
+                </p>
               </div>
 
               {/* CTA */}
