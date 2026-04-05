@@ -17,6 +17,7 @@ import { Testimonials } from "@/components/home/testimonials";
 import { HeroFloatingFigures } from "@/components/home/hero-floating-figures";
 import { ShopifyBuyExperienceWrapper } from "@/components/home/shopify-buy-wrapper";
 import { DailyFigureWrapper } from "@/components/home/daily-figure-wrapper";
+import { FeaturedCollection } from "@/components/home/featured-collection";
 import { RecentFigures } from "@/components/home/recent-figures";
 
 export const metadata: Metadata = {
@@ -45,6 +46,9 @@ export default function Home(): React.JSX.Element {
                 </h1>
                 <p className="mx-auto max-w-md text-lg text-[var(--ink-600)] sm:text-xl">
                   Figuras coleccionables con rareza oficial.
+                </p>
+                <p className="mx-auto max-w-md text-sm text-[var(--ink-500)] sm:text-base">
+                  Tu próxima figura épica puede estar en el pack de Mega.
                 </p>
               </div>
 
@@ -80,6 +84,11 @@ export default function Home(): React.JSX.Element {
                 <span className="inline-flex items-center gap-1.5">🇲🇽 Hecho en México</span>
               </div>
             </section>
+
+            {/* ── Catálogo rápido ── */}
+            <LazySection>
+              <FeaturedCollection />
+            </LazySection>
 
             {/* ── Universos ── */}
             <LazySection>
