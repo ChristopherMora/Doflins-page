@@ -4,6 +4,7 @@ import {
   ShieldCheckIcon,
   SparklesIcon,
   ShoppingCartIcon,
+  Squares2X2Icon,
 } from "@heroicons/react/24/solid";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
@@ -17,8 +18,6 @@ import { Testimonials } from "@/components/home/testimonials";
 import { HeroFloatingFigures } from "@/components/home/hero-floating-figures";
 import { ShopifyBuyExperienceWrapper } from "@/components/home/shopify-buy-wrapper";
 import { DailyFigureWrapper } from "@/components/home/daily-figure-wrapper";
-import { FeaturedCollection } from "@/components/home/featured-collection";
-import { RecentFigures } from "@/components/home/recent-figures";
 
 export const metadata: Metadata = {
   title: "DOFLINS | Figuras Coleccionables con Rareza Oficial",
@@ -59,8 +58,8 @@ export default function Home(): React.JSX.Element {
                   </Link>
                 </Button>
                 <Button asChild variant="secondary" size="lg" className="h-13 min-h-[48px] rounded-full px-8 text-base">
-                  <Link href="#compras">
-                    <ShoppingCartIcon className="h-5 w-5" /> Abrir pack ahora
+                  <Link href="/coleccion">
+                    <Squares2X2Icon className="h-5 w-5" /> Ver colección
                   </Link>
                 </Button>
               </div>
@@ -85,24 +84,9 @@ export default function Home(): React.JSX.Element {
               </div>
             </section>
 
-            {/* ── Catálogo rápido ── */}
-            <LazySection>
-              <FeaturedCollection />
-            </LazySection>
-
             {/* ── Universos ── */}
             <LazySection>
               <UniverseCards />
-            </LazySection>
-
-            {/* ── Lo más probable que consigas ── */}
-            <LazySection>
-              <RecentFigures title="Lo más probable que consigas" viewAllHref="/reveal?universe=animals" />
-            </LazySection>
-
-            {/* ── Cómo funciona ── */}
-            <LazySection>
-              <HowItWorks />
             </LazySection>
 
             {/* ── Figura del Día ── */}
@@ -113,6 +97,11 @@ export default function Home(): React.JSX.Element {
             {/* ── Tienda / Packs ── */}
             <LazySection>
               <ShopifyBuyExperienceWrapper />
+            </LazySection>
+
+            {/* ── Cómo funciona ── */}
+            <LazySection>
+              <HowItWorks />
             </LazySection>
 
             {/* ── Testimonios ── */}
