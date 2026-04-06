@@ -29,7 +29,10 @@ const SERIES_MAP: Record<string, string> = {
   animals: "Animals", mega: "MegaAnimals", multiverse: "Multiverse",
 };
 
-async function getFeaturedFigures() {
+type FeaturedFigure = { id: number; imagenUrl: string; nombre: string; rareza: string };
+type FeaturedData = { animals: FeaturedFigure[]; mega: FeaturedFigure[]; multiverse: FeaturedFigure[] };
+
+async function getFeaturedFigures(): Promise<FeaturedData> {
   try {
     const db = getDb();
     const rows = await db
@@ -37,9 +40,9 @@ async function getFeaturedFigures() {
       .from(doflins)
       .where(eq(doflins.activo, true));
 
-    const featured: Record<string, { id: number; imagenUrl: string; nombre: string; rareza: string }[]> = {};
+    const featured: FeaturedData = { animals: [], mega: [], multiverse: [] };
     for (const [key, serieName] of Object.entries(SERIES_MAP)) {
-      featured[key] = rows
+      featured[key as keyof FeaturedData] = rows
         .filter((r) => r.serie === serieName)
         .sort((a, b) => (RARITY_RANK[b.rareza] ?? 0) - (RARITY_RANK[a.rareza] ?? 0))
         .slice(0, 3);
