@@ -2284,14 +2284,10 @@ export function RevealExperience({
         <div
           className="mt-5 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]"
         >
-          <AnimatePresence mode="popLayout" initial={false}>
           {isLoadingCollection
             ? Array.from({ length: 8 }, (_, skI) => (
-                <motion.div
+                <div
                   key={`skel-${skI}`}
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.25, delay: skI * 0.04 }}
                   className={`space-y-3 overflow-hidden rounded-[2rem] border p-3.5 ${activeConfig.cardClass}`}
                 >
                   <div className="h-[132px] animate-pulse rounded-xl bg-black/[0.07] sm:h-[145px]" />
@@ -2302,7 +2298,7 @@ export function RevealExperience({
                     <div className="h-5 w-12 animate-pulse rounded-full bg-black/[0.05]" />
                   </div>
                   <div className="mt-2 h-8 animate-pulse rounded-full bg-black/[0.07]" />
-                </motion.div>
+                </div>
               ))
             : visibleCards.map((item, index) => {
             const modelConfig = MODEL_CONFIG_BY_COLLECTION[item.collectionNumber];
@@ -2312,19 +2308,10 @@ export function RevealExperience({
             const itemVariantLabel = variantLabel(item.variantName);
 
             return (
-              <motion.div
+              <div
                 key={item.id}
-                layout
-                initial={{ opacity: 0, y: 16, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.15 } }}
-                transition={{
-                  duration: 0.32,
-                  delay: Math.min(index, 11) * 0.045,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-                whileHover={{ y: -6, scale: 1.025, transition: { duration: 0.18, ease: "easeOut" } }}
-                whileTap={{ scale: 0.97, transition: { duration: 0.1 } }}
+                className="transition-transform duration-200 hover:-translate-y-1.5 hover:scale-[1.025] active:scale-[0.97]"
+                style={index < 12 ? { animation: `fadeInUp 0.3s ease both`, animationDelay: `${Math.min(index, 11) * 0.04}s` } : undefined}
               >
               <Card
                 style={{
@@ -2420,10 +2407,9 @@ export function RevealExperience({
                   </div>
                 </CardContent>
               </Card>
-              </motion.div>
+              </div>
             );
           })}
-          </AnimatePresence>
         </div>
 
         {hasMoreCards ? <div ref={loadMoreRef} className="mt-4 h-1 w-full" /> : null}

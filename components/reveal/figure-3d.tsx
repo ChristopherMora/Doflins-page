@@ -55,7 +55,6 @@ function SmartImage({
   className?: string;
 }): React.JSX.Element {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
-  const [loaded, setLoaded] = useState(false);
   const hasError = failedSrc === src;
   const imageSrc = hasError ? fallbackSrc : src || fallbackSrc;
 
@@ -65,10 +64,8 @@ function SmartImage({
       alt={alt}
       width={700}
       height={700}
-      className={cn(className, "transition-opacity duration-300", loaded ? "opacity-100" : "opacity-0")}
-      onLoad={() => setLoaded(true)}
-      onError={() => { setFailedSrc(src); setLoaded(true); }}
-      unoptimized
+      className={cn(className)}
+      onError={() => setFailedSrc(src)}
     />
   );
 }
