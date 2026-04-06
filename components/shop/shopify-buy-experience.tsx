@@ -2357,18 +2357,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       ) : null}
                     </div>
 
-                    <div className={`flex flex-1 flex-col space-y-3 ${ gridView === "list" ? "justify-center p-3 sm:p-4" : "p-5" }`}>
-                      <div className="flex items-center gap-2">
-                        <span className="rounded-full bg-[var(--surface-200)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink-600)]">{UNIVERSE_LABELS[activeUniverse]}</span>
-                        {product.variants.length > 1 ? (
-                          <span className="rounded-full bg-[var(--surface-200)] px-2 py-0.5 text-[10px] text-[var(--ink-500)] ring-1 ring-black/[0.06]">
-                            {product.variants.length} variantes
-                          </span>
-                        ) : null}
-                      </div>
-
-                      <h4 className={`font-title leading-tight text-[var(--ink-900)] ${ gridView === "list" ? "text-base sm:text-lg" : "text-2xl sm:text-[2rem]" }`}>{product.title}</h4>
-                      {gridView !== "list" ? <p className="line-clamp-2 text-sm leading-relaxed text-[var(--ink-700)]">{getProductDescription(product, activeUniverse)}</p> : null}
+                    <div className={`flex flex-1 flex-col gap-3 ${ gridView === "list" ? "justify-center p-3 sm:p-4" : "p-4" }`}>
+                      <h4 className={`font-title leading-tight text-[var(--ink-900)] ${ gridView === "list" ? "text-base sm:text-lg" : "text-xl sm:text-2xl" }`}>{product.title}</h4>
 
                       {gridView === "list" ? (
                         /* ── Lista: precio + CTA inline ── */
@@ -2388,17 +2378,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         </div>
                       ) : (
                       <div className="mt-auto space-y-3">
-                        <div className="flex items-end justify-between gap-2 border-t pt-3" style={{ borderColor: "var(--shop-card-border)" }}>
-                          <div>
-                            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--ink-500)]">Precio</p>
-                            <p className="font-title text-[2rem] leading-none" style={{ color: "var(--shop-primary-from)" }}>{formatMoney(selectedVariant?.price ?? product.price)}</p>
-                          </div>
-                          {rarityTag ? (
-                            <span className="mb-0.5 shrink-0 rounded-full bg-[#fdf3df] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#7a4a10] ring-1 ring-[#e6c676]">
-                              {/legendary|legendari/i.test(rarityTag) ? "✨ Legendaria" : /epic/i.test(rarityTag) ? "🔥 Épica" : "💚 Especial"}
-                            </span>
-                          ) : null}
-                        </div>
+                        <p className="font-title text-3xl leading-none" style={{ color: "var(--shop-primary-from)" }}>{formatMoney(selectedVariant?.price ?? product.price)}</p>
 
                         {product.variants.length > 1 ? (
                           <div
@@ -2535,40 +2515,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           )}
                         </div>
 
-                        {/* ── Acciones secundarias (discretas) ── */}
-                        <div
-                          className="flex items-center gap-1"
+                        <Link
+                          href={`/shop/${product.handle}`}
                           onClick={(e) => e.stopPropagation()}
-                          onKeyDown={(e) => e.stopPropagation()}
+                          className="block text-center text-xs text-[var(--ink-500)] transition hover:text-[var(--ink-800)]"
                         >
-                          <Link
-                            href={`/shop/${product.handle}`}
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-medium text-[var(--ink-600)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]"
-                          >
-                            <EyeIcon className="h-3.5 w-3.5" /> Ver detalle
-                          </Link>
-                          <span className="h-4 w-px" style={{ background: "var(--shop-card-border)" }} />
-                          <button
-                            type="button"
-                            className="flex flex-1 items-center justify-center gap-1.5 rounded-full py-1.5 text-xs font-medium text-[var(--ink-600)] transition hover:bg-black/[0.05] hover:text-[var(--ink-900)]"
-                            onClick={() => {
-                              const url = `${typeof window !== "undefined" ? window.location.origin : ""}/shop/${product.handle}`;
-                              if (
-                                typeof navigator !== "undefined" &&
-                                typeof (navigator as unknown as Record<string, unknown>)["share"] === "function"
-                              ) {
-                                void (navigator as unknown as { share: (d: { title: string; url: string }) => Promise<void> }).share({
-                                  title: product.title,
-                                  url,
-                                });
-                              } else if (typeof navigator !== "undefined" && navigator.clipboard) {
-                                void navigator.clipboard.writeText(url).then(() => toast.success("Enlace copiado"));
-                              }
-                            }}
-                          >
-                            <ShareIcon className="h-3.5 w-3.5" /> Compartir
-                          </button>
-                        </div>
+                          Ver detalle →
+                        </Link>
                       </div>
                       )}
                     </div>
