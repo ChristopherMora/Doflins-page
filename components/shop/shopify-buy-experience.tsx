@@ -2247,12 +2247,12 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     }
                   >
                     <article
-                    className={`group flex h-full cursor-pointer overflow-hidden rounded-3xl border transition-all duration-300 ease-out hover:-translate-y-0.5 ${
-                      gridView === "list" ? "flex-row" : "flex-col hover:-translate-y-2 hover:scale-[1.01]"
-                    } ${isBestSeller ? "ring-2 ring-[#e6c676] ring-offset-1" : ""}`}
+                    className={`group flex h-full cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 ease-out ${
+                      gridView === "list" ? "flex-row" : "flex-col hover:-translate-y-1"
+                    }`}
                     style={{
                       background: "var(--shop-card-bg)",
-                      borderColor: isBestSeller ? "#d4a84b" : "var(--shop-card-border)",
+                      borderColor: "var(--shop-card-border)",
                       boxShadow: "var(--shop-card-shadow)",
                     }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shop-card-hover-shadow)"; }}
@@ -2271,21 +2271,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     <div className={`relative overflow-hidden bg-[var(--shop-image-panel-bg)] ${
                         gridView === "list" ? "aspect-square w-24 shrink-0 sm:w-32" : "aspect-[4/3] w-full"
                       }`}>
-                      {(isLiveNew || isBestSeller) && gridView !== "list" ? (
-                        <div className="absolute left-3 top-3 z-10 flex flex-col gap-1.5">
-                          {isBestSeller ? (
-                            <span className="inline-flex rounded-full bg-[#ffe9b5] px-3 py-1 text-xs font-bold text-[#5e4300] ring-1 ring-[#e6c676]">
-                              <SparklesIcon className="mr-1 h-3.5 w-3.5" />
-                              Más vendido
-                            </span>
-                          ) : null}
-                          {isLiveNew ? (
-                            <span className="inline-flex rounded-full bg-[var(--shop-chip-bg)] px-3 py-1 text-xs font-bold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
-                              Nuevo
-                            </span>
-                          ) : null}
-                        </div>
-                      ) : null}
                       {product.imageUrl ? (
                         <Image
                           src={product.imageUrl}
@@ -2303,17 +2288,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           Sin imagen
                         </div>
                       )}
-                      <div className="pointer-events-none absolute inset-0 bg-[var(--shop-image-overlay)]" />
-                      <div className="absolute right-3 top-3">
-                        <span
-                          className={`inline-flex rounded-full px-3 py-1 text-xs font-bold ${stockBadge.className} ${
-                            isUltraLowStock ? "animate-pulse" : ""
-                          }`}
-                        >
-                          {stockBadge.label}
-                        </span>
-                      </div>
-                      {/* ✓ Agregado badge inline */}
                       {isJustAdded ? (
                         <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/20">
                           <span className="animate-card-pop flex items-center gap-2 rounded-full bg-[var(--shop-added-badge-bg)] px-4 py-2 text-sm font-bold text-white shadow-lg">
@@ -2321,43 +2295,15 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           </span>
                         </div>
                       ) : null}
-                      {/* ── Tier badge overlay bottom-left ── */}
-                      {gridView !== "list" ? (() => {
-                        const tier = getPackTier(Number(product.price.amount));
-                        return (
-                          <div className="absolute bottom-3 left-3 z-10">
-                            <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide backdrop-blur-md shadow-sm ${
-                              tier.highlight
-                                ? "bg-amber-400/90 text-amber-900 ring-1 ring-amber-300"
-                                : tier.label === "Coleccionista"
-                                  ? "bg-violet-500/80 text-white ring-1 ring-violet-300"
-                                  : "bg-white/80 text-[var(--ink-700)] ring-1 ring-black/10"
-                            }`}>
-                              {tier.highlight ? "⭐" : tier.label === "Coleccionista" ? "💎" : "🎒"} {tier.label}
-                            </span>
-                          </div>
-                        );
-                      })() : null}
-                      <button
-                        type="button"
-                        aria-label={wishlist.has(product.id) ? "Quitar de favoritos" : "Guardar en favoritos"}
-                        className="absolute bottom-3 right-3 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-white/90 shadow-sm ring-1 ring-black/10 transition hover:scale-110 active:scale-95"
-                        onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
-                      >
-                        <HeartIcon className={`h-4 w-4 transition ${wishlist.has(product.id) ? "text-red-500" : "text-[var(--ink-400)]"}`} />
-                      </button>
-                      {/* ── Low stock strip at bottom of image ── */}
-                      {isLowStock && !isSoldOut && gridView !== "list" ? (
-                        <div className={`absolute bottom-0 left-0 right-0 z-10 flex items-center justify-center gap-1 bg-amber-500/90 py-1 text-center text-[11px] font-bold text-white backdrop-blur-sm ${isUltraLowStock ? "animate-pulse" : ""}`}>
-                          <ExclamationTriangleIcon className="h-3 w-3 shrink-0" />
-                          {isUltraLowStock
-                            ? `¡Solo ${selectedVariant?.quantityAvailable ?? ""} ${selectedVariant?.quantityAvailable === 1 ? "queda" : "quedan"}!`
-                            : "⚡ ¡Quedan pocos!"}
-                        </div>
-                      ) : null}
                     </div>
 
-                    <div className={`flex flex-1 flex-col gap-3 ${ gridView === "list" ? "justify-center p-3 sm:p-4" : "p-4" }`}>
+                    <div className={`flex flex-1 flex-col gap-3 ${ gridView === "list" ? "justify-center p-3 sm:p-4" : "p-5" }`}>
+                      {gridView !== "list" ? (() => {
+                        if (isBestSeller) return <p className="text-xs font-bold uppercase tracking-widest" style={{ color: "var(--shop-primary-from)" }}>✦ Más vendido</p>;
+                        if (isLiveNew) return <p className="text-xs font-bold uppercase tracking-widest text-amber-500">Nuevo</p>;
+                        const tier = getPackTier(Number(product.price.amount));
+                        return <p className="text-xs font-medium uppercase tracking-widest text-[var(--ink-400)]">{tier.label}</p>;
+                      })() : null}
                       <h4 className={`font-title leading-tight text-[var(--ink-900)] ${ gridView === "list" ? "text-base sm:text-lg" : "text-xl sm:text-2xl" }`}>{product.title}</h4>
 
                       {gridView === "list" ? (
@@ -2422,8 +2368,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
                         {stockBadge.detail ? <p className="text-xs font-medium text-[var(--ink-700)]">{stockBadge.detail}</p> : null}
 
-                        {/* ── Acción principal: qty + agregar ── */}
-                        <div className="relative">
+                        <div
+                          className="relative"
+                          onClick={(e) => e.stopPropagation()}
+                          onKeyDown={(e) => e.stopPropagation()}
+                        >
                           {confettiByProduct.has(product.id) ?
                             ([
                               { tx: "-22px", rot: "-28deg", color: "var(--shop-primary-to)" },
@@ -2448,17 +2397,17 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           {isSoldOut ? (
                             <div className="space-y-1.5">
                               <Button
-                                className="h-12 w-full opacity-50"
-                                style={{ background: "var(--shop-card-border)", color: "var(--ink-900)" }}
+                                className="h-12 w-full opacity-40"
+                                style={{ background: "var(--shop-card-border)", color: "var(--ink-700)" }}
                                 disabled
                               >
-                                <ShoppingCartIcon className="h-5 w-5" /> Agotado temporalmente
+                                Agotado temporalmente
                               </Button>
                               {activeUniverse === "animals" ? (
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); activateUniverse("multiverse"); }}
-                                  className="w-full rounded-full py-1.5 text-xs font-medium text-[var(--ink-600)] transition hover:text-[var(--ink-900)] hover:bg-black/[0.04]"
+                                  className="w-full rounded-full py-1.5 text-xs font-medium text-[var(--ink-500)] transition hover:text-[var(--ink-900)]"
                                 >
                                   ¿Ver Multiverse? →
                                 </button>
@@ -2466,62 +2415,25 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                                 <button
                                   type="button"
                                   onClick={(e) => { e.stopPropagation(); activateUniverse("animals"); }}
-                                  className="w-full rounded-full py-1.5 text-xs font-medium text-[var(--ink-600)] transition hover:text-[var(--ink-900)] hover:bg-black/[0.04]"
+                                  className="w-full rounded-full py-1.5 text-xs font-medium text-[var(--ink-500)] transition hover:text-[var(--ink-900)]"
                                 >
                                   ¿Ver Animals? →
                                 </button>
                               )}
                             </div>
                           ) : (
-                            <div
-                              className="flex items-center gap-2"
-                              onClick={(e) => e.stopPropagation()}
-                              onKeyDown={(e) => e.stopPropagation()}
+                            <Button
+                              className={`h-12 w-full text-base font-bold bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] ${lastAddedProductId === product.id ? "animate-card-pop" : ""}`}
+                              disabled={isMutatingCart}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                void addToCart(product, 1);
+                              }}
                             >
-                              {/* Stepper compacto */}
-                              <div className="flex shrink-0 items-center gap-1 rounded-full border px-2 py-1.5" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
-                                <button
-                                  type="button"
-                                  aria-label="Reducir cantidad"
-                                  disabled={getProductQty(product.id) <= 1}
-                                  onClick={(e) => { e.stopPropagation(); setProductQty(product.id, getProductQty(product.id) - 1); }}
-                                  className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--ink-700)] transition hover:bg-black/[0.07] disabled:opacity-30"
-                                >
-                                  <MinusIcon className="h-3.5 w-3.5" />
-                                </button>
-                                <span className="min-w-[1.25rem] text-center text-sm font-bold text-[var(--ink-900)]">{getProductQty(product.id)}</span>
-                                <button
-                                  type="button"
-                                  aria-label="Aumentar cantidad"
-                                  onClick={(e) => { e.stopPropagation(); setProductQty(product.id, getProductQty(product.id) + 1); }}
-                                  className="flex h-6 w-6 items-center justify-center rounded-full text-[var(--ink-700)] transition hover:bg-black/[0.07]"
-                                >
-                                  <PlusIcon className="h-3.5 w-3.5" />
-                                </button>
-                              </div>
-                              {/* CTA principal */}
-                              <Button
-                                className={`h-12 flex-1 text-base font-bold bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] ${lastAddedProductId === product.id ? "animate-card-pop" : ""}`}
-                                disabled={isMutatingCart}
-                                onClick={(event) => {
-                                  event.stopPropagation();
-                                  void addToCart(product, getProductQty(product.id));
-                                }}
-                              >
-                                <ShoppingCartIcon className="h-5 w-5" />
-                                Agregar&nbsp;×{getProductQty(product.id)}
-                              </Button>
-                            </div>
+                              Agregar al carrito
+                            </Button>
                           )}
                         </div>
-
-                        <Link
-                          href={`/shop/${product.handle}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="block text-center text-xs text-[var(--ink-500)] transition hover:text-[var(--ink-800)]"
-                        >
-                          Ver detalle →
-                        </Link>
                       </div>
                       )}
                     </div>
