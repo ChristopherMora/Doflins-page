@@ -240,183 +240,196 @@ export function GlobalCartDrawer() {
   return (
     <Sheet open={isOpen} onOpenChange={setIsOpen}>
       <SheetContent
-        className="flex h-full w-[min(100vw,460px)] flex-col p-0"
+        className="flex h-full w-[min(100vw,420px)] flex-col gap-0 p-0"
         side="right"
       >
-        <div className="flex-1 space-y-3 overflow-y-auto p-5 pb-28">
-          <SheetHeader className="space-y-0.5">
-            <SheetTitle>Tu carrito DOFLINS</SheetTitle>
-            <SheetDescription>
-              {cartItemCount > 0
-                ? `${cartItemCount} pack${cartItemCount === 1 ? "" : "s"} · ${formatMoney(cart?.total)}`
-                : "Agrega packs y paga en Shopify Checkout"}
-            </SheetDescription>
+        {/* ── Header ── */}
+        <div className="shrink-0 border-b border-[#dde5ce] bg-[#f6faf0] px-5 py-4">
+          <SheetHeader className="space-y-0">
+            <div className="flex items-center gap-2.5">
+              <div className="flex h-9 w-9 items-center justify-center rounded-full bg-[linear-gradient(135deg,#4a7a4a,#6a9a5a)]">
+                <ShoppingCartIcon className="h-4.5 w-4.5 text-white" />
+              </div>
+              <div>
+                <SheetTitle className="text-base font-bold leading-tight text-[#1a2010]">
+                  Tu carrito
+                </SheetTitle>
+                <SheetDescription className="text-xs text-[#6b7565]">
+                  {cartItemCount > 0
+                    ? `${cartItemCount} pack${cartItemCount === 1 ? "" : "s"} · ${formatMoney(cart?.total)}`
+                    : "Agrega packs para empezar"}
+                </SheetDescription>
+              </div>
+            </div>
           </SheetHeader>
+        </div>
+
+        {/* ── Scrollable body ── */}
+        <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4 pb-32">
 
           {isLoading ? (
-            <div className="flex items-center gap-2 text-sm text-[var(--ink-700)]">
-              <ArrowPathIcon className="h-4 w-4 animate-spin text-[var(--shop-primary-from,#4a7a4a)]" />
+            <div className="flex items-center gap-2 rounded-2xl bg-[#f3f8e7] px-4 py-3 text-sm text-[#4a5542]">
+              <ArrowPathIcon className="h-4 w-4 animate-spin text-[#4a7a4a]" />
               <span>Cargando carrito…</span>
             </div>
           ) : null}
 
           {!isLoading && !hasLines ? (
-            <div className="rounded-2xl border p-5 text-center" style={{ borderColor: "var(--shop-card-border,#d4ddc2)", background: "var(--shop-control-bg,#f9faf7)" }}>
-              <ShoppingCartIcon className="mx-auto mb-2 h-7 w-7 text-[var(--ink-400,#9aa390)]" />
-              <p className="text-sm font-medium text-[var(--ink-700,#4a5542)]">Tu carrito está vacío</p>
-              <p className="mt-0.5 text-xs text-[var(--ink-500,#6b7565)]">
-                Elige un pack para comenzar tu colección
-              </p>
+            <div className="flex flex-col items-center gap-3 rounded-3xl border border-dashed border-[#c8d8b0] bg-[#f6faf0] py-12 text-center">
+              <div className="flex h-14 w-14 items-center justify-center rounded-full bg-[#e4f0d0]">
+                <ShoppingCartIcon className="h-7 w-7 text-[#6a9a5a]" />
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-[#1a2010]">Tu carrito está vacío</p>
+                <p className="mt-0.5 text-xs text-[#6b7565]">Elige un pack para comenzar tu colección</p>
+              </div>
             </div>
           ) : null}
 
+          {/* ── Line items ── */}
           {cart?.lines.map((line) => {
             const isFree = Number(line.pricePerUnit.amount) <= 0;
             const isMut = mutatingLineIds.has(line.id);
             return (
               <article
                 key={line.id}
-                className={`rounded-2xl border p-3 transition-opacity ${isMut ? "opacity-60" : ""} ${isFree ? "border-[var(--shop-chip-ring,#b8d494)] bg-[var(--shop-chip-bg,#ecf7d8)]" : "border-[var(--shop-card-border,#d4ddc2)] bg-[var(--shop-control-bg,#f9faf7)]"}`}
+                className={`flex gap-3 rounded-2xl border p-3 transition-opacity ${isMut ? "opacity-50" : ""} ${
+                  isFree
+                    ? "border-[#b8d494] bg-[#ecf7d8]"
+                    : "border-[#dde5ce] bg-white"
+                }`}
               >
-                {isFree ? (
-                  <p className="mb-2 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--shop-chip-text,#4a7a2a)]">
-                    🎁 Regalo gratis — se agrega al checkout
-                  </p>
+                {line.imageUrl ? (
+                  <div className="relative h-[72px] w-[72px] shrink-0 overflow-hidden rounded-xl border border-[#dde5ce] bg-[#f3f8e7]">
+                    <Image
+                      src={line.imageUrl}
+                      alt={line.imageAlt ?? line.productTitle}
+                      fill
+                      sizes="72px"
+                      className="object-cover"
+                      unoptimized
+                    />
+                  </div>
                 ) : null}
-                <div className="flex items-center gap-3">
-                  {line.imageUrl ? (
-                    <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border" style={{ borderColor: "var(--shop-card-border,#d4ddc2)" }}>
-                      <Image
-                        src={line.imageUrl}
-                        alt={line.imageAlt ?? line.productTitle}
-                        fill
-                        sizes="56px"
-                        className="object-cover"
-                        unoptimized
-                      />
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-start justify-between gap-1">
+                    <p className="truncate text-sm font-bold text-[#1a2010] leading-tight">
+                      {line.productTitle}
+                    </p>
+                    {!isFree ? (
+                      <button
+                        aria-label="Eliminar producto"
+                        className="shrink-0 rounded-full p-1 text-[#9aa390] transition hover:bg-red-50 hover:text-red-500"
+                        disabled={isMut}
+                        onClick={() => void removeLine(line.id)}
+                      >
+                        <TrashIcon className="h-3.5 w-3.5" />
+                      </button>
+                    ) : (
+                      <LockClosedIcon className="h-4 w-4 shrink-0 text-[#4a7a2a] opacity-40" />
+                    )}
+                  </div>
+                  {isFree ? (
+                    <span className="mt-1 inline-block rounded-full bg-[#d4efb4] px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-[#2f5b1f]">
+                      🎁 Gratis
+                    </span>
+                  ) : (
+                    <p className="mt-0.5 text-base font-bold text-[#1a2010]">{formatMoney(line.lineTotal)}</p>
+                  )}
+                  {!isFree ? (
+                    <div className="mt-2 flex items-center gap-1">
+                      <button
+                        aria-label="Reducir"
+                        disabled={isMut || line.quantity <= 1}
+                        onClick={() => void updateQuantity(line.id, Math.max(1, line.quantity - 1))}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-[#cdd8bb] bg-[#f3f8e7] text-[#4a5542] transition hover:bg-[#e4f0d0] disabled:opacity-30"
+                      >
+                        <MinusIcon className="h-3 w-3" />
+                      </button>
+                      <span className="min-w-[1.75rem] text-center text-sm font-bold text-[#1a2010]">
+                        {line.quantity}
+                      </span>
+                      <button
+                        aria-label="Aumentar"
+                        disabled={isMut}
+                        onClick={() => void updateQuantity(line.id, line.quantity + 1)}
+                        className="flex h-7 w-7 items-center justify-center rounded-full border border-[#cdd8bb] bg-[#f3f8e7] text-[#4a5542] transition hover:bg-[#e4f0d0]"
+                      >
+                        <PlusIcon className="h-3 w-3" />
+                      </button>
+                      {isMut ? (
+                        <ArrowPathIcon className="h-3.5 w-3.5 animate-spin text-[#4a7a4a]" />
+                      ) : null}
                     </div>
                   ) : null}
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-[var(--ink-900,#1a2010)]">
-                          {line.productTitle}
-                        </p>
-                        {line.variantTitle && line.variantTitle !== "Default Title" ? (
-                          <p className="text-xs text-[var(--ink-500,#6b7565)]">{line.variantTitle}</p>
-                        ) : null}
-                        <p className="mt-0.5">
-                          {isFree ? (
-                            <span className="rounded-full bg-[var(--shop-chip-bg,#ecf7d8)] px-2 py-0.5 text-xs font-bold text-[var(--shop-chip-text,#4a7a2a)] ring-1 ring-[var(--shop-chip-ring,#b8d494)]">
-                              Gratis
-                            </span>
-                          ) : (
-                            <span className="text-sm font-semibold text-[var(--ink-900,#1a2010)]">
-                              {formatMoney(line.lineTotal)}
-                            </span>
-                          )}
-                        </p>
-                      </div>
-                      {!isFree ? (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 shrink-0 p-0 text-[var(--ink-400,#9aa390)] hover:text-red-500"
-                          disabled={isMut}
-                          onClick={() => void removeLine(line.id)}
-                        >
-                          <TrashIcon className="h-3.5 w-3.5" />
-                        </Button>
-                      ) : (
-                        <LockClosedIcon className="h-4 w-4 shrink-0 text-[var(--shop-chip-text,#4a7a2a)] opacity-50" />
-                      )}
-                    </div>
-                    {!isFree ? (
-                      <div className="mt-2 flex items-center gap-1.5">
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          disabled={isMut || line.quantity <= 1}
-                          onClick={() => void updateQuantity(line.id, Math.max(1, line.quantity - 1))}
-                        >
-                          <MinusIcon className="h-3.5 w-3.5" />
-                        </Button>
-                        <span className="min-w-[1.75rem] text-center text-sm font-bold text-[var(--ink-900,#1a2010)]">
-                          {line.quantity}
-                        </span>
-                        <Button
-                          variant="secondary"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          disabled={isMut}
-                          onClick={() => void updateQuantity(line.id, line.quantity + 1)}
-                        >
-                          <PlusIcon className="h-3.5 w-3.5" />
-                        </Button>
-                        {isMut ? (
-                          <ArrowPathIcon className="h-3.5 w-3.5 animate-spin text-[var(--shop-primary-from,#4a7a4a)]" />
-                        ) : null}
-                      </div>
-                    ) : null}
-                  </div>
                 </div>
               </article>
             );
           })}
 
+          {/* ── Free shipping bar ── */}
           {freeShippingProgress && hasLines ? (
-            <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--shop-chip-ring,#b8d494)", background: "var(--shop-chip-bg,#ecf7d8)" }}>
-              <div className="h-1.5 w-full" style={{ background: "var(--shop-card-border,#d4ddc2)" }}>
+            <div className="overflow-hidden rounded-2xl border border-[#b8d494] bg-[#ecf7d8]">
+              <div className="relative h-2 w-full bg-[#d4e8c0]">
                 <div
-                  className="h-full transition-all duration-500"
+                  className="absolute left-0 top-0 h-full rounded-full transition-all duration-700"
                   style={{
                     width: `${freeShippingProgress.percent}%`,
-                    background: "linear-gradient(90deg,var(--shop-primary-from,#4a7a4a),var(--shop-primary-to,#6a9a5a))",
+                    background: "linear-gradient(90deg,#4a7a4a,#7ab85a)",
                   }}
                 />
               </div>
-              <div className="px-4 py-3">
-                <p className="text-sm font-semibold text-[var(--shop-chip-text,#4a7a2a)]">
-                  {freeShippingProgress.unlocked
-                    ? "🚚 ¡Envío gratis desbloqueado!"
-                    : `🚚 Faltan ${formatAmount(freeShippingProgress.remaining, currencyCode)} para envío gratis`}
-                </p>
-                <p className="mt-0.5 text-xs text-[var(--ink-600,#5a6555)]">
-                  {formatAmount(freeShippingProgress.paidSubtotal, currencyCode)} de{" "}
-                  {formatAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, currencyCode)}
-                </p>
+              <div className="flex items-center gap-2.5 px-4 py-3">
+                <TruckIcon className="h-5 w-5 shrink-0 text-[#3a6a2a]" />
+                <div>
+                  <p className="text-sm font-bold text-[#2f5b1f]">
+                    {freeShippingProgress.unlocked
+                      ? "¡Envío gratis desbloqueado! 🎉"
+                      : `Faltan ${formatAmount(freeShippingProgress.remaining, currencyCode)} para envío gratis`}
+                  </p>
+                  {!freeShippingProgress.unlocked ? (
+                    <p className="text-[11px] text-[#5a7a4a]">
+                      {formatAmount(freeShippingProgress.paidSubtotal, currencyCode)} de {formatAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, currencyCode)}
+                    </p>
+                  ) : null}
+                </div>
               </div>
             </div>
           ) : null}
 
+          {/* ── Totals ── */}
           {hasLines ? (
-            <div className="space-y-2 rounded-2xl border p-4 text-sm text-[var(--ink-700,#4a5542)]" style={{ borderColor: "var(--shop-card-border,#d4ddc2)", background: "var(--shop-control-bg,#f9faf7)" }}>
-              <p className="flex items-center justify-between">
+            <div className="rounded-2xl border border-[#dde5ce] bg-white p-4 text-sm">
+              <div className="flex items-center justify-between text-[#5a6555]">
                 <span>Subtotal</span>
-                <strong className="text-[var(--ink-900,#1a2010)]">{formatMoney(cart?.subtotal)}</strong>
-              </p>
-              <p className="flex items-center justify-between text-base">
-                <span>Total estimado</span>
-                <strong className="text-[var(--ink-900,#1a2010)]">{formatMoney(cart?.total)}</strong>
-              </p>
+                <span className="font-semibold text-[#1a2010]">{formatMoney(cart?.subtotal)}</span>
+              </div>
+              <div className="mt-1 flex items-center justify-between text-xs text-[#6b7565]">
+                <span>Envío</span>
+                <span>Se calcula en checkout</span>
+              </div>
+              <div className="mt-2 border-t border-[#eaefde] pt-2 flex items-center justify-between">
+                <span className="font-semibold text-[#1a2010]">Total estimado</span>
+                <span className="font-bold text-lg text-[#1a2010]">{formatMoney(cart?.total)}</span>
+              </div>
             </div>
           ) : null}
 
+          {/* ── Discount code ── */}
           {hasLines ? (
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <label htmlFor="gc-discount-code" className="sr-only">Código de descuento</label>
-                <Input
-                  id="gc-discount-code"
-                  value={discountCode}
-                  onChange={(e) => setDiscountCode(e.target.value)}
-                  placeholder="Cupón"
-                  disabled={isMutating}
-                />
-              </div>
+              <label htmlFor="gc-discount-code" className="sr-only">Código de descuento</label>
+              <Input
+                id="gc-discount-code"
+                value={discountCode}
+                onChange={(e) => setDiscountCode(e.target.value)}
+                placeholder="Código de descuento"
+                disabled={isMutating}
+                className="flex-1 rounded-full"
+              />
               <Button
                 variant="secondary"
+                className="rounded-full"
                 disabled={isMutating || !discountCode.trim()}
                 onClick={() => void applyDiscount()}
               >
@@ -425,9 +438,10 @@ export function GlobalCartDrawer() {
             </div>
           ) : null}
 
+          {/* ── Gift note ── */}
           {hasLines ? (
             <div className="space-y-1.5">
-              <label htmlFor="gc-gift-note" className="text-xs font-medium text-[var(--ink-700,#4a5542)]">
+              <label htmlFor="gc-gift-note" className="text-xs font-medium text-[#5a6555]">
                 🎁 ¿Es un regalo? Agrega una nota (opcional)
               </label>
               <textarea
@@ -436,63 +450,59 @@ export function GlobalCartDrawer() {
                 value={giftNote}
                 onChange={(e) => setGiftNote(e.target.value)}
                 placeholder="Ej: ¡Feliz cumpleaños! Esta figura es especial para ti."
-                className="w-full resize-none rounded-xl border border-[var(--shop-control-border,#c8d4bc)] bg-[var(--shop-control-bg,#f9faf7)] px-3 py-2.5 text-sm text-[var(--ink-900,#1a2010)] placeholder:text-[var(--ink-500,#6b7565)] outline-none focus:ring-1 focus:ring-[var(--shop-primary-from,#4a7a4a)]"
+                className="w-full resize-none rounded-2xl border border-[#cdd8bb] bg-[#f6faf0] px-3 py-2.5 text-sm text-[#1a2010] placeholder:text-[#9aa390] outline-none focus:ring-1 focus:ring-[#4a7a4a]"
                 maxLength={280}
               />
             </div>
           ) : null}
 
-          <div className="space-y-3 rounded-2xl border border-[#d4ddc2] bg-[#f3f8e7] p-4 text-sm text-[var(--ink-700,#4a5542)]">
-            <p className="font-semibold text-[var(--ink-900,#1a2010)]">Compra con confianza</p>
-            <div className="space-y-2">
+          {/* ── Trust signals — compact horizontal ── */}
+          <div className="rounded-2xl border border-[#dde5ce] bg-[#f6faf0] p-4">
+            <div className="flex flex-col gap-2">
               {[
-                { icon: ShieldCheckIcon, title: "Pago protegido", detail: "Tu pago se procesa en Shopify Checkout con conexión segura." },
-                { icon: TruckIcon, title: "Envío claro", detail: "Costos y tiempos se muestran antes de confirmar el pago." },
-                { icon: ClockIcon, title: "Soporte rápido", detail: "Te atendemos por WhatsApp para cualquier duda de tu pedido." },
-              ].map(({ icon: Icon, title, detail }) => (
-                <div key={title} className="rounded-xl border border-[#d2ddba] bg-white/70 p-3">
-                  <p className="flex items-center gap-2 font-medium text-[var(--ink-900,#1a2010)]">
-                    <Icon className="h-4 w-4 text-[var(--shop-primary-from,#4a7a4a)]" />
-                    {title}
-                  </p>
-                  <p className="mt-1 text-xs text-[var(--ink-700,#4a5542)]">{detail}</p>
+                { icon: ShieldCheckIcon, text: "Pago seguro en Shopify Checkout" },
+                { icon: TruckIcon, text: "Envío calculado antes de pagar" },
+                { icon: ClockIcon, text: "Soporte por WhatsApp" },
+              ].map(({ icon: Icon, text }) => (
+                <div key={text} className="flex items-center gap-2 text-xs text-[#4a5542]">
+                  <Icon className="h-4 w-4 shrink-0 text-[#4a7a4a]" />
+                  <span>{text}</span>
                 </div>
               ))}
             </div>
             <a
-              className="inline-flex items-center gap-2 font-medium text-[var(--ink-900,#1a2010)] underline underline-offset-2"
               href={SUPPORT_WHATSAPP_URL}
               rel="noreferrer"
               target="_blank"
+              className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-[#2f5b1f] hover:underline"
             >
-              <ChatBubbleLeftRightIcon className="h-4 w-4 text-[var(--shop-primary-from,#4a7a4a)]" />
-              Hablar con soporte por WhatsApp
+              <ChatBubbleLeftRightIcon className="h-4 w-4" />
+              Hablar con soporte
             </a>
           </div>
         </div>
 
+        {/* ── Sticky checkout footer ── */}
         {hasLines ? (
-          <div className="border-t p-4" style={{ borderColor: "var(--shop-card-border,#d4ddc2)", background: "var(--shop-control-bg,#f9faf7)" }}>
-            <div className="mb-2 flex items-center justify-between text-sm text-[var(--ink-700,#4a5542)]">
-              <span>Total estimado</span>
-              <strong className="text-base text-[var(--ink-900,#1a2010)]">{formatMoney(cart?.total)}</strong>
-            </div>
+          <div className="shrink-0 border-t border-[#dde5ce] bg-white px-4 pb-6 pt-4 shadow-[0_-8px_24px_rgba(0,0,0,0.07)]">
             <Button
-              className="h-12 w-full"
-              style={{ background: "linear-gradient(135deg,var(--shop-primary-from,#4a7a4a),var(--shop-primary-to,#6a9a5a))" }}
+              className="h-13 w-full rounded-2xl text-base font-bold shadow-lg transition hover:brightness-110 active:scale-[0.98]"
+              style={{ background: "linear-gradient(135deg,#4a7a4a,#6aaa5a)", height: "52px" }}
               disabled={isMutating}
               onClick={() => void goToCheckout()}
             >
               {isMutating ? (
                 <ArrowPathIcon className="h-5 w-5 animate-spin" />
               ) : (
-                <ShoppingCartIcon className="h-5 w-5" />
+                <>
+                  <ShoppingCartIcon className="h-5 w-5" />
+                  Pagar ahora · {formatMoney(cart?.total)}
+                </>
               )}
-              Pagar en Shopify
             </Button>
-            <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-[var(--ink-700,#4a5542)]">
-              <LockClosedIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from,#4a7a4a)]" />
-              Pago protegido en Shopify Checkout
+            <p className="mt-2.5 flex items-center justify-center gap-1.5 text-[11px] text-[#7a8a70]">
+              <LockClosedIcon className="h-3 w-3" />
+              Pago protegido por Shopify
             </p>
           </div>
         ) : null}
