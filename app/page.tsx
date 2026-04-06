@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { eq } from "drizzle-orm";
 import {
   ShieldCheckIcon,
   SparklesIcon,
@@ -18,6 +19,36 @@ import { Testimonials } from "@/components/home/testimonials";
 import { HeroFloatingFigures } from "@/components/home/hero-floating-figures";
 import { ShopifyBuyExperienceWrapper } from "@/components/home/shopify-buy-wrapper";
 import { DailyFigureWrapper } from "@/components/home/daily-figure-wrapper";
+import { getDb } from "@/lib/db/client";
+import { doflins } from "@/lib/db/schema";
+
+const RARITY_RANK: Record<string, number> = {
+  MYTHIC: 6, ULTRA: 5, LEGENDARY: 4, EPIC: 3, RARE: 2, COMMON: 1,
+};
+const SERIES_MAP: Record<string, string> = {
+  animals: "Animals", mega: "MegaAnimals", multiverse: "Multiverse",
+};
+
+async function getFeaturedFigures() {
+  try {
+    const db = getDb();
+    const rows = await db
+      .select({ id: doflins.id, nombre: doflins.nombre, serie: doflins.serie, rareza: doflins.rareza, imagenUrl: doflins.imagenUrl })
+      .from(doflins)
+      .where(eq(doflins.activo, true));
+
+    const featured: Record<string, { id: number; imagenUrl: string; nombre: string; rareza: string }[]> = {};
+    for (const [key, serieName] of Object.entries(SERIES_MAP)) {
+      featured[key] = rows
+        .filter((r) => r.serie === serieName)
+        .sort((a, b) => (RARITY_RANK[b.rareza] ?? 0) - (RARITY_RANK[a.rareza] ?? 0))
+        .slice(0, 3);
+    }
+    return featured;
+  } catch {
+    return { animals: [], mega: [], multiverse: [] };
+  }
+}
 
 export const metadata: Metadata = {
   title: "DOFLINS | Figuras Coleccionables con Rareza Oficial",
@@ -28,7 +59,16 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Home(): React.JSX.Element {
+export default async function Home(): Promise<React.JSX.Element> {
+  const featured = await getFeaturedFigures();
+
+  // Preparar las figuras del hero: top 4 únicas por rareza
+  const heroFigures = Object.values(featured)
+    .flat()
+    .filter((f, i, arr) => arr.findIndex((x) => x.id === f.id) === i)
+    .sort((a, b) => (RARITY_RANK[b.rareza] ?? 0) - (RARITY_RANK[a.rareza] ?? 0))
+    .slice(0, 4);
+
   return (
     <>
       <HomeUniverseSync />
@@ -38,7 +78,7 @@ export default function Home(): React.JSX.Element {
 
             {/* ── Hero ── */}
             <section className="relative flex flex-col items-center gap-6 pt-10 text-center sm:pt-20">
-              <HeroFloatingFigures />
+              <HeroFloatingFigures initialFigures={heroFigures} />
               <div className="stagger-fade-in space-y-4">
                 <h1 className="font-title text-[2.75rem] leading-[1.05] tracking-tight text-[var(--ink-900)] sm:text-6xl md:text-7xl">
                   Colecciona<br />DOFLINS
@@ -86,7 +126,7 @@ export default function Home(): React.JSX.Element {
 
             {/* ── Universos ── */}
             <LazySection>
-              <UniverseCards />
+              <UniverseCards initialFeatured={featured} />
             </LazySection>
 
             {/* ── Figura del Día ── */}

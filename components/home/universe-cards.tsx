@@ -86,15 +86,20 @@ const FAN = [
   { rotate: "13deg",  dx: 36,  dy: 6, z: 0, scale: 0.93 },
 ];
 
-export function UniverseCards(): React.JSX.Element {
-  const [featured, setFeatured] = useState<FeaturedResponse["featured"] | null>(null);
+interface UniverseCardsProps {
+  initialFeatured?: FeaturedResponse["featured"];
+}
+
+export function UniverseCards({ initialFeatured }: UniverseCardsProps = {}): React.JSX.Element {
+  const [featured, setFeatured] = useState<FeaturedResponse["featured"] | null>(initialFeatured ?? null);
 
   useEffect(() => {
+    if (initialFeatured) return; // ya tenemos datos del servidor
     fetch("/api/universe/featured")
       .then((r) => (r.ok ? (r.json() as Promise<FeaturedResponse>) : null))
       .then((d) => { if (d) setFeatured(d.featured); })
       .catch(() => null);
-  }, []);
+  }, [initialFeatured]);
 
   return (
     <section className="space-y-6">
@@ -159,7 +164,7 @@ export function UniverseCards(): React.JSX.Element {
                             width={76}
                             height={100}
                             className="h-full w-full object-cover"
-                            unoptimized
+                            priority
                           />
                         </div>
                       </div>

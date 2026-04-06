@@ -31,15 +31,19 @@ const POSITIONS = [
   { top: "60%", right: "0%",  size: 104, delay: "1.8s",  duration: "5.5s", rotate: "14deg"  },
 ];
 
-export function HeroFloatingFigures(): React.JSX.Element | null {
-  const [figures, setFigures] = useState<Figure[]>([]);
+interface HeroFloatingFiguresProps {
+  initialFigures?: Figure[];
+}
+
+export function HeroFloatingFigures({ initialFigures = [] }: HeroFloatingFiguresProps): React.JSX.Element | null {
+  const [figures, setFigures] = useState<Figure[]>(initialFigures);
 
   useEffect(() => {
+    if (initialFigures.length > 0) return; // ya tenemos datos del servidor
     fetch("/api/universe/featured")
       .then((r) => r.json())
       .then((data: FeaturedResponse) => {
         const all = Object.values(data.featured ?? {}).flat();
-        // Dedup por id, tomar los primeros 4 de mayor rareza
         const seen = new Set<number>();
         const unique = all.filter((f) => {
           if (seen.has(f.id)) return false;
@@ -49,7 +53,7 @@ export function HeroFloatingFigures(): React.JSX.Element | null {
         setFigures(unique.slice(0, 4));
       })
       .catch(() => {});
-  }, []);
+  }, [initialFigures.length]);
 
   if (figures.length === 0) return null;
 
@@ -83,6 +87,7 @@ export function HeroFloatingFigures(): React.JSX.Element | null {
               height={pos.size}
               className="h-full w-full rounded-2xl object-cover"
               sizes={`${pos.size}px`}
+              priority
             />
           </div>
         );
