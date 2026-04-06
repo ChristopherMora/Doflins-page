@@ -25,7 +25,6 @@ import {
   WifiIcon,
   XMarkIcon,
 } from "@heroicons/react/24/solid";
-import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 
 import { pushDataLayerEvent } from "@/lib/analytics";
@@ -421,27 +420,17 @@ function RarityParticles({ rarity }: { rarity: string }): React.JSX.Element {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden rounded-[2rem]" aria-hidden="true">
       {Array.from({ length: 6 }, (_, i) => (
-        <motion.span
+        <span
           key={i}
-          className="absolute rounded-full"
+          className="particle-float absolute rounded-full"
           style={{
             width: 3 + (i % 3),
             height: 3 + (i % 3),
             backgroundColor: color,
             left: `${10 + i * 15}%`,
             bottom: "8%",
-          }}
-          animate={{
-            y: [0, -(50 + i * 14), -(80 + i * 18)],
-            x: [0, i % 2 === 0 ? 8 : -8, 0],
-            opacity: [0, 0.9, 0],
-            scale: [0.5, 1, 0.3],
-          }}
-          transition={{
-            duration: 2.4 + i * 0.35,
-            repeat: Infinity,
-            delay: i * 0.45,
-            ease: "easeOut",
+            animationDuration: `${2.4 + i * 0.35}s`,
+            animationDelay: `${i * 0.45}s`,
           }}
         />
       ))}
@@ -2144,19 +2133,12 @@ export function RevealExperience({
                   aria-selected={activeUniverse === "animals"}
                   type="button"
                   onClick={() => switchUniverse("animals", "catalog_toggle")}
-                  className={`relative rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
+                  className={`relative rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
                     activeUniverse === "animals"
-                      ? "text-white"
+                      ? `text-white shadow-sm ${activeTheme.primaryButton}`
                       : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"
                   }`}
                 >
-                  {activeUniverse === "animals" ? (
-                    <motion.span
-                      layoutId="universe-tab-pill"
-                      className={`absolute inset-0 rounded-full shadow-sm ${activeTheme.primaryButton}`}
-                      transition={{ type: "spring", stiffness: 400, damping: 36 }}
-                    />
-                  ) : null}
                   <span className="relative z-10">🌿 Animals</span>
                 </button>
                 <button
@@ -2164,19 +2146,12 @@ export function RevealExperience({
                   aria-selected={activeUniverse === "mega"}
                   type="button"
                   onClick={() => switchUniverse("mega", "catalog_toggle")}
-                  className={`relative rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
+                  className={`relative rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
                     activeUniverse === "mega"
-                      ? "text-white"
+                      ? `text-white shadow-sm ${activeTheme.primaryButton}`
                       : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"
                   }`}
                 >
-                  {activeUniverse === "mega" ? (
-                    <motion.span
-                      layoutId="universe-tab-pill"
-                      className={`absolute inset-0 rounded-full shadow-sm ${activeTheme.primaryButton}`}
-                      transition={{ type: "spring", stiffness: 400, damping: 36 }}
-                    />
-                  ) : null}
                   <span className="relative z-10">🦣 Mega Animals</span>
                 </button>
                 <button
@@ -2184,19 +2159,12 @@ export function RevealExperience({
                   aria-selected={activeUniverse === "multiverse"}
                   type="button"
                   onClick={() => switchUniverse("multiverse", "catalog_toggle")}
-                  className={`relative rounded-full px-4 py-1.5 text-xs font-bold transition-colors ${
+                  className={`relative rounded-full px-4 py-1.5 text-xs font-bold transition-all ${
                     activeUniverse === "multiverse"
-                      ? "text-white"
+                      ? `text-white shadow-sm ${activeTheme.primaryButton}`
                       : "text-[var(--ink-600)] hover:text-[var(--ink-900)]"
                   }`}
                 >
-                  {activeUniverse === "multiverse" ? (
-                    <motion.span
-                      layoutId="universe-tab-pill"
-                      className={`absolute inset-0 rounded-full shadow-sm ${activeTheme.primaryButton}`}
-                      transition={{ type: "spring", stiffness: 400, damping: 36 }}
-                    />
-                  ) : null}
                   <span className="relative z-10">⚡ Multiverse</span>
                 </button>
               </div>
@@ -2246,13 +2214,6 @@ export function RevealExperience({
                     className={`relative shrink-0 overflow-hidden ${isActive ? activeTheme.primaryButton : ""}`}
                     onClick={() => applyRarityFilter(option.value, "catalog_rarity")}
                   >
-                    {isActive ? (
-                      <motion.span
-                        layoutId="rarity-active-pill"
-                        className="absolute inset-0 rounded-[inherit]"
-                        transition={{ type: "spring", stiffness: 380, damping: 34 }}
-                      />
-                    ) : null}
                     <span className="relative z-10 flex items-center gap-1">
                     {option.label}
                     {count > 0 ? (

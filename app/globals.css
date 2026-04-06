@@ -27,6 +27,19 @@ button, a, [role="tab"], [role="button"] {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes particleFloat {
+  0%   { transform: translateY(0) scale(0.5); opacity: 0; }
+  20%  { opacity: 0.9; }
+  100% { transform: translateY(-80px) scale(0.3); opacity: 0; }
+}
+
+.particle-float {
+  animation-name: particleFloat;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-out;
+  animation-fill-mode: both;
+}
+
 @keyframes btt-fadein {
   from {
     opacity: 0;
