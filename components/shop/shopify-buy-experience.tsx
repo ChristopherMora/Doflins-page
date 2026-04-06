@@ -2269,7 +2269,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     }}
                     >
                     <div className={`relative overflow-hidden bg-[var(--shop-image-panel-bg)] ${
-                        gridView === "list" ? "aspect-square w-24 shrink-0 sm:w-32" : "aspect-[16/11] w-full"
+                        gridView === "list" ? "aspect-square w-24 shrink-0 sm:w-32" : "aspect-[4/3] w-full"
                       }`}>
                       {(isLiveNew || isBestSeller) && gridView !== "list" ? (
                         <div className="absolute left-3 top-3 z-10 flex flex-col gap-1.5">
@@ -2321,6 +2321,23 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           </span>
                         </div>
                       ) : null}
+                      {/* ── Tier badge overlay bottom-left ── */}
+                      {gridView !== "list" ? (() => {
+                        const tier = getPackTier(Number(product.price.amount));
+                        return (
+                          <div className="absolute bottom-3 left-3 z-10">
+                            <span className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wide backdrop-blur-md shadow-sm ${
+                              tier.highlight
+                                ? "bg-amber-400/90 text-amber-900 ring-1 ring-amber-300"
+                                : tier.label === "Coleccionista"
+                                  ? "bg-violet-500/80 text-white ring-1 ring-violet-300"
+                                  : "bg-white/80 text-[var(--ink-700)] ring-1 ring-black/10"
+                            }`}>
+                              {tier.highlight ? "⭐" : tier.label === "Coleccionista" ? "💎" : "🎒"} {tier.label}
+                            </span>
+                          </div>
+                        );
+                      })() : null}
                       <button
                         type="button"
                         aria-label={wishlist.has(product.id) ? "Quitar de favoritos" : "Guardar en favoritos"}
@@ -2341,23 +2358,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     </div>
 
                     <div className={`flex flex-1 flex-col space-y-3 ${ gridView === "list" ? "justify-center p-3 sm:p-4" : "p-5" }`}>
-                      <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--ink-700)]">{UNIVERSE_LABELS[activeUniverse]}</p>
-                          {(() => {
-                            const tier = getPackTier(Number(product.price.amount));
-                            return (
-                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${tier.highlight ? "bg-amber-100 text-amber-800 ring-1 ring-amber-300" : "bg-[var(--surface-200)] text-[var(--ink-600)]"}`}>
-                                {tier.label}
-                              </span>
-                            );
-                          })()}
-                        </div>
-                        <div className="flex items-center">
+                      <div className="flex items-center gap-2">
+                        <span className="rounded-full bg-[var(--surface-200)] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[var(--ink-600)]">{UNIVERSE_LABELS[activeUniverse]}</span>
+                        {product.variants.length > 1 ? (
                           <span className="rounded-full bg-[var(--surface-200)] px-2 py-0.5 text-[10px] text-[var(--ink-500)] ring-1 ring-black/[0.06]">
-                            {product.variants.length} variante{product.variants.length === 1 ? "" : "s"}
+                            {product.variants.length} variantes
                           </span>
-                        </div>
+                        ) : null}
                       </div>
 
                       <h4 className={`font-title leading-tight text-[var(--ink-900)] ${ gridView === "list" ? "text-base sm:text-lg" : "text-2xl sm:text-[2rem]" }`}>{product.title}</h4>
@@ -2382,7 +2389,10 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       ) : (
                       <div className="mt-auto space-y-3">
                         <div className="flex items-end justify-between gap-2 border-t pt-3" style={{ borderColor: "var(--shop-card-border)" }}>
-                          <p className="font-title text-[2rem] leading-none text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</p>
+                          <div>
+                            <p className="mb-0.5 text-[10px] font-medium uppercase tracking-[0.14em] text-[var(--ink-500)]">Precio</p>
+                            <p className="font-title text-[2rem] leading-none" style={{ color: "var(--shop-primary-from)" }}>{formatMoney(selectedVariant?.price ?? product.price)}</p>
+                          </div>
                           {rarityTag ? (
                             <span className="mb-0.5 shrink-0 rounded-full bg-[#fdf3df] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#7a4a10] ring-1 ring-[#e6c676]">
                               {/legendary|legendari/i.test(rarityTag) ? "✨ Legendaria" : /epic/i.test(rarityTag) ? "🔥 Épica" : "💚 Especial"}
