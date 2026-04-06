@@ -2353,20 +2353,15 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                             );
                           })()}
                         </div>
-                        <div className="flex items-center gap-1.5">
-                          {rarityTag && gridView !== "list" ? (
-                            <span className="rounded-full bg-[#fdf3df] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#7a4a10] ring-1 ring-[#e6c676]">
-                              {/legendary|legendari/i.test(rarityTag) ? "✨ Legendaria" : /epic/i.test(rarityTag) ? "🔥 Épica" : "💚 Especial"}
-                            </span>
-                          ) : null}
-                          <span className="rounded-full bg-white px-2.5 py-1 text-xs text-[var(--ink-700)] ring-1 ring-black/10">
+                        <div className="flex items-center">
+                          <span className="rounded-full bg-[var(--surface-200)] px-2 py-0.5 text-[10px] text-[var(--ink-500)] ring-1 ring-black/[0.06]">
                             {product.variants.length} variante{product.variants.length === 1 ? "" : "s"}
                           </span>
                         </div>
                       </div>
 
                       <h4 className={`font-title leading-tight text-[var(--ink-900)] ${ gridView === "list" ? "text-base sm:text-lg" : "text-2xl sm:text-[2rem]" }`}>{product.title}</h4>
-                      {gridView !== "list" ? <p className="min-h-[3rem] text-sm leading-relaxed text-[var(--ink-700)]">{getProductDescription(product, activeUniverse)}</p> : null}
+                      {gridView !== "list" ? <p className="line-clamp-2 text-sm leading-relaxed text-[var(--ink-700)]">{getProductDescription(product, activeUniverse)}</p> : null}
 
                       {gridView === "list" ? (
                         /* ── Lista: precio + CTA inline ── */
@@ -2386,9 +2381,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                         </div>
                       ) : (
                       <div className="mt-auto space-y-3">
-                        <div className="rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-card-bg)" }}>
-                          <p className="text-xs uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio</p>
+                        <div className="flex items-end justify-between gap-2 border-t pt-3" style={{ borderColor: "var(--shop-card-border)" }}>
                           <p className="font-title text-[2rem] leading-none text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</p>
+                          {rarityTag ? (
+                            <span className="mb-0.5 shrink-0 rounded-full bg-[#fdf3df] px-2.5 py-1 text-xs font-bold uppercase tracking-[0.08em] text-[#7a4a10] ring-1 ring-[#e6c676]">
+                              {/legendary|legendari/i.test(rarityTag) ? "✨ Legendaria" : /epic/i.test(rarityTag) ? "🔥 Épica" : "💚 Especial"}
+                            </span>
+                          ) : null}
                         </div>
 
                         {product.variants.length > 1 ? (
