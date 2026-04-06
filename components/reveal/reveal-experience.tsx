@@ -37,6 +37,7 @@ import {
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 import type { CollectionItemDTO, PackSize, Rarity } from "@/lib/types/doflin";
 import { ensureModelViewer, Figure3D } from "@/components/reveal/figure-3d";
+import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -1041,19 +1042,26 @@ export function RevealExperience({
   const [isAuthActionLoading, setIsAuthActionLoading] = useState(false);
   const [isAuthPromptOpen, setIsAuthPromptOpen] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [packPrices, setPackPrices] = useState<Record<number, { amount: string; currencyCode: string }>>({});
+  const [packPrices, setPackPrices] = useState<Record<number, { amount: string; currencyCode: string; variantId: string; productTitle: string; availableForSale: boolean }>>({});
 
   useEffect(() => {
     fetch(`/api/shop/products?universe=${activeUniverse}`)
       .then((r) => r.json())
       .then((data: unknown) => {
-        const products = (data as { products?: Array<{ title: string; price: { amount: string; currencyCode: string } }> }).products ?? [];
-        const map: Record<number, { amount: string; currencyCode: string }> = {};
+        const products = (data as { products?: Array<{ title: string; availableForSale: boolean; price: { amount: string; currencyCode: string }; variants: Array<{ id: string; availableForSale: boolean }> }> }).products ?? [];
+        const map: Record<number, { amount: string; currencyCode: string; variantId: string; productTitle: string; availableForSale: boolean }> = {};
         for (const product of products) {
           const match = /\b(5|15|30)\b/.exec(product.title);
           if (match) {
             const size = Number(match[1]) as 5 | 15 | 30;
-            if (!map[size]) map[size] = product.price;
+            if (!map[size]) {
+              map[size] = {
+                ...product.price,
+                variantId: product.variants[0]?.id ?? "",
+                productTitle: product.title,
+                availableForSale: product.availableForSale,
+              };
+            }
           }
         }
         if (Object.keys(map).length > 0) setPackPrices(map);
@@ -2601,23 +2609,35 @@ export function RevealExperience({
                       <span className="ml-1.5 text-sm font-semibold text-[var(--ink-600)]">{packPrices[pack.packSize].currencyCode}</span>
                     </p>
                   ) : null}
-                  <Button
-                    asChild
-                    variant={isRecommended ? undefined : "ghost"}
-                    className={`mt-5 w-full ${isRecommended ? activeTheme.primaryButton : "bg-[var(--ink-900)] !text-white hover:brightness-125"}`}
-                  >
+                  <div className="mt-5 space-y-2">
+                    {packPrices[pack.packSize]?.variantId ? (
+                      <AddToCartButton
+                        variantId={packPrices[pack.packSize].variantId}
+                        productTitle={packPrices[pack.packSize].productTitle}
+                        isSoldOut={!packPrices[pack.packSize].availableForSale}
+                        label={`Agregar ${pack.packSize} figuras al carrito`}
+                        className={isRecommended ? activeTheme.primaryButton : "bg-[var(--ink-900)] hover:brightness-125"}
+                        onClick={() => handlePurchaseIntent({ source: `packs_section_${pack.packSize}`, packSize: pack.packSize })}
+                      />
+                    ) : (
+                      <Button
+                        asChild
+                        variant={isRecommended ? undefined : "ghost"}
+                        className={`w-full ${isRecommended ? activeTheme.primaryButton : "bg-[var(--ink-900)] !text-white hover:brightness-125"}`}
+                      >
+                        <a href={shopUrl} onClick={() => handlePurchaseIntent({ source: `packs_section_${pack.packSize}`, packSize: pack.packSize })}>
+                          <ShoppingCartIcon className="h-4 w-4" /> Comprar {pack.packSize} figuras
+                        </a>
+                      </Button>
+                    )}
                     <a
                       href={shopUrl}
-                      onClick={() =>
-                        handlePurchaseIntent({
-                          source: `packs_section_${pack.packSize}`,
-                          packSize: pack.packSize,
-                        })
-                      }
+                      onClick={() => handlePurchaseIntent({ source: `packs_section_detail_${pack.packSize}`, packSize: pack.packSize })}
+                      className="block text-center text-xs text-[var(--ink-500)] transition hover:text-[var(--ink-800)] hover:underline"
                     >
-                      <ShoppingCartIcon className="h-4 w-4" /> Comprar {pack.packSize} figuras
+                      Ver en tienda →
                     </a>
-                  </Button>
+                  </div>
                 </div>
               </div>
             );

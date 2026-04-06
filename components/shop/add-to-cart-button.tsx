@@ -12,6 +12,9 @@ interface AddToCartButtonProps {
   variantId: string;
   productTitle: string;
   isSoldOut: boolean;
+  className?: string;
+  label?: string;
+  onClick?: () => void;
 }
 
 function writeCartSnapshot(cart: ShopCart): void {
@@ -40,11 +43,15 @@ export function AddToCartButton({
   variantId,
   productTitle,
   isSoldOut,
+  className,
+  label,
+  onClick,
 }: AddToCartButtonProps): React.JSX.Element {
   const [state, setState] = useState<"idle" | "adding" | "added" | "error">("idle");
 
   const handleClick = async () => {
     if (state === "adding" || isSoldOut) return;
+    onClick?.();
     setState("adding");
     try {
       const res = await fetch("/api/cart/lines/add", {
@@ -90,7 +97,7 @@ export function AddToCartButton({
           ? "bg-[linear-gradient(135deg,#2a5a18,#4a7c28)]"
           : state === "error"
             ? "bg-[linear-gradient(135deg,#8a2020,#b03030)]"
-            : "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] hover:brightness-110"
+            : (className ?? "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] hover:brightness-110")
       }`}
     >
       {state === "adding" ? (
@@ -108,7 +115,7 @@ export function AddToCartButton({
         </>
       ) : (
         <>
-          <ShoppingCartIcon className="h-5 w-5" /> Agregar al carrito
+          <ShoppingCartIcon className="h-5 w-5" /> {label ?? "Agregar al carrito"}
         </>
       )}
     </Button>
