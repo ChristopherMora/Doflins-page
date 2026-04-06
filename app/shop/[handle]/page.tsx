@@ -253,7 +253,7 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                         } ${isRecommended ? "ring-1 ring-[#b8d493]" : ""}`}
                       >
                         <span className="flex items-center gap-2 font-medium">
-                          {variant.title}
+                          {variant.title && variant.title !== "Default Title" ? variant.title : null}
                           {isRecommended ? (
                             <span className="rounded-full bg-[#e2f1cc] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2f5b1f]">
                               Recomendada

@@ -2555,43 +2555,70 @@ export function RevealExperience({
           <h3 className="font-title text-3xl text-[var(--ink-900)]">¿Cuántas figuras quieres hoy?</h3>
           <p className="mt-1 text-sm text-[var(--ink-700)]">Elige el pack que mejor se adapte a tu ritmo de colección.</p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-5 md:grid-cols-3">
           {BUY_PACK_OPTIONS.map((pack) => {
             const isRecommended = pack.packSize === 15;
+            const meta = packPrices[pack.packSize];
             return (
               <div
                 key={pack.packSize}
-                className={`relative flex flex-col overflow-hidden rounded-3xl border transition hover:-translate-y-1 ${
+                className={`group relative flex flex-col overflow-hidden rounded-3xl transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl ${
                   isRecommended
-                    ? "border-[var(--brand-primary)] shadow-[0_8px_28px_rgba(78,111,42,0.22)]"
-                    : "border-[#d7cfb0] shadow-sm"
-                } ${activeTheme.panelCard}`}
+                    ? "shadow-[0_12px_36px_rgba(78,111,42,0.28)]"
+                    : "shadow-[0_4px_16px_rgba(0,0,0,0.10)]"
+                }`}
               >
-                {isRecommended ? (
-                  <div className={`py-1.5 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-white ${activeTheme.primaryButton}`}>
-                    Más popular
-                  </div>
-                ) : null}
-                {/* Product image */}
-                {packPrices[pack.packSize]?.imageUrl ? (
-                  <div className="relative h-44 w-full overflow-hidden">
+                {/* Image hero with overlay */}
+                <div className="relative h-52 w-full overflow-hidden bg-[var(--surface-100)]">
+                  {meta?.imageUrl ? (
                     <Image
-                      src={packPrices[pack.packSize].imageUrl!}
-                      alt={packPrices[pack.packSize].productTitle}
+                      src={meta.imageUrl}
+                      alt={meta.productTitle}
                       fill
                       sizes="(max-width: 768px) 100vw, 33vw"
-                      className="object-cover"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                     />
+                  ) : (
+                    <div className={`absolute inset-0 ${activeTheme.primaryButton} opacity-30`} />
+                  )}
+                  {/* dark gradient bottom */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+
+                  {/* Top badges */}
+                  <div className="absolute left-3 top-3 flex gap-1.5">
+                    {isRecommended ? (
+                      <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-white ${activeTheme.primaryButton}`}>
+                        ⭐ Más popular
+                      </span>
+                    ) : null}
+                    {!meta?.availableForSale && meta ? (
+                      <span className="rounded-full bg-red-500/90 px-3 py-1 text-[10px] font-bold uppercase text-white">Agotado</span>
+                    ) : meta ? (
+                      <span className="rounded-full bg-black/40 px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-white/90 backdrop-blur-sm">Disponible</span>
+                    ) : null}
                   </div>
-                ) : null}
-                <div className="flex flex-1 flex-col p-5">
-                  {/* big pack number as visual anchor */}
-                  <div className="mb-3 flex items-end gap-1.5">
-                    <span className="font-title text-[4.5rem] leading-none text-[var(--ink-900)]">{pack.packSize}</span>
-                    <span className="mb-2 text-sm font-semibold text-[var(--ink-600)]">figuras</span>
+
+                  {/* Big pack size bottom-left */}
+                  <div className="absolute bottom-3 left-4 flex items-end gap-1.5 drop-shadow-lg">
+                    <span className="font-title text-[4rem] leading-none text-white">{pack.packSize}</span>
+                    <span className="mb-1.5 text-base font-semibold text-white/80">figuras</span>
                   </div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-600)]">{pack.subtitle}</p>
-                  <p className="mt-2 flex-1 text-sm leading-relaxed text-[var(--ink-700)]">{pack.benefit}</p>
+
+                  {/* Price bottom-right */}
+                  {meta ? (
+                    <div className="absolute bottom-3 right-4 text-right drop-shadow-lg">
+                      <p className="font-title text-2xl leading-none text-white">
+                        {new Intl.NumberFormat("es-MX", { style: "currency", currency: meta.currencyCode, maximumFractionDigits: 0 }).format(Number(meta.amount))}
+                      </p>
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-white/70">{meta.currencyCode}</p>
+                    </div>
+                  ) : null}
+                </div>
+
+                {/* Content */}
+                <div className={`flex flex-1 flex-col p-5 ${activeTheme.panelCard} ${isRecommended ? `border-2 border-[var(--brand-primary)]` : "border border-[#d7cfb0]"} rounded-b-3xl border-t-0`}>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-[var(--ink-500)]">{pack.subtitle}</p>
+                  <p className="mt-1.5 flex-1 text-sm leading-relaxed text-[var(--ink-700)]">{pack.benefit}</p>
 
                   {/* Estimador de probabilidad */}
                   <div className="mt-3 flex flex-wrap gap-1.5" aria-label="Figuras esperadas por rareza">
@@ -2603,11 +2630,7 @@ export function RevealExperience({
                         <span
                           key={rarity}
                           className="rounded-full px-2.5 py-0.5 text-[11px] font-semibold"
-                          style={{
-                            background: cfg.softColor,
-                            color: cfg.color,
-                            outline: `1px solid ${cfg.color}40`,
-                          }}
+                          style={{ background: cfg.softColor, color: cfg.color, outline: `1px solid ${cfg.color}40` }}
                           title={`~${expected} figura${expected === 1 ? "" : "s"} ${cfg.label}`}
                         >
                           ~{expected} {cfg.label}
@@ -2616,18 +2639,12 @@ export function RevealExperience({
                     })}
                   </div>
 
-                  {packPrices[pack.packSize] ? (
-                    <p className="mt-3 font-title text-2xl leading-none text-[var(--ink-900)]">
-                      {new Intl.NumberFormat("es-MX", { style: "currency", currency: packPrices[pack.packSize].currencyCode, maximumFractionDigits: 0 }).format(Number(packPrices[pack.packSize].amount))}
-                      <span className="ml-1.5 text-sm font-semibold text-[var(--ink-600)]">{packPrices[pack.packSize].currencyCode}</span>
-                    </p>
-                  ) : null}
-                  <div className="mt-5 space-y-2">
-                    {packPrices[pack.packSize]?.variantId ? (
+                  <div className="mt-4 space-y-2">
+                    {meta?.variantId ? (
                       <AddToCartButton
-                        variantId={packPrices[pack.packSize].variantId}
-                        productTitle={packPrices[pack.packSize].productTitle}
-                        isSoldOut={!packPrices[pack.packSize].availableForSale}
+                        variantId={meta.variantId}
+                        productTitle={meta.productTitle}
+                        isSoldOut={!meta.availableForSale}
                         label={`Agregar ${pack.packSize} figuras al carrito`}
                         className={isRecommended ? activeTheme.primaryButton : "bg-[var(--ink-900)] hover:brightness-125"}
                         onClick={() => handlePurchaseIntent({ source: `packs_section_${pack.packSize}`, packSize: pack.packSize })}
