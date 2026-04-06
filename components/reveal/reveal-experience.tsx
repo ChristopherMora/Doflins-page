@@ -1042,14 +1042,14 @@ export function RevealExperience({
   const [isAuthActionLoading, setIsAuthActionLoading] = useState(false);
   const [isAuthPromptOpen, setIsAuthPromptOpen] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [packPrices, setPackPrices] = useState<Record<number, { amount: string; currencyCode: string; variantId: string; productTitle: string; availableForSale: boolean }>>({});
+  const [packPrices, setPackPrices] = useState<Record<number, { amount: string; currencyCode: string; variantId: string; productTitle: string; availableForSale: boolean; imageUrl: string | null }>>({});
 
   useEffect(() => {
     fetch(`/api/shop/products?universe=${activeUniverse}`)
       .then((r) => r.json())
       .then((data: unknown) => {
-        const products = (data as { products?: Array<{ title: string; availableForSale: boolean; price: { amount: string; currencyCode: string }; variants: Array<{ id: string; availableForSale: boolean }> }> }).products ?? [];
-        const map: Record<number, { amount: string; currencyCode: string; variantId: string; productTitle: string; availableForSale: boolean }> = {};
+        const products = (data as { products?: Array<{ title: string; availableForSale: boolean; imageUrl: string | null; price: { amount: string; currencyCode: string }; variants: Array<{ id: string; availableForSale: boolean }> }> }).products ?? [];
+        const map: Record<number, { amount: string; currencyCode: string; variantId: string; productTitle: string; availableForSale: boolean; imageUrl: string | null }> = {};
         for (const product of products) {
           const match = /\b(5|15|30)\b/.exec(product.title);
           if (match) {
@@ -1060,6 +1060,7 @@ export function RevealExperience({
                 variantId: product.variants[0]?.id ?? "",
                 productTitle: product.title,
                 availableForSale: product.availableForSale,
+                imageUrl: product.imageUrl,
               };
             }
           }
@@ -2569,6 +2570,18 @@ export function RevealExperience({
                 {isRecommended ? (
                   <div className={`py-1.5 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-white ${activeTheme.primaryButton}`}>
                     Más popular
+                  </div>
+                ) : null}
+                {/* Product image */}
+                {packPrices[pack.packSize]?.imageUrl ? (
+                  <div className="relative h-44 w-full overflow-hidden">
+                    <Image
+                      src={packPrices[pack.packSize].imageUrl!}
+                      alt={packPrices[pack.packSize].productTitle}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 33vw"
+                      className="object-cover"
+                    />
                   </div>
                 ) : null}
                 <div className="flex flex-1 flex-col p-5">
