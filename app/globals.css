@@ -683,3 +683,32 @@ html[data-universe="multiverse"][data-theme="dark"] body {
       var(--background);
   }
 }
+
+/* ── Floating decorations (home + catalog) ── */
+@keyframes float-deco {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  35%       { transform: translateY(-12px) rotate(4deg); }
+  65%       { transform: translateY(-6px) rotate(-3deg); }
+}
+
+.home-deco {
+  pointer-events: none;
+  user-select: none;
+  animation: float-deco var(--deco-dur, 4s) ease-in-out infinite;
+  animation-delay: var(--deco-delay, 0s);
+  will-change: transform;
+  line-height: 1;
+  position: absolute;
+}
+
+.home-deco--1  { opacity: .22; --deco-dur: 3.9s;             font-size: 1.85rem; top:  8%; left:  4%; }
+.home-deco--2  { opacity: .17; --deco-dur: 5.2s; --deco-delay: -1.8s; font-size: 1.15rem; top: 14%; right: 5%; }
+.home-deco--3  { opacity: .18; --deco-dur: 4.7s; --deco-delay: -2.6s; font-size: 2.1rem;  top: 52%; left:  2%; }
+.home-deco--4  { opacity: .19; --deco-dur: 4.2s; --deco-delay:  -.9s; font-size: 1.6rem;  top: 32%; right: 3%; }
+.home-deco--5  { opacity: .16; --deco-dur: 5.9s; --deco-delay: -3.1s; font-size: 1.35rem; top: 65%; right: 7%; }
+.home-deco--6  { opacity: .17; --deco-dur: 3.6s; --deco-delay: -1.2s; font-size: 2rem;    top: 55%; left:  7%; }
+
+.catalog-deco--1 { opacity: .13; --deco-dur: 4.1s;             font-size: 1.8rem; top:  8%; left:  2%; }
+.catalog-deco--2 { opacity: .10; --deco-dur: 5.5s; --deco-delay: -2s;  font-size: 1.1rem; top: 15%; right: 3%; }
+.catalog-deco--3 { opacity: .12; --deco-dur: 4.8s; --deco-delay: -3s;  font-size: 2rem;   top: 55%; left:  1%; }
+.catalog-deco--4 { opacity: .10; --deco-dur: 4.4s; --deco-delay: -1s;  font-size: 1.5rem; top: 38%; right: 2%; }

@@ -381,15 +381,6 @@ const UNIVERSE_THEME_DARK: Record<Universe, UniverseTheme> = {
   },
 };
 
-function formatPackPrice(basePrice: { amount: string; currencyCode: string }, multiplier: number): string {
-  const value = Number(basePrice.amount) * multiplier;
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: basePrice.currencyCode,
-    maximumFractionDigits: 0,
-  }).format(value);
-}
-
 const BUY_PACK_OPTIONS: BuyPackOption[] = [
   {
     packSize: 5,
@@ -1050,14 +1041,22 @@ export function RevealExperience({
   const [isAuthActionLoading, setIsAuthActionLoading] = useState(false);
   const [isAuthPromptOpen, setIsAuthPromptOpen] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
-  const [baseUnitPrice, setBaseUnitPrice] = useState<{ amount: string; currencyCode: string } | null>(null);
+  const [packPrices, setPackPrices] = useState<Record<number, { amount: string; currencyCode: string }>>({});
 
   useEffect(() => {
     fetch(`/api/shop/products?universe=${activeUniverse}`)
       .then((r) => r.json())
       .then((data: unknown) => {
-        const price = (data as { products?: Array<{ price: { amount: string; currencyCode: string } }> }).products?.[0]?.price;
-        if (price) setBaseUnitPrice(price);
+        const products = (data as { products?: Array<{ title: string; price: { amount: string; currencyCode: string } }> }).products ?? [];
+        const map: Record<number, { amount: string; currencyCode: string }> = {};
+        for (const product of products) {
+          const match = /\b(5|15|30)\b/.exec(product.title);
+          if (match) {
+            const size = Number(match[1]) as 5 | 15 | 30;
+            if (!map[size]) map[size] = product.price;
+          }
+        }
+        if (Object.keys(map).length > 0) setPackPrices(map);
       })
       .catch(() => null);
   }, [activeUniverse]);
@@ -2596,10 +2595,10 @@ export function RevealExperience({
                     })}
                   </div>
 
-                  {baseUnitPrice ? (
+                  {packPrices[pack.packSize] ? (
                     <p className="mt-3 font-title text-2xl leading-none text-[var(--ink-900)]">
-                      {formatPackPrice(baseUnitPrice, pack.packSize)}
-                      <span className="ml-1.5 text-sm font-semibold text-[var(--ink-600)]">{baseUnitPrice.currencyCode}</span>
+                      {new Intl.NumberFormat("es-MX", { style: "currency", currency: packPrices[pack.packSize].currencyCode, maximumFractionDigits: 0 }).format(Number(packPrices[pack.packSize].amount))}
+                      <span className="ml-1.5 text-sm font-semibold text-[var(--ink-600)]">{packPrices[pack.packSize].currencyCode}</span>
                     </p>
                   ) : null}
                   <Button
