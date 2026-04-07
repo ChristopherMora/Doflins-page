@@ -565,35 +565,38 @@ function useDarkMode(): boolean {
 function MegaCinematicIntro({ show, onComplete }: { show: boolean; onComplete: () => void }): React.JSX.Element | null {
   useEffect(() => {
     if (!show) return;
-    const timer = setTimeout(onComplete, 1600);
+    const timer = setTimeout(onComplete, 1000);
     return () => clearTimeout(timer);
   }, [show, onComplete]);
 
   if (!show) return null;
 
   return (
-    <div className="mega-intro-overlay fixed inset-0 z-[9999] flex items-center justify-center bg-[#1a0e00]/95 backdrop-blur-sm">
+    <div
+      className="mega-intro-overlay fixed inset-0 z-[9999] flex items-center justify-center bg-[#1a0e00]/92"
+      style={{ pointerEvents: "none" }}
+    >
       <div className="mega-intro-text flex flex-col items-center gap-2">
-        <span className="text-[6rem] font-black tracking-[0.1em] text-amber-400 sm:text-[10rem] md:text-[14rem]" style={{ fontFamily: "var(--font-title), Trebuchet MS, sans-serif", textShadow: "0 0 80px rgba(220,160,40,0.6), 0 0 160px rgba(196,124,32,0.3)" }}>
+        <span className="text-[6rem] font-black tracking-[0.1em] text-amber-400 sm:text-[10rem] md:text-[14rem]" style={{ fontFamily: "var(--font-title), Trebuchet MS, sans-serif" }}>
           MEGA
         </span>
         <span className="text-lg font-bold uppercase tracking-[0.5em] text-amber-300/70 sm:text-xl">
           Animals
         </span>
       </div>
-      {/* Impact particles */}
-      {Array.from({ length: 12 }, (_, i) => (
+      {/* Impact particles — finite, not infinite */}
+      {Array.from({ length: 8 }, (_, i) => (
         <span
           key={i}
           className="mega-debris absolute rounded-full"
           style={{
-            width: 4 + (i % 4) * 2,
-            height: 4 + (i % 4) * 2,
+            width: 4 + (i % 3) * 2,
+            height: 4 + (i % 3) * 2,
             backgroundColor: `rgba(220, 160, 40, ${0.4 + (i % 3) * 0.2})`,
-            left: `${15 + i * 6}%`,
+            left: `${18 + i * 8}%`,
             bottom: "35%",
-            animationDuration: `${1.8 + i * 0.2}s`,
-            animationDelay: `${0.3 + i * 0.08}s`,
+            animationDuration: `${1.5 + i * 0.15}s`,
+            animationDelay: `${0.1 + i * 0.06}s`,
           }}
         />
       ))}
@@ -1154,7 +1157,7 @@ export function RevealExperience({
       megaIntroShownRef.current.add("initial");
       setShowMegaIntro(true);
       setMegaRumble(true);
-      setTimeout(() => setMegaRumble(false), 500);
+      setTimeout(() => setMegaRumble(false), 400);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -1638,7 +1641,7 @@ export function RevealExperience({
         megaIntroShownRef.current.add(source);
         setShowMegaIntro(true);
         setMegaRumble(true);
-        setTimeout(() => setMegaRumble(false), 500);
+        setTimeout(() => setMegaRumble(false), 400);
       }
 
       if (sectionId) {
@@ -2016,7 +2019,7 @@ export function RevealExperience({
               <>
                 <div className="mega-title-entrance space-y-1">
                   <h1 className="mega-breathe font-title text-7xl leading-[0.85] tracking-tighter text-[var(--ink-900)] sm:text-8xl md:text-9xl">
-                    <span className="block text-amber-600/90" style={{ textShadow: "0 4px 30px rgba(196,124,32,0.25)" }}>MEGA</span>
+                    <span className="block text-amber-600/90">MEGA</span>
                     <span className="block text-4xl tracking-tight sm:text-5xl">Animals</span>
                   </h1>
                   <p className="max-w-lg text-lg font-semibold leading-relaxed text-amber-800/80 sm:text-xl">

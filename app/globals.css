@@ -728,15 +728,17 @@ html[data-universe="multiverse"][data-theme="dark"] body {
 @keyframes mega-intro-bg {
   0%   { opacity: 1; }
   70%  { opacity: 1; }
-  100% { opacity: 0; pointer-events: none; }
+  100% { opacity: 0; }
 }
 
 .mega-intro-overlay {
-  animation: mega-intro-bg 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation: mega-intro-bg 1s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  will-change: opacity;
 }
 
 .mega-intro-text {
-  animation: mega-intro-zoom 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: mega-intro-zoom 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: transform, opacity;
 }
 
 /* Screen rumble on mega entry */
@@ -754,7 +756,8 @@ html[data-universe="multiverse"][data-theme="dark"] body {
 }
 
 .mega-rumble {
-  animation: mega-rumble 0.5s ease-out;
+  animation: mega-rumble 0.4s ease-out;
+  will-change: transform;
 }
 
 /* Mega hero title — dramatic scale entrance */
@@ -770,25 +773,27 @@ html[data-universe="multiverse"][data-theme="dark"] body {
   animation-delay: 0.15s;
 }
 
-/* Mega breathing pulse — subtle scale oscillation for "alive" feeling */
+/* Mega breathing pulse — subtle scale oscillation for "alive" feeling.
+   Uses slow, GPU-composited transform only. */
 @keyframes mega-breathe {
-  0%, 100% { transform: scale(1); }
-  50%      { transform: scale(1.015); }
+  0%, 100% { transform: scale(1) translateZ(0); }
+  50%      { transform: scale(1.012) translateZ(0); }
 }
 
 .mega-breathe {
-  animation: mega-breathe 4s ease-in-out infinite;
+  animation: mega-breathe 5s ease-in-out infinite;
+  will-change: transform;
 }
 
 /* Mega card — image overflow effect (figure "breaks" the card boundary) */
 .mega-card-image-overflow {
-  transform: scale(1.2) translateY(-12%);
-  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
-  filter: drop-shadow(0 20px 40px rgba(160, 100, 20, 0.35));
+  transform: scale(1.15) translateY(-8%) translateZ(0);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: transform;
 }
 
 .mega-card-image-overflow:hover {
-  transform: scale(1.35) translateY(-16%);
+  transform: scale(1.25) translateY(-12%) translateZ(0);
 }
 
 /* Mega card entrance — dramatic zoom from far away */
@@ -819,17 +824,19 @@ html[data-universe="multiverse"][data-theme="dark"] body {
 }
 
 .mega-debris {
-  animation: mega-debris-float 3s ease-out infinite;
+  animation: mega-debris-float 2s ease-out forwards;
+  will-change: transform, opacity;
 }
 
-/* Mega XL badge pulse */
+/* Mega XL badge — single pulse on appear, then static glow */
 @keyframes mega-xl-pulse {
-  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(196, 124, 32, 0.5); }
-  50%      { transform: scale(1.05); box-shadow: 0 0 20px 6px rgba(196, 124, 32, 0.3); }
+  0%   { transform: scale(0.8); box-shadow: 0 0 0 0 rgba(196, 124, 32, 0.5); }
+  50%  { transform: scale(1.1); box-shadow: 0 0 14px 4px rgba(196, 124, 32, 0.35); }
+  100% { transform: scale(1); box-shadow: 0 0 8px 2px rgba(196, 124, 32, 0.2); }
 }
 
 .mega-xl-pulse {
-  animation: mega-xl-pulse 2s ease-in-out infinite;
+  animation: mega-xl-pulse 0.5s ease-out both;
 }
 
 /* Mega section separator — earthquake crack line */
@@ -856,6 +863,7 @@ html[data-universe="multiverse"][data-theme="dark"] body {
   opacity: 0.08;
   font-size: 4rem;
   animation: mega-footprint-drift 8s ease-in-out infinite;
+  will-change: transform;
 }
 
 @keyframes mega-footprint-drift {
@@ -892,25 +900,20 @@ html[data-universe="multiverse"][data-theme="dark"] body {
 .mega-card-scale {
   transform-origin: center bottom;
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+  will-change: transform;
 }
 
 .mega-card-scale:hover {
-  transform: translateY(-8px) scale(1.04);
+  transform: translateY(-8px) scale(1.04) translateZ(0);
   box-shadow: 0 30px 60px rgba(160, 100, 20, 0.25);
 }
 
-/* Mega ambient glow ring behind cards */
-@keyframes mega-ambient-glow {
-  0%, 100% { opacity: 0.3; transform: scale(0.95); }
-  50%      { opacity: 0.6; transform: scale(1.05); }
-}
-
+/* Mega ambient glow ring behind cards — static, no animation for perf */
 .mega-ambient-glow {
   position: absolute;
-  inset: -20px;
+  inset: -16px;
   border-radius: 2.5rem;
-  background: radial-gradient(ellipse, rgba(220, 160, 40, 0.2), transparent 70%);
-  animation: mega-ambient-glow 4s ease-in-out infinite;
+  background: radial-gradient(ellipse, rgba(220, 160, 40, 0.15), transparent 70%);
   pointer-events: none;
   z-index: -1;
 }
