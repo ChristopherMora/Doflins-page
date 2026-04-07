@@ -1981,7 +1981,7 @@ export function RevealExperience({
     activeUniverse === "animals" ? "!text-[#1f3b12]" : "!text-[#243271]";
 
   return (
-    <main className={`relative overflow-hidden pb-36 transition-colors duration-500 md:pb-24 ${mainInkScopeClass} ${megaRumble ? "mega-rumble" : ""}`} style={themeVars}>
+    <main className={`relative pb-36 md:pb-24 ${mainInkScopeClass} ${megaRumble ? "mega-rumble" : ""}`} style={themeVars}>
       {/* Mega cinematic intro overlay */}
       <MegaCinematicIntro show={showMegaIntro} onComplete={handleMegaIntroComplete} />
 
@@ -1991,8 +1991,8 @@ export function RevealExperience({
           Sin conexión — los datos pueden estar desactualizados
         </div>
       ) : null}
-      <div className={`pointer-events-none absolute inset-0 -z-30 ${activeTheme.pageGlow}`} />
-      <div className={`pointer-events-none absolute inset-0 -z-20 ${activeTheme.pageGradient}`} />
+      <div className={`pointer-events-none fixed inset-0 -z-30 ${activeTheme.pageGlow}`} style={{ willChange: 'auto' }} />
+      <div className={`pointer-events-none fixed inset-0 -z-20 ${activeTheme.pageGradient}`} />
 
 
       <div className="relative">
@@ -2279,7 +2279,7 @@ export function RevealExperience({
           </Button>
         </div>
 
-        <Card className={`sticky top-0 z-20 backdrop-blur-sm ${activeTheme.panelCard}`}>
+        <Card className={`sticky top-0 z-20 ${activeTheme.panelCard}`} style={{ backdropFilter: 'none', WebkitBackdropFilter: 'none' }}>
           <CardContent className="space-y-3 p-3 sm:p-4">
             {/* Universe tabs + search in one row on lg */}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
