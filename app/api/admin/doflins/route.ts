@@ -9,6 +9,8 @@ import { isAdminEmail } from "@/lib/auth-admin";
 import { RARITY_ORDER } from "@/lib/constants/rarity";
 import { getDb } from "@/lib/db/client";
 import { doflins } from "@/lib/db/schema";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { getClientIp } from "@/lib/server/request";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 import type { Rarity } from "@/lib/types/doflin";
 
@@ -200,6 +202,15 @@ async function validateAdminAccess(
   request: NextRequest,
   tokenFromBody?: string,
 ): Promise<NextResponse | null> {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`admin_auth:${ip}`, 5, 60_000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { status: "error", message: "Demasiados intentos, espera un momento." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   const requiredToken = process.env.ADMIN_FORM_TOKEN?.trim();
   const providedToken =
     normalizeToken(request.headers.get("x-admin-token")) ||
@@ -466,8 +477,8 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 201 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error inesperado al crear el Doflin.";
-    return errorResponse(message, 500);
+    console.error("[admin/doflins POST]", error);
+    return errorResponse("Error inesperado al crear el Doflin.", 500);
   }
 }
 
@@ -623,8 +634,8 @@ export async function PUT(request: NextRequest): Promise<NextResponse> {
       { status: 200 },
     );
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Error inesperado al actualizar el Doflin.";
-    return errorResponse(message, 500);
+    console.error("[admin/doflins PUT]", error);
+    return errorResponse("Error inesperado al actualizar el Doflin.", 500);
   }
 }
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { BellIcon, EnvelopeIcon, DevicePhoneMobileIcon } from "@heroicons/react/24/solid";
+import { EnvelopeIcon, DevicePhoneMobileIcon } from "@heroicons/react/24/solid";
 import { toast } from "sonner";
 
 interface Preferences {

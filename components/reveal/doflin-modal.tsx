@@ -21,7 +21,7 @@ import {
 } from "@/components/ui/dialog";
 
 import type { DoflinModalProps } from "./types";
-import { isOriginalVariant, variantLabel } from "./utils";
+import { variantLabel } from "./utils";
 
 export function DoflinModal({
   selectedDoflin,
@@ -42,7 +42,7 @@ export function DoflinModal({
   isAuthenticated,
   isDark,
   theme,
-  onShare,
+  onShare: _onShare,
   onMarkOwned,
   onClearOwned,
   onPurchaseIntent,

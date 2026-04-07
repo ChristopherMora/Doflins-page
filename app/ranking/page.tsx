@@ -68,11 +68,6 @@ async function getRanking(): Promise<RankingRow[]> {
   }
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function displayLabel(row: RankingRow) {
-  return row.displayName ?? row.userEmail;
-}
 // ─── Página ────────────────────────────────────────────────────────────────────
 
 export default async function RankingPage(): Promise<React.JSX.Element> {

@@ -8,7 +8,6 @@ import { toast } from "sonner";
 import { pushDataLayerEvent } from "@/lib/analytics";
 import {
   CATALOG_RARITY_CONFIG,
-  CATALOG_RARITY_ORDER,
   toCatalogRarity,
   type CatalogRarity,
 } from "@/lib/constants/rarity";
@@ -78,7 +77,7 @@ export function useRevealExperience({
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState(initialQuery);
   const [catalogAnimKey, setCatalogAnimKey] = useState(0);
   const [remaining, setRemaining] = useState<Record<Rarity, number> | null>(initialRemaining ?? null);
-  const [_isAdminViewer, setIsAdminViewer] = useState(false);
+  const [, setIsAdminViewer] = useState(false);
   const [isAuthenticatedViewer, setIsAuthenticatedViewer] = useState(false);
   const [viewerEmail, setViewerEmail] = useState<string | null>(null);
   const [isAuthActionLoading, setIsAuthActionLoading] = useState(false);

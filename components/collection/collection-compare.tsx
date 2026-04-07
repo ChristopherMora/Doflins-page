@@ -4,12 +4,6 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { ArrowsRightLeftIcon, ChevronDownIcon, ChevronUpIcon } from "@heroicons/react/24/solid";
 
-interface ComparisonData {
-  youHaveTheyDont: number[];
-  theyHaveYouDont: number[];
-  bothHave: number[];
-}
-
 interface DoflinInfo {
   id: number;
   nombre: string;
@@ -33,7 +27,7 @@ const RARITY_BADGE: Record<string, string> = {
 };
 
 export function CollectionCompare({
-  targetUserId,
+  targetUserId: _targetUserId,
   allDoflins,
   targetOwnedIds,
 }: CollectionCompareProps): React.JSX.Element | null {

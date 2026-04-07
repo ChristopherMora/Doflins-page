@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 
 import { getDb } from "@/lib/db/client";
-import { rewards, rewardRedemptions, userPoints } from "@/lib/db/schema";
+import { rewards, rewardRedemptions } from "@/lib/db/schema";
 import { awardPoints, getBalance, hasStock } from "@/lib/server/points";
 import { hasSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";

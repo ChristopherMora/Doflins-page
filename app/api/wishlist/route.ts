@@ -4,6 +4,8 @@ import { z } from "zod";
 
 import { getDb } from "@/lib/db/client";
 import { wishlistItems } from "@/lib/db/schema";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { getClientIp } from "@/lib/server/request";
 import { hasSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 
@@ -33,6 +35,15 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`wishlist_write:${ip}`, 20, 60_000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   if (!hasSupabasePublicConfig()) return NextResponse.json({ ok: false });
 
   const supabase = createSupabaseServerClientForRoute(request);
@@ -51,6 +62,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 }
 
 export async function DELETE(request: NextRequest): Promise<NextResponse> {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`wishlist_write:${ip}`, 20, 60_000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   if (!hasSupabasePublicConfig()) return NextResponse.json({ ok: false });
 
   const supabase = createSupabaseServerClientForRoute(request);

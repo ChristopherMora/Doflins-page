@@ -210,7 +210,6 @@ export default async function OgImage({
               padding: "40px",
             }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={imageUrl}
               alt={title}

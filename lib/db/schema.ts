@@ -100,6 +100,7 @@ export const codigosBolsa = mysqlTable(
     uniqueIndex("codigos_bolsa_codigo_unique").on(table.codigo),
     index("codigos_bolsa_usado_idx").on(table.usado),
     index("codigos_bolsa_pack_size_idx").on(table.packSize),
+    index("codigos_bolsa_doflin_idx").on(table.doflinId),
   ],
 );
 
@@ -109,10 +110,10 @@ export const codigosBolsaItems = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     codigoBolsaId: int("codigo_bolsa_id")
       .notNull()
-      .references(() => codigosBolsa.id),
+      .references(() => codigosBolsa.id, { onDelete: "cascade" }),
     doflinId: int("doflin_id")
       .notNull()
-      .references(() => doflins.id),
+      .references(() => doflins.id, { onDelete: "cascade" }),
     posicion: int("posicion").notNull(),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
   },
@@ -128,7 +129,7 @@ export const scanEvents = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     codigoInput: varchar("codigo_input", { length: 32 }).notNull(),
-    codigoBolsaId: int("codigo_bolsa_id").references(() => codigosBolsa.id),
+    codigoBolsaId: int("codigo_bolsa_id").references(() => codigosBolsa.id, { onDelete: "set null" }),
     eventType: scanEventTypeEnum.notNull(),
     ipHash: varchar("ip_hash", { length: 64 }).notNull(),
     userAgent: varchar("user_agent", { length: 255 }).notNull(),
@@ -191,7 +192,7 @@ export const referralUses = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     referralCodeId: int("referral_code_id")
       .notNull()
-      .references(() => referralCodes.id),
+      .references(() => referralCodes.id, { onDelete: "cascade" }),
     usedByEmail: varchar("used_by_email", { length: 190 }),
     shopifyOrderId: varchar("shopify_order_id", { length: 64 }),
     discountApplied: int("discount_applied").notNull().default(0),
@@ -200,6 +201,7 @@ export const referralUses = mysqlTable(
   (table) => [
     index("referral_uses_code_idx").on(table.referralCodeId),
     index("referral_uses_email_idx").on(table.usedByEmail),
+    uniqueIndex("referral_uses_code_email_unique").on(table.referralCodeId, table.usedByEmail),
   ],
 );
 
@@ -211,7 +213,7 @@ export const userCollectionProgress = mysqlTable(
     userEmail: varchar("user_email", { length: 190 }).notNull(),
     doflinId: int("doflin_id")
       .notNull()
-      .references(() => doflins.id),
+      .references(() => doflins.id, { onDelete: "cascade" }),
     owned: boolean("owned").notNull().default(true),
     quantity: int("quantity").notNull().default(1),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -333,7 +335,7 @@ export const rewardRedemptions = mysqlTable(
     supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
     rewardId: int("reward_id")
       .notNull()
-      .references(() => rewards.id),
+      .references(() => rewards.id, { onDelete: "cascade" }),
     pointsSpent: int("points_spent").notNull(),
     status: redemptionStatusEnum.notNull().default("pending"),
     deliveryData: text("delivery_data"), // JSON con lo que se entregó (cupón, URL, etc.)
@@ -416,12 +418,12 @@ export const tradeOffers = mysqlTable(
     id: int("id").autoincrement().primaryKey(),
     listingId: int("listing_id")
       .notNull()
-      .references(() => tradeListings.id),
+      .references(() => tradeListings.id, { onDelete: "cascade" }),
     offererUserId: varchar("offerer_user_id", { length: 64 }).notNull(),
     // What the offerer is offering in return
     offeredDoflinId: int("offered_doflin_id")
       .notNull()
-      .references(() => doflins.id),
+      .references(() => doflins.id, { onDelete: "cascade" }),
     message: text("message"),
     status: tradeOfferStatusEnum.notNull().default("pending"),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -465,7 +467,7 @@ export const dailyClaims = mysqlTable(
     supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
     dailyFigureId: int("daily_figure_id")
       .notNull()
-      .references(() => dailyFigures.id),
+      .references(() => dailyFigures.id, { onDelete: "cascade" }),
     pointsAwarded: int("points_awarded").notNull(),
     streakBonus: int("streak_bonus").notNull().default(0),
     claimedAt: timestamp("claimed_at", { mode: "date" }).notNull().defaultNow(),
@@ -512,7 +514,7 @@ export const figureWantList = mysqlTable(
     supabaseUserId: varchar("supabase_user_id", { length: 64 }).notNull(),
     doflinId: int("doflin_id")
       .notNull()
-      .references(() => doflins.id),
+      .references(() => doflins.id, { onDelete: "cascade" }),
     priority: wantListPriorityEnum.notNull().default("medium"),
     notes: varchar("notes", { length: 200 }), // Short note about why they want it
     isPublic: boolean("is_public").notNull().default(true),

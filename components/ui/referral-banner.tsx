@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useRef, useState } from "react";
+import { Suspense, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { GiftIcon, XMarkIcon } from "@heroicons/react/24/solid";
 
@@ -10,25 +10,26 @@ const REF_CODE_REGEX = /^[A-Z0-9_-]{3,32}$/i;
 
 function ReferralBannerInner(): React.JSX.Element | null {
   const searchParams = useSearchParams();
-  const [code, setCode] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  useEffect(() => {
+  // Derive the initial code synchronously to avoid setState inside effect
+  const deriveCode = (): string | null => {
+    if (typeof window === "undefined") return null;
     const fromUrl = searchParams.get("ref");
     if (fromUrl && REF_CODE_REGEX.test(fromUrl)) {
       const clean = fromUrl.toUpperCase();
       localStorage.setItem(REF_CODE_KEY, clean);
       localStorage.removeItem(REF_SHOWN_KEY);
-      setCode(clean);
-      return;
+      return clean;
     }
     const stored = localStorage.getItem(REF_CODE_KEY);
     const shown = localStorage.getItem(REF_SHOWN_KEY);
-    if (stored && !shown) {
-      setCode(stored);
-    }
-  }, [searchParams]);
+    if (stored && !shown) return stored;
+    return null;
+  };
+
+  const [code, setCode] = useState<string | null>(deriveCode);
 
   const dismiss = () => {
     setCode(null);

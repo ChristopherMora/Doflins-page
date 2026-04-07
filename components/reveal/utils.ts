@@ -77,7 +77,6 @@ export function withPurchaseQuery(baseUrl: string, options: { packSize: PackSize
   }
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function buildPurchaseUrls(baseUrl: string, universe: Universe): Record<PackSize, string> {
   return {
     5: withPurchaseQuery(baseUrl, { packSize: 5, universe }),

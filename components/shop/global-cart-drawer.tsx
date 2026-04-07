@@ -6,7 +6,6 @@ import {
   ArrowPathIcon,
   ChatBubbleLeftRightIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
   LockClosedIcon,
   MinusIcon,
   PlusIcon,

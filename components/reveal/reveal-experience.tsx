@@ -78,7 +78,6 @@ export function RevealExperience({
     brokenVariantImageIds,
     setBrokenVariantImageIds,
     isLoadingCollection,
-    debouncedSearchQuery,
     setDebouncedSearchQuery,
     isAuthenticatedViewer,
     viewerEmail,
@@ -134,7 +133,6 @@ export function RevealExperience({
     handleShareDoflin,
     handlePurchaseIntent,
     handleOpenCard,
-    remaining,
   } = useRevealExperience({ initialCollection, initialRemaining, dark });
 
   const setRarityFilter = (value: "all" | CatalogRarity) => applyRarityFilter(value, "catalog_rarity");

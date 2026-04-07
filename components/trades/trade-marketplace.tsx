@@ -379,7 +379,7 @@ function TradeCard({
 
         {listing.notes && (
           <p className="mt-2 text-xs text-[var(--ink-500)] italic">
-            "{listing.notes}"
+            &ldquo;{listing.notes}&rdquo;
           </p>
         )}
       </div>

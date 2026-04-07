@@ -43,6 +43,13 @@
       "when": 1772200000000,
       "tag": "0005_dato_curioso",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1775591402590,
+      "tag": "0006_perfect_scorpion",
+      "breakpoints": true
     }
   ]
 }

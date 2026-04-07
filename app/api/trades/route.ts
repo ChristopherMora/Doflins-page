@@ -1,11 +1,12 @@
-import { and, desc, eq, ne, or, isNull } from "drizzle-orm";
+import { and, desc, eq, or, isNull } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getDb } from "@/lib/db/client";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { getClientIp } from "@/lib/server/request";
 import {
   doflins,
   tradeListings,
-  tradeOffers,
   userCollectionProgress,
 } from "@/lib/db/schema";
 import { hasSupabasePublicConfig } from "@/lib/supabase/config";
@@ -38,7 +39,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const db = getDb();
 
   // Build query with aliases for both doflins
-  let whereConditions = [eq(tradeListings.status, "open")];
+  const whereConditions = [eq(tradeListings.status, "open")];
 
   if (wantsId) {
     const wantingDoflinId = parseInt(wantsId, 10);
@@ -128,6 +129,15 @@ interface CreateListingBody {
 
 // POST: create a new trade listing
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`trades_post:${ip}`, 10, 60_000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes, intenta en unos segundos." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   if (!hasSupabasePublicConfig()) {
     return NextResponse.json({ error: "No configurado" }, { status: 503 });
   }

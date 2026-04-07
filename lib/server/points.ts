@@ -6,7 +6,7 @@
 import { and, desc, eq, sql } from "drizzle-orm";
 
 import { getDb } from "@/lib/db/client";
-import { doflins, pointTransactions, userCollectionProgress, userPoints } from "@/lib/db/schema";
+import { doflins, pointTransactions, userPoints } from "@/lib/db/schema";
 import type { Rarity } from "@/lib/types/doflin";
 
 // ─── Configuración de puntos ─────────────────────────────────────────────────

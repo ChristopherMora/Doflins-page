@@ -2,8 +2,7 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { toast } from "sonner";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
@@ -13,8 +12,8 @@ import {
   ClipboardDocumentIcon,
   ClockIcon,
   EnvelopeIcon,
-  EyeIcon,
   ExclamationTriangleIcon,
+  FireIcon,
   HeartIcon,
   ListBulletIcon,
   LockClosedIcon,
@@ -22,24 +21,23 @@ import {
   MinusIcon,
   PhotoIcon,
   PlusIcon,
-  ShareIcon,
-  ShieldCheckIcon,
   ShoppingCartIcon,
   SparklesIcon,
   Squares2X2Icon,
-  TruckIcon,
   TrashIcon,
-  FireIcon,
 } from "@heroicons/react/24/solid";
 
-import type { ShopCart, ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
-import { broadcastUniverse, onUniverseChange, type Universe } from "@/lib/universe-store";
-import { CART_SNAPSHOT_STORAGE_KEY } from "@/lib/constants/shop";
 import { Badge } from "@/components/ui/badge";
 import { WatchingBadge } from "@/components/ui/watching-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import {
   Sheet,
@@ -49,493 +47,34 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import type { CollectionItemDTO, Rarity } from "@/lib/types/doflin";
 
-interface ProductsResponse {
-  status: "ok";
-  universe: UniverseFilter;
-  products: ShopProduct[];
-  cached: boolean;
-  fetchedAt: string;
-}
+import {
+  BEST_SELLER_HANDLES,
+  BUNDLE_PROMO_CODE,
+  DROP_TIER_LABELS,
+  DROP_TIER_ORDER,
+  DROP_TIER_PROBABILITY,
+  FREE_GIFT_MIN_SUBTOTAL,
+  FREE_GIFT_PROMO_LABEL,
+  LOW_STOCK_THRESHOLD,
+  SHOPPING_FAQ_ITEMS,
+  SUPPORT_WHATSAPP_URL,
+  TRUST_PROMISES,
+  UNIVERSE_LABELS,
+  getPackTier,
+} from "./shop-constants";
+import {
+  formatCollectionPreviewName,
+  formatCurrencyAmount,
+  formatMoney,
+  getProductDescription,
+  resolveStockBadge,
+  toDropTier,
+} from "./shop-utils";
+import { useShopExperience } from "./use-shop-experience";
 
-interface CartResponse {
-  status: "ok";
-  cart: ShopCart | null;
-}
-
-interface CheckoutResponse {
-  status: "ok";
-  checkoutUrl: string;
-}
-
-interface CollectionResponse {
-  status: "ok";
-  collection: CollectionItemDTO[];
-}
-
-type ApiError = Error & {
-  code?: string;
-};
-
-const UNIVERSE_LABELS: Record<UniverseFilter, string> = {
-  animals: "Animals",
-  multiverse: "Multiverse",
-  mega: "MEGA",
-};
-const BEST_SELLER_HANDLES = new Set(["safari-15"]);
-
-/** Emotional tier label for packs based on price. */
-function getPackTier(price: number): { label: string; highlight: boolean } {
-  if (price <= 200) return { label: "Entrada", highlight: false };
-  if (price <= 400) return { label: "Recomendado", highlight: true };
-  return { label: "Coleccionista", highlight: false };
-}
-const BUNDLE_PROMO_CODE = process.env.NEXT_PUBLIC_BUNDLE_PROMO_CODE?.trim() ?? "";
-const DEFAULT_LIVE_REFRESH_MS = 15_000;
-const LIVE_REFRESH_MS_ENV = Number(process.env.NEXT_PUBLIC_SHOPIFY_LIVE_REFRESH_MS ?? DEFAULT_LIVE_REFRESH_MS);
-const LIVE_REFRESH_MS =
-  Number.isFinite(LIVE_REFRESH_MS_ENV) && LIVE_REFRESH_MS_ENV >= 5_000 ? LIVE_REFRESH_MS_ENV : DEFAULT_LIVE_REFRESH_MS;
-const FREE_GIFT_PROMO_LABEL = process.env.NEXT_PUBLIC_FREE_GIFT_PROMO_LABEL?.trim() ?? "";
-const FREE_GIFT_MIN_SUBTOTAL_ENV = Number(process.env.NEXT_PUBLIC_FREE_GIFT_MIN_SUBTOTAL ?? 450);
-const FREE_GIFT_MIN_SUBTOTAL =
-  Number.isFinite(FREE_GIFT_MIN_SUBTOTAL_ENV) && FREE_GIFT_MIN_SUBTOTAL_ENV > 0 ? FREE_GIFT_MIN_SUBTOTAL_ENV : null;
-const LOW_STOCK_THRESHOLD = 5;
-const CART_SNAPSHOT_MAX_AGE_MS = 1000 * 60 * 60 * 24 * 14;
-const SUPPORT_WHATSAPP_URL =
-  process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL?.trim() ??
-  "https://wa.me/529812425698?text=Hola%20equipo%20DOFLINS,%20necesito%20ayuda%20con%20mi%20compra.";
-const PROMO_EXPIRES_ENV = process.env.NEXT_PUBLIC_PROMO_EXPIRES?.trim() ?? "";
-const QTY_HISTORY_KEY = "doflins_qty_history_v1";
-const WISHLIST_KEY = "doflins_wishlist_v1";
-// 4×4 blurry greenish placeholder para next/image con imágenes externas
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHUlEQVQIW2NkYGD4z8BQDwIMjIz1DEDMSNMAACb9Av9aFEHzAAAAAElFTkSuQmCC";
-const SHOPPING_FAQ_ITEMS = [
-  {
-    question: "¿Cuánto tarda el envío?",
-    answer: "El tiempo exacto aparece en Shopify Checkout según tu dirección. Normalmente se muestra antes de pagar.",
-  },
-  {
-    question: "¿Puedo solicitar devolución?",
-    answer: "Si tu pack llega con problema, contáctanos por WhatsApp para revisar el caso y ayudarte con la solución.",
-  },
-  {
-    question: "¿Qué métodos de pago aceptan?",
-    answer: "Los métodos disponibles se muestran en Shopify Checkout (por ejemplo PayPal y opciones activas de tu tienda).",
-  },
-] as const;
-const TRUST_PROMISES = [
-  {
-    title: "Pago protegido",
-    detail: "Tu pago se procesa en Shopify Checkout con conexión segura.",
-    icon: ShieldCheckIcon,
-  },
-  {
-    title: "Envío claro",
-    detail: "Costos y tiempos se muestran antes de confirmar el pago.",
-    icon: TruckIcon,
-  },
-  {
-    title: "Soporte rápido",
-    detail: "Te atendemos por WhatsApp para cualquier duda de tu pedido.",
-    icon: ClockIcon,
-  },
-] as const;
-type DropTier = "common" | "special" | "epic" | "legendary";
-
-const DROP_TIER_ORDER: DropTier[] = ["common", "special", "epic", "legendary"];
-const DROP_TIER_LABELS: Record<DropTier, string> = {
-  common: "Común",
-  special: "Especial",
-  epic: "Épica",
-  legendary: "Legendaria",
-};
-const DROP_TIER_PROBABILITY: Record<DropTier, number> = {
-  common: 50,
-  special: 30,
-  epic: 15,
-  legendary: 5,
-};
-const DROP_TIER_COLORS: Record<DropTier, string> = {
-  common: "#7a8070",
-  special: "#4a7a8a",
-  epic: "#a06040",
-  legendary: "#a07830",
-};
-
-interface ShopVisualTheme {
-  shellClassName: "ink-light" | "ink-light-blue";
-  shellBackground: string;
-  shellBorder: string;
-  shellShadow: string;
-  primaryFrom: string;
-  primaryTo: string;
-  chipBg: string;
-  chipText: string;
-  chipRing: string;
-  promoTimerBg: string;
-  promoTimerText: string;
-  supportChipHoverBg: string;
-  supportChipHoverBorder: string;
-  imagePanelBg: string;
-  imageOverlay: string;
-  imageFilter: string;
-  imageShadow: string;
-  addedBadgeBg: string;
-  modalUniverseBadgeBg: string;
-  // Card & control theming
-  cardBg: string;
-  cardBorder: string;
-  cardShadow: string;
-  cardHoverShadow: string;
-  controlBg: string;
-  controlBorder: string;
-  skeletonBase: string;
-  skeletonHighlight: string;
-}
-
-const SHOP_VISUAL_THEMES: Record<Universe, ShopVisualTheme> = {
-  neutral: {
-    shellClassName: "ink-light",
-    shellBackground: "linear-gradient(145deg,#fffdf6,#eff5f1)",
-    shellBorder: "#d3d8ca",
-    shellShadow: "0 18px 38px rgba(58,74,66,0.18)",
-    primaryFrom: "#2f6f67",
-    primaryTo: "#429084",
-    chipBg: "#e2f2ed",
-    chipText: "#24564f",
-    chipRing: "#acd4cb",
-    promoTimerBg: "#cde9e1",
-    promoTimerText: "#1f5048",
-    supportChipHoverBg: "#ecf7f3",
-    supportChipHoverBorder: "#9ecbbf",
-    imagePanelBg: "linear-gradient(140deg,#eef6f2,#e2ede8)",
-    imageOverlay: "linear-gradient(180deg,rgba(42,77,71,0.04),rgba(38,72,68,0.2))",
-    imageFilter: "saturate(1.02) contrast(1.05)",
-    imageShadow: "0 14px 30px rgba(38,63,58,0.2)",
-    addedBadgeBg: "#2f6f67",
-    modalUniverseBadgeBg: "#2f6f67",
-    cardBg: "linear-gradient(160deg,#ffffff,#f2f6f0)",
-    cardBorder: "#d0d8ca",
-    cardShadow: "0 8px 20px rgba(48,64,44,0.10)",
-    cardHoverShadow: "0 16px 32px rgba(48,64,44,0.18)",
-    controlBg: "rgba(255,255,255,0.78)",
-    controlBorder: "#ced4c6",
-    skeletonBase: "#eaece5",
-    skeletonHighlight: "#dfe2d8",
-  },
-  animals: {
-    shellClassName: "ink-light",
-    shellBackground: "linear-gradient(145deg,#fffbf0,#edf6e2)",
-    shellBorder: "#d7ce9f",
-    shellShadow: "0 18px 36px rgba(86,98,51,0.17)",
-    primaryFrom: "#4f7f2d",
-    primaryTo: "#76ab46",
-    chipBg: "#e7f5d6",
-    chipText: "#2f6020",
-    chipRing: "#bdd99a",
-    promoTimerBg: "#d0edb8",
-    promoTimerText: "#1f5412",
-    supportChipHoverBg: "#eef8df",
-    supportChipHoverBorder: "#afd586",
-    imagePanelBg: "linear-gradient(140deg,#f3f6e7,#e2ecd6)",
-    imageOverlay: "linear-gradient(180deg,rgba(50,85,30,0.03),rgba(45,79,27,0.16))",
-    imageFilter: "none",
-    imageShadow: "0 14px 30px rgba(35,43,22,0.19)",
-    addedBadgeBg: "#4f7f2d",
-    modalUniverseBadgeBg: "#4f7f2d",
-    cardBg: "linear-gradient(160deg,#ffffff,#f4f8ea)",
-    cardBorder: "#cfd8a8",
-    cardShadow: "0 8px 20px rgba(64,80,30,0.10)",
-    cardHoverShadow: "0 18px 34px rgba(64,80,30,0.18)",
-    controlBg: "rgba(245,250,235,0.88)",
-    controlBorder: "#c8d89a",
-    skeletonBase: "#e8ecd5",
-    skeletonHighlight: "#dde4c2",
-  },
-  multiverse: {
-    shellClassName: "ink-light-blue",
-    shellBackground: "linear-gradient(145deg,#f3f6ff,#e4ecff)",
-    shellBorder: "#c4d0f7",
-    shellShadow: "0 18px 38px rgba(60,80,163,0.22)",
-    primaryFrom: "#4360d2",
-    primaryTo: "#6f8bff",
-    chipBg: "#e3ebff",
-    chipText: "#2a3f97",
-    chipRing: "#b7c9fb",
-    promoTimerBg: "#d2dffe",
-    promoTimerText: "#1f3386",
-    supportChipHoverBg: "#eaf0ff",
-    supportChipHoverBorder: "#afc3f8",
-    imagePanelBg: "linear-gradient(140deg,#e8efff,#d9e4fe)",
-    imageOverlay: "linear-gradient(180deg,rgba(61,81,176,0.03),rgba(36,54,134,0.3))",
-    imageFilter: "saturate(1.23) hue-rotate(10deg) contrast(1.09) brightness(0.95)",
-    imageShadow: "0 14px 30px rgba(30,43,102,0.28)",
-    addedBadgeBg: "#4360d2",
-    modalUniverseBadgeBg: "#4360d2",
-    cardBg: "linear-gradient(160deg,#f6f8ff,#eaefff)",
-    cardBorder: "#c2cef8",
-    cardShadow: "0 8px 20px rgba(60,80,180,0.12)",
-    cardHoverShadow: "0 18px 34px rgba(60,80,180,0.22)",
-    controlBg: "rgba(234,240,255,0.90)",
-    controlBorder: "#bac8f8",
-    skeletonBase: "#dce5fa",
-    skeletonHighlight: "#ccd8f6",
-  },
-  mega: {
-    shellClassName: "ink-light",
-    shellBackground: "linear-gradient(145deg,#fffbee,#fdf0c8)",
-    shellBorder: "#e8cc90",
-    shellShadow: "0 18px 38px rgba(160,100,20,0.22)",
-    primaryFrom: "#c47c20",
-    primaryTo: "#e8a830",
-    chipBg: "#fff0c8",
-    chipText: "#7a4e14",
-    chipRing: "#e0c070",
-    promoTimerBg: "#fce8a0",
-    promoTimerText: "#6a3f10",
-    supportChipHoverBg: "#fff8e0",
-    supportChipHoverBorder: "#d8b060",
-    imagePanelBg: "linear-gradient(140deg,#fdf4e0,#f8e8c0)",
-    imageOverlay: "linear-gradient(180deg,rgba(140,90,20,0.03),rgba(120,70,10,0.2))",
-    imageFilter: "saturate(1.1) contrast(1.05)",
-    imageShadow: "0 14px 30px rgba(120,80,10,0.22)",
-    addedBadgeBg: "#c47c20",
-    modalUniverseBadgeBg: "#c47c20",
-    cardBg: "linear-gradient(160deg,#ffffff,#fdf5e0)",
-    cardBorder: "#e0c870",
-    cardShadow: "0 8px 20px rgba(140,100,10,0.10)",
-    cardHoverShadow: "0 18px 34px rgba(140,100,10,0.20)",
-    controlBg: "rgba(255,250,235,0.88)",
-    controlBorder: "#d8c060",
-    skeletonBase: "#f0e0a0",
-    skeletonHighlight: "#e8d080",
-  },
-};
-
-interface CartSnapshotLine {
-  merchandiseId: string;
-  quantity: number;
-}
-
-interface CartSnapshotPayload {
-  updatedAt: number;
-  checkoutUrl: string | null;
-  lines: CartSnapshotLine[];
-}
-
-interface StockBadge {
-  label: string;
-  className: string;
-  detail: string | null;
-}
-
-function readCartSnapshot(): CartSnapshotPayload | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  try {
-    const raw = window.localStorage.getItem(CART_SNAPSHOT_STORAGE_KEY);
-    if (!raw) {
-      return null;
-    }
-
-    const parsed = JSON.parse(raw) as Partial<CartSnapshotPayload>;
-    const lines = Array.isArray(parsed.lines)
-      ? parsed.lines
-          .map((line) => ({
-            merchandiseId: typeof line?.merchandiseId === "string" ? line.merchandiseId : "",
-            quantity: Number.isFinite(line?.quantity) ? Math.max(1, Math.floor(Number(line?.quantity))) : 1,
-          }))
-          .filter((line) => line.merchandiseId.length > 0)
-      : [];
-    const updatedAt = Number(parsed.updatedAt);
-    if (!Number.isFinite(updatedAt) || Date.now() - updatedAt > CART_SNAPSHOT_MAX_AGE_MS || lines.length === 0) {
-      window.localStorage.removeItem(CART_SNAPSHOT_STORAGE_KEY);
-      return null;
-    }
-
-    return {
-      updatedAt,
-      checkoutUrl: typeof parsed.checkoutUrl === "string" ? parsed.checkoutUrl : null,
-      lines,
-    };
-  } catch {
-    return null;
-  }
-}
-
-function writeCartSnapshot(cart: ShopCart): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const lines = cart.lines
-    .map((line) => ({
-      merchandiseId: line.merchandiseId,
-      quantity: Math.max(1, Math.floor(line.quantity)),
-    }))
-    .filter((line) => line.merchandiseId.length > 0);
-
-  if (!lines.length) {
-    window.localStorage.removeItem(CART_SNAPSHOT_STORAGE_KEY);
-    return;
-  }
-
-  const payload: CartSnapshotPayload = {
-    updatedAt: Date.now(),
-    checkoutUrl: cart.checkoutUrl ?? null,
-    lines,
-  };
-
-  try {
-    window.localStorage.setItem(CART_SNAPSHOT_STORAGE_KEY, JSON.stringify(payload));
-  } catch {
-    // Ignore write failures in private mode/quota limits.
-  }
-}
-
-function clearCartSnapshot(): void {
-  if (typeof window === "undefined") {
-    return;
-  }
-  window.localStorage.removeItem(CART_SNAPSHOT_STORAGE_KEY);
-}
-
-function resolveStockBadge(variant: ShopProductVariant | null): StockBadge {
-  const quantity =
-    variant && typeof variant.quantityAvailable === "number" && Number.isFinite(variant.quantityAvailable)
-      ? variant.quantityAvailable
-      : null;
-
-  if (!variant?.availableForSale || quantity === 0) {
-    return {
-      label: "Agotado",
-      className: "bg-[#e5d3d3] text-[#7a3a3a] ring-1 ring-[#d6b8b8]",
-      detail: null,
-    };
-  }
-
-  if (quantity !== null && quantity <= LOW_STOCK_THRESHOLD) {
-    return {
-      label: "Pocas piezas",
-      className: "bg-[#fde8c8] text-[#7a4a10] ring-1 ring-[#efcb92]",
-      detail: `Solo ${quantity} disponible${quantity === 1 ? "" : "s"}`,
-    };
-  }
-
-  return {
-    label: "Disponible",
-    className: "bg-[#dff0c7] text-[#2f5c1f] ring-1 ring-[#b7d494]",
-    detail: quantity !== null ? `${quantity} disponibles` : null,
-  };
-}
-
-function formatMoney(money: ShopifyMoney | null): string {
-  if (!money) {
-    return "-";
-  }
-
-  const value = Number(money.amount);
-  if (!Number.isFinite(value)) {
-    return `${money.amount} ${money.currencyCode}`;
-  }
-
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: money.currencyCode,
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function formatCurrencyAmount(amount: number, currencyCode: string): string {
-  if (!Number.isFinite(amount)) {
-    return "-";
-  }
-
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: currencyCode,
-    maximumFractionDigits: 2,
-  }).format(amount);
-}
-
-async function parseApiResponse<T>(response: Response): Promise<T> {
-  const payload = (await response.json()) as T & {
-    status?: string;
-    message?: string;
-    code?: string;
-  };
-
-  if (!response.ok || payload.status === "error") {
-    const message = payload.message ?? "No se pudo completar la operación.";
-    const error = new Error(message) as ApiError;
-    error.code = payload.code;
-    throw error;
-  }
-
-  return payload;
-}
-
-function pickDefaultVariant(product: ShopProduct): ShopProductVariant | null {
-  const firstAvailable = product.variants.find((variant) => variant.availableForSale);
-  return firstAvailable ?? product.variants[0] ?? null;
-}
-
-function getProductDescription(product: ShopProduct, universe: UniverseFilter): string {
-  const clean = product.shortDescription.trim();
-  if (clean.length > 0) {
-    return clean;
-  }
-
-  if (universe === "animals") {
-    return "Pack oficial del universo Animals para ampliar tu colección con estilo natural.";
-  }
-
-  if (universe === "mega") {
-    return "Pack oficial MEGA — figuras gigantes para los coleccionistas más ambiciosos.";
-  }
-
-  return "Pack oficial del universo Multiverse con estética futurista y variantes especiales.";
-}
-
-function toUniverseFromSeries(series: string): UniverseFilter | null {
-  const normalized = series.trim().toLowerCase();
-  if (normalized.includes("mega")) {
-    return "mega";
-  }
-  if (normalized.includes("animal")) {
-    return "animals";
-  }
-  if (normalized.includes("multiverse")) {
-    return "multiverse";
-  }
-  return null;
-}
-
-function toDropTier(rarity: Rarity): DropTier {
-  if (rarity === "COMMON") {
-    return "common";
-  }
-  if (rarity === "RARE") {
-    return "special";
-  }
-  if (rarity === "EPIC") {
-    return "epic";
-  }
-  return "legendary";
-}
-
-function formatCollectionPreviewName(item: CollectionItemDTO): string {
-  const base = item.baseModel.trim().replace(/^doflin\s+/i, "");
-  const variant = item.variantName.trim();
-  if (!variant || /^original$/i.test(variant)) {
-    return base;
-  }
-  return `${base} ${variant}`.trim();
-}
 
 function LazyCard({ children, skeleton }: { children: React.ReactNode; skeleton: React.ReactNode }): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
@@ -554,1005 +93,95 @@ function LazyCard({ children, skeleton }: { children: React.ReactNode; skeleton:
 }
 
 export function ShopifyBuyExperience(): React.JSX.Element {
-  const [activeUniverse, setActiveUniverse] = useState<UniverseFilter>("animals");
-  const [visualUniverse, setVisualUniverse] = useState<Universe>("neutral");
-
-  // Pre-filtrar universo desde ?universe= y escuchar cambios globales de universo
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const u = params.get("universe");
-    if (u === "animals" || u === "multiverse" || u === "mega") {
-      setActiveUniverse(u);
-      setVisualUniverse(u);
-    } else {
-      setVisualUniverse("neutral");
-    }
-
-    return onUniverseChange((nextUniverse) => {
-      setVisualUniverse(nextUniverse);
-      if (nextUniverse === "animals" || nextUniverse === "multiverse" || nextUniverse === "mega") {
-        setActiveUniverse(nextUniverse);
-        setGridAnimKey((current) => current + 1);
-        setShopSearch("");
-      }
-    });
-  }, []);
-
-  // Auto-aplicar código de referido desde ?ref= en la URL
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const refCode = params.get("ref")?.trim().toUpperCase();
-    if (!refCode) return;
-    // Guardamos en localStorage para aplicarlo cuando el carrito esté listo
-    localStorage.setItem("doflins_pending_ref", refCode);
-  }, []);
-
-  // Broadcast visual universe so header/home stay in sync
-  useEffect(() => {
-    broadcastUniverse(visualUniverse);
-  }, [visualUniverse]);
-
-  const [products, setProducts] = useState<ShopProduct[]>([]);
-  const [collectionByUniverse, setCollectionByUniverse] = useState<Record<UniverseFilter, CollectionItemDTO[]>>({
-    animals: [],
-    multiverse: [],
-    mega: [],
-  });
-  const [cart, setCart] = useState<ShopCart | null>(null);
-  const [liveNewProducts, setLiveNewProducts] = useState<Record<UniverseFilter, string[]>>({
-    animals: [],
-    multiverse: [],
-    mega: [],
-  });
-  const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);
-  const [selectedVariantByProduct, setSelectedVariantByProduct] = useState<Record<string, string>>({});
-  const [discountCode, setDiscountCode] = useState("");
-  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-  const [isCartOpen, setIsCartOpen] = useState(false);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
-  const [isLoadingCart, setIsLoadingCart] = useState(true);
-  const [isMutatingCart, setIsMutatingCart] = useState(false);
-  const [lastAddedProductId, setLastAddedProductId] = useState<string | null>(null);
-  const [quantityByProduct, setQuantityByProduct] = useState<Record<string, number>>({});
-  const [sortOrder, setSortOrder] = useState<"default" | "asc" | "desc" | "new">("default");
-  const [confettiByProduct, setConfettiByProduct] = useState<Set<string>>(new Set());
-  const [productsError, setProductsError] = useState<string | null>(null);
-  const [productsErrorCode, setProductsErrorCode] = useState<string | null>(null);
-  const [gridAnimKey, setGridAnimKey] = useState(0);
-  const [brokenShowcaseIds, setBrokenShowcaseIds] = useState<Set<number>>(new Set());
-  const [giftNote, setGiftNote] = useState("");
-  const [shopSearch, setShopSearch] = useState("");
-  const [mutatingLineIds, setMutatingLineIds] = useState<Set<string>>(new Set());
-  const [promoTimeLeft, setPromoTimeLeft] = useState<string | null>(null);
-  const [wishlist, setWishlist] = useState<Set<string>>(new Set());
-  const [gridView, setGridView] = useState<"grid" | "list">("grid");
-  const [showWishlistOnly, setShowWishlistOnly] = useState(false);
-  const [isFabHovered, setIsFabHovered] = useState(false);
-  const [showCartQR, setShowCartQR] = useState(false);
-  const [isLoadingCollectionPreview, setIsLoadingCollectionPreview] = useState(true);
-  const knownProductIdsRef = useRef<Record<UniverseFilter, Set<string>>>({
-    animals: new Set(),
-    multiverse: new Set(),
-    mega: new Set(),
-  });
-  const prevStockRef = useRef<Map<string, boolean>>(new Map());
-  const liveRefreshInFlightRef = useRef(false);
-  const snapshotRecoveryAttemptedRef = useRef(false);
-  const comprasSectionRef = useRef<HTMLElement | null>(null);
-  // Ref siempre actualizado con el cart actual — usado en callbacks con dep array vacío
-  // para evitar el bug de capturar previousCart dentro de un updater de React (no es síncrono)
-  const cartRef = useRef<ShopCart | null>(null);
-
-  // Mantener cartRef siempre sincronizado con el estado cart
-  useEffect(() => {
-    cartRef.current = cart;
-  }, [cart]);
-
-  // Cuando el carrito cargue, aplicar el código de referido pendiente (?ref= URL)
-  useEffect(() => {
-    const pending = localStorage.getItem("doflins_pending_ref");
-    if (!pending || !cart) return;
-    // Solo aplicar si no hay ya un descuento activo con ese código
-    const alreadyApplied = cart.discountCodes.some(
-      (d) => d.code.toUpperCase() === pending.toUpperCase() && d.applicable,
-    );
-    if (alreadyApplied) {
-      localStorage.removeItem("doflins_pending_ref");
-      return;
-    }
-    localStorage.removeItem("doflins_pending_ref");
-    setDiscountCode(pending);
-    fetch("/api/cart/discount", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ code: pending }),
-    })
-      .then(async (res) => {
-        if (!res.ok) return;
-        const data = (await res.json()) as { cart?: ShopCart; coupon?: { code: string; applied: boolean } };
-        if (data.cart) setCart(data.cart);
-        if (data.coupon?.applied) {
-          toast.success(`Código de referido ${pending} aplicado 🎉`, { duration: 4000 });
-        } else {
-          toast.error(`El código ${pending} no pudo aplicarse al carrito.`);
-        }
-      })
-      .catch(() => null);
-  }, [cart]);
-
-  // Keep Home neutral at top, but once user enters shop section switch to an active purchase theme.
-  useEffect(() => {
-    const section = comprasSectionRef.current;
-    if (!section) {
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setVisualUniverse((previous) => (previous === "neutral" ? activeUniverse : previous));
-        }
-      },
-      { threshold: 0.18, rootMargin: "-8% 0px -55% 0px" },
-    );
-
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, [activeUniverse]);
-
-  const visualTheme = SHOP_VISUAL_THEMES[visualUniverse];
-  const imageFilterStyle = useMemo(() => ({ filter: "var(--shop-image-filter)" } as React.CSSProperties), []);
-  const universeThemeVars = useMemo(
-    () =>
-      ({
-        "--shop-shell-bg": visualTheme.shellBackground,
-        "--shop-shell-border": visualTheme.shellBorder,
-        "--shop-shell-shadow": visualTheme.shellShadow,
-        "--shop-primary-from": visualTheme.primaryFrom,
-        "--shop-primary-to": visualTheme.primaryTo,
-        "--shop-chip-bg": visualTheme.chipBg,
-        "--shop-chip-text": visualTheme.chipText,
-        "--shop-chip-ring": visualTheme.chipRing,
-        "--shop-promo-timer-bg": visualTheme.promoTimerBg,
-        "--shop-promo-timer-text": visualTheme.promoTimerText,
-        "--shop-support-hover-bg": visualTheme.supportChipHoverBg,
-        "--shop-support-hover-border": visualTheme.supportChipHoverBorder,
-        "--shop-image-panel-bg": visualTheme.imagePanelBg,
-        "--shop-image-overlay": visualTheme.imageOverlay,
-        "--shop-image-filter": visualTheme.imageFilter,
-        "--shop-image-shadow": visualTheme.imageShadow,
-        "--shop-added-badge-bg": visualTheme.addedBadgeBg,
-        "--shop-modal-universe-badge-bg": visualTheme.modalUniverseBadgeBg,
-        "--shop-card-bg": visualTheme.cardBg,
-        "--shop-card-border": visualTheme.cardBorder,
-        "--shop-card-shadow": visualTheme.cardShadow,
-        "--shop-card-hover-shadow": visualTheme.cardHoverShadow,
-        "--shop-control-bg": visualTheme.controlBg,
-        "--shop-control-border": visualTheme.controlBorder,
-        "--shop-skeleton-base": visualTheme.skeletonBase,
-        "--shop-skeleton-hi": visualTheme.skeletonHighlight,
-      }) as React.CSSProperties,
-    [visualTheme],
-  );
-
-  const getProductQty = useCallback((productId: string): number => quantityByProduct[productId] ?? 1, [quantityByProduct]);
-  const setProductQty = useCallback((productId: string, qty: number) => {
-    setQuantityByProduct((prev) => {
-      const next = { ...prev, [productId]: Math.max(1, Math.min(99, qty)) };
-      try { localStorage.setItem(QTY_HISTORY_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-      return next;
-    });
-  }, []);
-
-  const toggleWishlist = useCallback((productId: string) => {
-    setWishlist((prev) => {
-      const next = new Set(prev);
-      const added = !next.has(productId);
-      if (added) next.add(productId);
-      else next.delete(productId);
-      try { localStorage.setItem(WISHLIST_KEY, JSON.stringify([...next])); } catch { /* ignore */ }
-      if (added) {
-        toast.success("Guardado en favoritos", {
-          action: {
-            label: "Ver favoritos",
-            onClick: () => setShowWishlistOnly(true),
-          },
-          duration: 3500,
-        });
-      }
-      return next;
-    });
-  }, []);
-
-  const cartItemCount = cart?.totalQuantity ?? 0;
-
-  const tryRestoreCartFromSnapshot = useCallback(async (): Promise<ShopCart | null> => {
-    if (snapshotRecoveryAttemptedRef.current) {
-      return null;
-    }
-    snapshotRecoveryAttemptedRef.current = true;
-
-    const snapshot = readCartSnapshot();
-    if (!snapshot?.lines.length) {
-      return null;
-    }
-
-    try {
-      const response = await fetch("/api/cart/create", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          lines: snapshot.lines,
-        }),
-      });
-      const payload = await parseApiResponse<CartResponse>(response);
-      if (!payload.cart) {
-        clearCartSnapshot();
-        return null;
-      }
-      setFeedbackMessage("Recuperamos tu carrito guardado en este dispositivo.");
-      return payload.cart;
-    } catch {
-      return null;
-    }
-  }, []);
-
-  const loadCart = useCallback(async () => {
-    setIsLoadingCart(true);
-    try {
-      const response = await fetch("/api/cart", {
-        method: "GET",
-        cache: "no-store",
-      });
-      const payload = await parseApiResponse<CartResponse>(response);
-
-      if (payload.cart) {
-        setCart(payload.cart);
-        return;
-      }
-
-      const restoredCart = await tryRestoreCartFromSnapshot();
-      setCart(restoredCart);
-    } catch (error) {
-      setFeedbackMessage(error instanceof Error ? error.message : "No se pudo cargar el carrito.");
-    } finally {
-      setIsLoadingCart(false);
-    }
-  }, [tryRestoreCartFromSnapshot]);
-
-  const loadProducts = useCallback(
-    async (
-      universe: UniverseFilter,
-      options: {
-        silent?: boolean;
-        forceRealtime?: boolean;
-      } = {},
-    ) => {
-      const { silent = false, forceRealtime = false } = options;
-      if (!silent) {
-        setIsLoadingProducts(true);
-      }
-
-      const query = new URLSearchParams({
-        universe,
-      });
-      if (forceRealtime) {
-        query.set("realtime", "1");
-      }
-
-      if (!silent) {
-        setProductsError(null);
-        setProductsErrorCode(null);
-      }
-
-      try {
-        const response = await fetch(`/api/shop/products?${query.toString()}`, {
-          method: "GET",
-          cache: "no-store",
-        });
-        const payload = await parseApiResponse<ProductsResponse>(response);
-
-        const knownIds = knownProductIdsRef.current[universe];
-        if (knownIds.size > 0) {
-          const incomingNewIds = payload.products
-            .map((product) => product.id)
-            .filter((productId) => !knownIds.has(productId));
-
-          if (incomingNewIds.length > 0) {
-            setLiveNewProducts((previous) => ({
-              ...previous,
-              [universe]: [...new Set([...previous[universe], ...incomingNewIds])],
-            }));
-            setFeedbackMessage(
-              `${incomingNewIds.length} pack${incomingNewIds.length === 1 ? "" : "s"} nuevo${
-                incomingNewIds.length === 1 ? "" : "s"
-              } en ${UNIVERSE_LABELS[universe]}.`,
-            );
-          }
-        }
-
-        for (const product of payload.products) {
-          knownIds.add(product.id);
-        }
-
-        setProducts(payload.products);
-        setProductsErrorCode(null);
-        setSelectedVariantByProduct((previous) => {
-          const next = { ...previous };
-          for (const product of payload.products) {
-            if (next[product.id]) {
-              continue;
-            }
-            const defaultVariant = pickDefaultVariant(product);
-            if (defaultVariant) {
-              next[product.id] = defaultVariant.id;
-            }
-          }
-          return next;
-        });
-      } catch (error) {
-        const code = (error as ApiError)?.code ?? null;
-        const baseMessage = error instanceof Error ? error.message : "No se pudieron cargar los productos.";
-        const nextMessage =
-          code === "shopify_config_missing"
-            ? "La compra está temporalmente desconfigurada en Shopify. Puedes reintentar o contactarnos por WhatsApp."
-            : code === "shopify_network_timeout"
-              ? "No pudimos conectar con Shopify en este momento. Intenta nuevamente."
-              : baseMessage;
-        if (!silent) {
-          setProductsError(nextMessage);
-          setProductsErrorCode(code);
-        }
-        if (!silent) {
-          setProducts([]);
-        }
-      } finally {
-        if (!silent) {
-          setIsLoadingProducts(false);
-        }
-      }
-    },
-    [],
-  );
-
-  useEffect(() => {
-    void loadCart();
-  }, [loadCart]);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const loadCollectionPreview = async () => {
-      setIsLoadingCollectionPreview(true);
-      try {
-        const response = await fetch("/api/collection", {
-          method: "GET",
-          cache: "no-store",
-        });
-        const payload = await parseApiResponse<CollectionResponse>(response);
-        if (cancelled) {
-          return;
-        }
-
-        const grouped: Record<UniverseFilter, CollectionItemDTO[]> = {
-          animals: [],
-          multiverse: [],
-          mega: [],
-        };
-
-        for (const item of payload.collection) {
-          if (!item.active) {
-            continue;
-          }
-          const universe = toUniverseFromSeries(item.series);
-          if (!universe) {
-            continue;
-          }
-          grouped[universe].push(item);
-        }
-
-        setCollectionByUniverse(grouped);
-      } catch {
-        if (!cancelled) {
-          setCollectionByUniverse({
-            animals: [],
-            multiverse: [],
-            mega: [],
-          });
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoadingCollectionPreview(false);
-        }
-      }
-    };
-
-    void loadCollectionPreview();
-
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  // Restore wishlist from localStorage on mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(WISHLIST_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as string[];
-        if (Array.isArray(parsed)) setWishlist(new Set(parsed));
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  // Restock notifications: detect when a wishlist product comes back in stock
-  useEffect(() => {
-    const prev = prevStockRef.current;
-    for (const product of products) {
-      const nowAvailable = product.variants.some((v) => v.availableForSale);
-      const wasAvailable = prev.get(product.id);
-      // Only fire when going from explicitly-unavailable to available (not on first load)
-      if (wasAvailable === false && nowAvailable && wishlist.has(product.id)) {
-        toast.success(`¡${product.title} volvió al stock!`, {
-          duration: 7000,
-          action: {
-            label: "Ver",
-            onClick: () => setSelectedProduct(product),
-          },
-        });
-        if (typeof navigator !== "undefined" && "vibrate" in navigator) {
-          navigator.vibrate([100, 80, 200]);
-        }
-      }
-      prev.set(product.id, nowAvailable);
-    }
-  }, [products, wishlist]);
-
-  // Restore qty history from localStorage on mount
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(QTY_HISTORY_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as Record<string, number>;
-        if (parsed && typeof parsed === "object") {
-          setQuantityByProduct(parsed);
-        }
-      }
-    } catch { /* ignore */ }
-  }, []);
-
-  // Promo countdown
-  useEffect(() => {
-    if (!PROMO_EXPIRES_ENV || !FREE_GIFT_MIN_SUBTOTAL) return;
-    const expiresAt = new Date(PROMO_EXPIRES_ENV).getTime();
-    if (!Number.isFinite(expiresAt) || Date.now() >= expiresAt) return;
-    const update = () => {
-      const diff = expiresAt - Date.now();
-      if (diff <= 0) { setPromoTimeLeft(null); return; }
-      const d = Math.floor(diff / 86_400_000);
-      const h = Math.floor((diff % 86_400_000) / 3_600_000);
-      const m = Math.floor((diff % 3_600_000) / 60_000);
-      const s = Math.floor((diff % 60_000) / 1_000);
-      setPromoTimeLeft(d > 0 ? `${d}d ${h}h ${m}m` : `${h}h ${m}m ${s}s`);
-    };
-    update();
-    const id = setInterval(update, 1_000);
-    return () => clearInterval(id);
-  }, []);
-
-  useEffect(() => {
-    void loadProducts(activeUniverse);
-  }, [activeUniverse, loadProducts]);
-
-  useEffect(() => {
-    const refreshCatalog = async () => {
-      if (typeof document !== "undefined" && document.hidden) {
-        return;
-      }
-
-      if (liveRefreshInFlightRef.current) {
-        return;
-      }
-
-      liveRefreshInFlightRef.current = true;
-      try {
-        await loadProducts(activeUniverse, {
-          silent: true,
-          forceRealtime: true,
-        });
-      } finally {
-        liveRefreshInFlightRef.current = false;
-      }
-    };
-
-    const intervalId = window.setInterval(() => {
-      void refreshCatalog();
-    }, LIVE_REFRESH_MS);
-
-    const onWindowFocus = () => {
-      void refreshCatalog();
-    };
-
-    const onVisibilityChange = () => {
-      if (!document.hidden) {
-        void refreshCatalog();
-      }
-    };
-
-    window.addEventListener("focus", onWindowFocus);
-    document.addEventListener("visibilitychange", onVisibilityChange);
-
-    return () => {
-      window.clearInterval(intervalId);
-      window.removeEventListener("focus", onWindowFocus);
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-  }, [activeUniverse, loadProducts]);
-
-  useEffect(() => {
-    const onOpenCart = () => setIsCartOpen(true);
-    window.addEventListener("doflins:open-cart", onOpenCart);
-    return () => window.removeEventListener("doflins:open-cart", onOpenCart);
-  }, []);
-
-  useEffect(() => {
-    if (isLoadingCart) {
-      return;
-    }
-
-    if (cart?.lines.length) {
-      writeCartSnapshot(cart);
-      return;
-    }
-
-    clearCartSnapshot();
-  }, [cart, isLoadingCart]);
-
-  const applyCartPayload = useCallback((nextCart: ShopCart) => {
-    setCart(nextCart);
-    setIsCartOpen(true);
-  }, []);
-
-  const getSelectedVariant = useCallback(
-    (product: ShopProduct): ShopProductVariant | null => {
-      const selectedId = selectedVariantByProduct[product.id];
-      return product.variants.find((variant) => variant.id === selectedId) ?? pickDefaultVariant(product);
-    },
-    [selectedVariantByProduct],
-  );
-
-  const addToCart = useCallback(
-    async (product: ShopProduct, quantity = 1) => {
-      const selectedVariant = getSelectedVariant(product);
-      const normalizedQuantity = Number.isFinite(quantity) ? Math.max(1, Math.floor(quantity)) : 1;
-      if (!selectedVariant) {
-        setFeedbackMessage("Este producto no tiene variantes disponibles para compra.");
-        return;
-      }
-
-      if (!selectedVariant.availableForSale) {
-        setFeedbackMessage("Este pack está agotado por ahora.");
-        return;
-      }
-
-      setIsMutatingCart(true);
-      setFeedbackMessage(null);
-      try {
-        const response = await fetch("/api/cart/lines/add", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            lines: [
-              {
-                merchandiseId: selectedVariant.id,
-                quantity: normalizedQuantity,
-              },
-            ],
-          }),
-        });
-        const payload = await parseApiResponse<CartResponse>(response);
-        if (!payload.cart) {
-          throw new Error("No se pudo actualizar el carrito.");
-        }
-        applyCartPayload(payload.cart);
-        setLastAddedProductId(product.id);
-        setTimeout(() => setLastAddedProductId(null), 700);
-        setConfettiByProduct((prev) => new Set([...prev, product.id]));
-        setTimeout(
-          () =>
-            setConfettiByProduct((prev) => {
-              const next = new Set(prev);
-              next.delete(product.id);
-              return next;
-            }),
-          850,
-        );
-        toast.success(`${product.title} al carrito`, {
-          description: `${normalizedQuantity} pack${normalizedQuantity === 1 ? "" : "s"} agregado${normalizedQuantity === 1 ? "" : "s"} correctamente.`,
-          duration: 2500,
-        });
-        setFeedbackMessage(`${product.title} x${normalizedQuantity} agregado al carrito.`);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : "No se pudo agregar al carrito.";
-        const code = (error as ApiError)?.code;
-
-        if (code === "shopify_network_timeout") {
-          setFeedbackMessage("Shopify tardó en responder. Intenta de nuevo en unos segundos.");
-          return;
-        }
-
-        if (code === "shopify_cart_user_error" && /no existe/i.test(message)) {
-          await loadProducts(activeUniverse);
-          setFeedbackMessage("El catálogo cambió en Shopify. Ya lo recargamos; intenta agregar de nuevo.");
-          return;
-        }
-
-        setFeedbackMessage(message);
-      } finally {
-        setIsMutatingCart(false);
-      }
-    },
-    [activeUniverse, applyCartPayload, getSelectedVariant, loadProducts],
-  );
-
-  const updateLineQuantity = useCallback(
-    async (lineId: string, quantity: number) => {
-      if (!Number.isFinite(quantity) || quantity <= 0 || quantity > 99) return;
-
-      // Capturar snapshot ANTES del setState — cartRef está siempre actualizado
-      const previousCart = cartRef.current;
-
-      // Optimistic update: actualizar qty + recalcular lineTotal inmediatamente
-      setMutatingLineIds((prev) => { const next = new Set(prev); next.add(lineId); return next; });
-      setCart((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          lines: prev.lines.map((l) => {
-            if (l.id !== lineId) return l;
-            const unitPrice = Number(l.pricePerUnit.amount);
-            const newTotal = Number.isFinite(unitPrice)
-              ? String((unitPrice * quantity).toFixed(2))
-              : l.lineTotal.amount;
-            return { ...l, quantity, lineTotal: { ...l.lineTotal, amount: newTotal } };
-          }),
-        };
-      });
-
-      setFeedbackMessage(null);
-      try {
-        const response = await fetch("/api/cart/lines/update", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lines: [{ id: lineId, quantity }] }),
-        });
-        const payload = await parseApiResponse<CartResponse>(response);
-        if (!payload.cart) throw new Error("No se pudo actualizar el carrito.");
-        setCart(payload.cart);
-      } catch (error) {
-        // Revertir al estado real anterior
-        setCart(previousCart);
-        setFeedbackMessage(error instanceof Error ? error.message : "No se pudo actualizar la cantidad.");
-      } finally {
-        setMutatingLineIds((prev) => { const next = new Set(prev); next.delete(lineId); return next; });
-      }
-    },
-    [],
-  );
-
-  const removeLine = useCallback(async (lineId: string) => {
-    // Capturar snapshot ANTES del setState — cartRef está siempre actualizado
-    const previousCart = cartRef.current;
-
-    setFeedbackMessage(null);
-    setMutatingLineIds((prev) => { const next = new Set(prev); next.add(lineId); return next; });
-    // Optimistic: quitar la línea visualmente de inmediato
-    setCart((prev) => {
-      if (!prev) return prev;
-      return { ...prev, lines: prev.lines.filter((l) => l.id !== lineId) };
-    });
-    try {
-      const response = await fetch("/api/cart/lines/remove", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lineIds: [lineId] }),
-      });
-      const payload = await parseApiResponse<CartResponse>(response);
-      if (!payload.cart) throw new Error("No se pudo actualizar el carrito.");
-      // Confirmar con respuesta del servidor (actualiza totales, descuentos, etc.)
-      setCart(payload.cart);
-    } catch (error) {
-      // Revertir al estado real anterior
-      setCart(previousCart);
-      setFeedbackMessage(error instanceof Error ? error.message : "No se pudo eliminar el item.");
-    } finally {
-      setMutatingLineIds((prev) => { const next = new Set(prev); next.delete(lineId); return next; });
-    }
-  }, []);
-
-  const applyDiscount = useCallback(async () => {
-    const normalized = discountCode.trim();
-    if (!normalized) {
-      return;
-    }
-
-    setIsMutatingCart(true);
-    setFeedbackMessage(null);
-    try {
-      const response = await fetch("/api/cart/discount", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          code: normalized,
-        }),
-      });
-      const payload = await parseApiResponse<
-        CartResponse & {
-          coupon?: {
-            code: string;
-            applied: boolean;
-          };
-        }
-      >(response);
-
-      if (!payload.cart) {
-        throw new Error("No se pudo aplicar el cupón.");
-      }
-
-      setCart(payload.cart);
-      setFeedbackMessage(payload.coupon?.applied ? "Cupón aplicado correctamente." : "Cupón enviado, revisa si aplica en tu carrito.");
-    } catch (error) {
-      setFeedbackMessage(error instanceof Error ? error.message : "No se pudo aplicar el cupón.");
-    } finally {
-      setIsMutatingCart(false);
-    }
-  }, [discountCode]);
-
-  const goToCheckout = useCallback(async () => {
-    setIsMutatingCart(true);
-    setFeedbackMessage(null);
-    try {
-      const response = await fetch("/api/cart/checkout", {
-        method: "POST",
-      });
-      const payload = await parseApiResponse<CheckoutResponse>(response);
-      let url = payload.checkoutUrl;
-      if (giftNote.trim()) {
-        url += (url.includes("?") ? "&" : "?") + `note=${encodeURIComponent(giftNote.trim())}`;
-      }
-      setIsCartOpen(false);
-      window.location.href = url;
-    } catch (error) {
-      setFeedbackMessage(error instanceof Error ? error.message : "No se pudo abrir checkout.");
-    } finally {
-      setIsMutatingCart(false);
-    }
-  }, [giftNote]);
-
-  const totals = useMemo(() => {
-    if (!cart) {
-      return {
-        subtotal: "-",
-        total: "-",
-        tax: "-",
-      };
-    }
-
-    return {
-      subtotal: formatMoney(cart.subtotal),
-      total: formatMoney(cart.total),
-      tax: formatMoney(cart.totalTax),
-    };
-  }, [cart]);
-
-  const freeGiftProgress = useMemo(() => {
-    if (!FREE_GIFT_MIN_SUBTOTAL) {
-      return {
-        enabled: false,
-        unlocked: false,
-        paidSubtotal: 0,
-        remaining: 0,
-        percent: 0,
-      };
-    }
-
-    const paidSubtotal = (cart?.lines ?? []).reduce((total, line) => {
-      const unitAmount = Number(line.pricePerUnit.amount);
-      const lineAmount = Number(line.lineTotal.amount);
-      if (!Number.isFinite(unitAmount) || !Number.isFinite(lineAmount)) {
-        return total;
-      }
-
-      if (unitAmount <= 0) {
-        return total;
-      }
-
-      return total + lineAmount;
-    }, 0);
-
-    const unlocked = paidSubtotal >= FREE_GIFT_MIN_SUBTOTAL;
-    const remaining = Math.max(0, FREE_GIFT_MIN_SUBTOTAL - paidSubtotal);
-    const percent = Math.min(100, (paidSubtotal / FREE_GIFT_MIN_SUBTOTAL) * 100);
-
-    return {
-      enabled: true,
-      unlocked,
-      paidSubtotal,
-      remaining,
-      percent,
-    };
-  }, [cart]);
-
-  const stickyProduct = useMemo(() => {
-    if (!products.length) {
-      return null;
-    }
-
-    const bestSeller = products.find((product) => BEST_SELLER_HANDLES.has(product.handle.toLowerCase()) && getSelectedVariant(product)?.availableForSale);
-    if (bestSeller) {
-      return bestSeller;
-    }
-
-    return products.find((product) => getSelectedVariant(product)?.availableForSale) ?? products[0] ?? null;
-  }, [getSelectedVariant, products]);
-
-  const stickyVariant = stickyProduct ? getSelectedVariant(stickyProduct) : null;
-  const stickyCtaDisabled = isMutatingCart || !stickyProduct || !stickyVariant?.availableForSale;
-  const activeCatalogHref = `/reveal?universe=${activeUniverse}`;
-  const quickBuyLabel = stickyProduct ? `Comprar ${stickyProduct.title}` : "Comprar pack recomendado";
-  const addRecommendedPack = useCallback(() => {
-    if (!stickyProduct) {
-      return;
-    }
-    void addToCart(stickyProduct, 1);
-  }, [addToCart, stickyProduct]);
-
-  const cartRecoveryLinks = useMemo(() => {
-    if (!cart?.checkoutUrl) {
-      return null;
-    }
-
-    const checkoutUrl = cart.checkoutUrl;
-    const recoveryText = `Guardé mi carrito DOFLINS para retomarlo después: ${checkoutUrl}`;
-
-    return {
-      checkoutUrl,
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(recoveryText)}`,
-      email: `mailto:?subject=${encodeURIComponent("Mi carrito DOFLINS")}&body=${encodeURIComponent(recoveryText)}`,
-    };
-  }, [cart?.checkoutUrl]);
-
-  const copyRecoveryLink = useCallback(async () => {
-    if (!cartRecoveryLinks?.checkoutUrl) {
-      return;
-    }
-
-    if (typeof navigator === "undefined" || !navigator.clipboard) {
-      setFeedbackMessage("No se pudo copiar automáticamente. Comparte el enlace desde WhatsApp o email.");
-      return;
-    }
-
-    try {
-      await navigator.clipboard.writeText(cartRecoveryLinks.checkoutUrl);
-      setFeedbackMessage("Link del carrito copiado.");
-    } catch {
-      setFeedbackMessage("No se pudo copiar el link del carrito.");
-    }
-  }, [cartRecoveryLinks]);
-
-  const currencyCode = products[0]?.price.currencyCode ?? "MXN";
-  const pricingCurrencyCode = cart?.subtotal.currencyCode ?? currencyCode;
-
-  const getLineQtyAvailable = useCallback(
-    (merchandiseId: string): number | null => {
-      for (const p of products) {
-        const v = p.variants.find((variant) => variant.id === merchandiseId);
-        if (v) return v.quantityAvailable;
-      }
-      return null;
-    },
-    [products],
-  );
-
-  const sortedProducts = useMemo(() => {
-    if (sortOrder === "new") {
-      const newSet = new Set(liveNewProducts[activeUniverse]);
-      return [...products].sort((a, b) => {
-        const an = newSet.has(a.id) ? 0 : 1;
-        const bn = newSet.has(b.id) ? 0 : 1;
-        return an - bn;
-      });
-    }
-    if (sortOrder === "default") {
-      // Pin bestsellers first, then rest in original API order
-      return [...products].sort((a, b) => {
-        const aBS = BEST_SELLER_HANDLES.has(a.handle.toLowerCase()) ? 0 : 1;
-        const bBS = BEST_SELLER_HANDLES.has(b.handle.toLowerCase()) ? 0 : 1;
-        return aBS - bBS;
-      });
-    }
-    return [...products].sort((a, b) => {
-      const pa = Number(a.price.amount);
-      const pb = Number(b.price.amount);
-      return sortOrder === "asc" ? pa - pb : pb - pa;
-    });
-  }, [products, sortOrder, liveNewProducts, activeUniverse]);
-
-  const filteredProducts = useMemo(() => {
-    let base = sortedProducts;
-    if (showWishlistOnly) base = base.filter((p) => wishlist.has(p.id));
-    if (!shopSearch.trim()) return base;
-    const q = shopSearch.trim().toLowerCase();
-    return base.filter(
-      (p) => p.title.toLowerCase().includes(q) || p.shortDescription.toLowerCase().includes(q),
-    );
-  }, [sortedProducts, shopSearch, showWishlistOnly, wishlist]);
-  const activeCollectionPreviewNames = useMemo(() => {
-    const sortedItems = [...collectionByUniverse[activeUniverse]].sort((a, b) => {
-      const tierA = DROP_TIER_ORDER.indexOf(toDropTier(a.rarity));
-      const tierB = DROP_TIER_ORDER.indexOf(toDropTier(b.rarity));
-      if (tierA !== tierB) {
-        return tierA - tierB;
-      }
-      return a.collectionNumber - b.collectionNumber;
-    });
-
-    const seen = new Set<string>();
-    const names: string[] = [];
-    for (const item of sortedItems) {
-      const next = formatCollectionPreviewName(item);
-      if (!next || seen.has(next)) {
-        continue;
-      }
-      seen.add(next);
-      names.push(next);
-    }
-    return names;
-  }, [activeUniverse, collectionByUniverse]);
-  const activeCollectionPreviewHead = useMemo(
-    () => activeCollectionPreviewNames.slice(0, 10),
-    [activeCollectionPreviewNames],
-  );
-  const activeCollectionPreviewRemaining = Math.max(0, activeCollectionPreviewNames.length - activeCollectionPreviewHead.length);
-  const activeCollectionShowcaseItems = useMemo(() => {
-    const sortedItems = [...collectionByUniverse[activeUniverse]].sort((a, b) => {
-      const tierA = DROP_TIER_ORDER.indexOf(toDropTier(a.rarity));
-      const tierB = DROP_TIER_ORDER.indexOf(toDropTier(b.rarity));
-      if (tierA !== tierB) {
-        return tierA - tierB;
-      }
-      return a.collectionNumber - b.collectionNumber;
-    });
-    return sortedItems.slice(0, 12);
-  }, [activeUniverse, collectionByUniverse]);
-  const activeCollectionShowcaseRemaining = Math.max(
-    0,
-    collectionByUniverse[activeUniverse].length - activeCollectionShowcaseItems.length,
-  );
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const productsCountLabel = `${products.length} pack${products.length === 1 ? "" : "s"}`;
-  const selectedModalVariant = selectedProduct ? getSelectedVariant(selectedProduct) : null;
-  const selectedModalSoldOut = !selectedModalVariant?.availableForSale;
-  const selectedModalStock = resolveStockBadge(selectedModalVariant);
-  const hasCartLines = Boolean(cart?.lines.length);
-  const retryProductsLoad = useCallback(() => {
-    void loadProducts(activeUniverse, {
-      forceRealtime: true,
-    });
-  }, [activeUniverse, loadProducts]);
-  const activateUniverse = useCallback((nextUniverse: UniverseFilter) => {
-    setActiveUniverse(nextUniverse);
-    setVisualUniverse(nextUniverse);
-    setGridAnimKey((current) => current + 1);
-    setShopSearch("");
-  }, []);
+  const shop = useShopExperience();
+
+  const {
+    activeUniverse,
+    visualUniverse,
+    visualTheme,
+    imageFilterStyle,
+    universeThemeVars,
+    activateUniverse,
+    activeCatalogHref,
+    products,
+    filteredProducts,
+    isLoadingProducts,
+    productsError,
+    productsErrorCode,
+    retryProductsLoad,
+    liveNewProducts,
+    sortOrder,
+    setSortOrder,
+    gridView,
+    setGridView,
+    gridAnimKey,
+    shopSearch,
+    setShopSearch,
+    cart,
+    cartItemCount,
+    isCartOpen,
+    setIsCartOpen,
+    isLoadingCart,
+    isMutatingCart,
+    mutatingLineIds,
+    addToCart,
+    updateLineQuantity,
+    removeLine,
+    hasCartLines,
+    totals,
+    discountCode,
+    setDiscountCode,
+    applyDiscount,
+    goToCheckout,
+    giftNote,
+    setGiftNote,
+    showCartQR,
+    setShowCartQR,
+    cartRecoveryLinks,
+    copyRecoveryLink,
+    freeGiftProgress,
+    pricingCurrencyCode,
+    selectedProduct,
+    setSelectedProduct,
+    selectedVariantByProduct: _selectedVariantByProduct,
+    setSelectedVariantByProduct,
+    getSelectedVariant,
+    getProductQty,
+    setProductQty,
+    getLineQtyAvailable,
+    selectedModalVariant,
+    selectedModalSoldOut,
+    selectedModalStock,
+    stickyProduct,
+    stickyVariant,
+    stickyCtaDisabled,
+    quickBuyLabel,
+    addRecommendedPack,
+    wishlist,
+    toggleWishlist: _toggleWishlist,
+    showWishlistOnly,
+    setShowWishlistOnly,
+    feedbackMessage,
+    lastAddedProductId,
+    confettiByProduct,
+    brokenShowcaseIds,
+    setBrokenShowcaseIds,
+    promoTimeLeft,
+    isFabHovered,
+    setIsFabHovered,
+    isLoadingCollectionPreview,
+    activeCollectionPreviewHead,
+    activeCollectionPreviewRemaining,
+    activeCollectionShowcaseItems,
+    activeCollectionShowcaseRemaining,
+    comprasSectionRef,
+  } = shop;
+
+  // Derive values needed only in JSX
+  const activeCollectionPreviewNames = [...activeCollectionPreviewHead];
+  if (activeCollectionPreviewRemaining > 0) {
+    // used below for empty-state check
+  }
 
   return (
     <section id="compras" ref={comprasSectionRef} className="space-y-5 pb-28 lg:pb-6" style={universeThemeVars}>
@@ -1575,7 +204,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         }}
       >
         <CardContent className="space-y-5 p-6 sm:p-8">
-          {/* ── Fila 1: carrito (sin título/copy redundante con el hero) ── */}
+          {/* ── Fila 1: carrito ── */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <Button
@@ -1819,7 +448,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     <div className="space-y-2">
                       {TRUST_PROMISES.map((promise) => {
                         const Icon = promise.icon;
-
                         return (
                           <div key={promise.title} className="rounded-xl border border-[#d2ddba] bg-white/70 p-3">
                             <p className="flex items-center gap-2 font-medium text-[var(--ink-900)]">
@@ -1920,14 +548,10 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 </div>
               </SheetContent>
             </Sheet>
-
-            {/* ── Embedded Shopify Checkout ── */}
-
           </div>
 
-          {/* ── Tira: promo + trust (sin pasos duplicados del hero) ── */}
+          {/* ── Tira: promo + trust ── */}
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-[var(--shop-chip-ring)] pt-4 text-xs">
-            {/* Promo */}
             {FREE_GIFT_PROMO_LABEL || FREE_GIFT_MIN_SUBTOTAL ? (
               <span className="inline-flex items-center gap-1.5 rounded-full bg-[var(--shop-chip-bg)] px-2.5 py-1 font-semibold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">
                 🎁 {FREE_GIFT_PROMO_LABEL || `Regalo gratis desde ${formatCurrencyAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, pricingCurrencyCode)}`}
@@ -1938,8 +562,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 ) : null}
               </span>
             ) : null}
-
-            {/* Trust */}
             <div className="flex items-center gap-2 ml-auto">
               <WatchingBadge universe={activeUniverse} />
               <span className="inline-flex items-center gap-1 rounded-full bg-white/90 px-2.5 py-1 text-[var(--ink-700)] ring-1 ring-[#d6d2b4]">
@@ -2013,6 +635,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               {visualUniverse === "mega" ? <CheckCircleIcon className="ml-auto h-5 w-5 shrink-0 text-[#c47c20] hidden sm:block" /> : null}
             </button>
           </div>
+
+          {/* ── Search & filters ── */}
           <div className="flex gap-2">
             <div className="relative flex-1">
               <label htmlFor="shop-search" className="sr-only">Buscar pack</label>
@@ -2088,10 +712,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </div>
           </div>
 
-
-
-
-
+          {/* ── Feedback ── */}
           {feedbackMessage ? (
             <p
               aria-live="polite"
@@ -2105,6 +726,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </p>
           ) : null}
 
+          {/* ── Error state ── */}
           {productsError ? (
             <div className="rounded-2xl border border-[#efc5c5] bg-[#fff1f1] px-4 py-3 text-sm text-[#7b2e2e]">
               <p className="font-medium">
@@ -2125,6 +747,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </div>
           ) : null}
 
+          {/* ── Loading state ── */}
           {isLoadingProducts ? (
             <div className="space-y-3">
               <div className="grid gap-4 md:grid-cols-3">
@@ -2141,6 +764,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </div>
           ) : null}
 
+          {/* ── Empty catalog with collection preview ── */}
           {!isLoadingProducts && !productsError && !products.length && activeCollectionPreviewNames.length > 0 ? (
             <div className="space-y-3 rounded-2xl border border-[var(--shop-chip-ring)] bg-white/80 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -2196,9 +820,9 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </div>
           ) : null}
 
+          {/* ── Product grid ── */}
           {!isLoadingProducts ? (
             <div className="space-y-4">
-            {/* ── Bundle promo banner ── */}
             {!shopSearch.trim() && !showWishlistOnly && BUNDLE_PROMO_CODE && filteredProducts.length >= 2 ? (
               <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border-2 border-dashed border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)] px-5 py-4">
                 <div className="min-w-0">
@@ -2243,19 +867,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 const isLiveNew = liveNewProducts[activeUniverse].includes(product.id);
                 const isBestSeller = BEST_SELLER_HANDLES.has(product.handle.toLowerCase());
                 const stockBadge = resolveStockBadge(selectedVariant);
-
                 const isJustAdded = lastAddedProductId === product.id;
-                const isLowStock =
-                  typeof selectedVariant?.quantityAvailable === "number" &&
-                  selectedVariant.quantityAvailable > 0 &&
-                  selectedVariant.quantityAvailable <= LOW_STOCK_THRESHOLD;
-                const isUltraLowStock =
-                  isLowStock &&
-                  typeof selectedVariant?.quantityAvailable === "number" &&
-                  selectedVariant.quantityAvailable <= 2;
-                const rarityTag = product.tags.find((t) =>
-                  /legendary|legendari|epic|rare|especial|uncommon/i.test(t)
-                );
 
                 return (
                   <LazyCard
@@ -2342,7 +954,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       <h4 className={`font-title leading-tight text-[var(--ink-900)] ${ gridView === "list" ? "text-base sm:text-lg" : "text-xl sm:text-2xl" }`}>{product.title}</h4>
 
                       {gridView === "list" ? (
-                        /* ── Lista: precio + CTA inline ── */
                         <div className="mt-auto flex items-center gap-2 pt-1" onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
                           <span className="font-title text-lg font-bold text-[var(--ink-900)]">{formatMoney(selectedVariant?.price ?? product.price)}</span>
                           {isSoldOut ? (
@@ -2480,6 +1091,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             </div>
           ) : null}
 
+          {/* ── Collection showcase ── */}
           {!isLoadingProducts && !productsError ? (
             <div className="space-y-3 rounded-3xl border border-[var(--shop-chip-ring)] bg-[linear-gradient(150deg,#ffffff,#f5f8ea)] p-4 sm:p-5">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -2567,7 +1179,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         </CardContent>
       </Card>
 
-      {/* FAB carrito flotante — solo mobile cuando hay items */}
+      {/* FAB carrito flotante */}
       {cartItemCount > 0 ? (
         <div
           className="fixed bottom-[calc(env(safe-area-inset-bottom)+9rem)] right-4 z-40 flex flex-col items-end gap-2 sm:bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] lg:hidden"
@@ -2576,7 +1188,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           onFocus={() => setIsFabHovered(true)}
           onBlur={() => setIsFabHovered(false)}
         >
-          {/* Mini carrito en hover */}
           {isFabHovered && cart?.lines.length ? (
             <div className="w-64 rounded-2xl border border-[#d7d7c3] bg-white p-3 shadow-[0_8px_24px_rgba(44,47,23,0.18)] animate-catalog-fadein">
               <p className="mb-2 text-xs font-semibold text-[var(--ink-900)]">En tu carrito</p>
@@ -2618,6 +1229,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         </div>
       ) : null}
 
+      {/* Sticky product bar */}
       {stickyProduct && stickyVariant ? (
         <div className="fixed inset-x-0 bottom-14 z-40 px-3 pb-1.5 sm:bottom-0 sm:pb-[calc(env(safe-area-inset-bottom)+0.65rem)] lg:hidden">
           <div
@@ -2664,18 +1276,16 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         </div>
       ) : null}
 
+      {/* Quick view modal */}
       <Dialog
         open={Boolean(selectedProduct)}
         onOpenChange={(open) => {
-          if (!open) {
-            setSelectedProduct(null);
-          }
+          if (!open) setSelectedProduct(null);
         }}
       >
         <DialogContent className="w-[min(94vw,920px)] gap-0 overflow-hidden p-0" style={universeThemeVars}>
           {selectedProduct ? (
             <div className="grid gap-0 md:grid-cols-[1.05fr_0.95fr]">
-              {/* LEFT: image panel */}
               <div className="relative flex min-h-[320px] items-center justify-center bg-[var(--shop-image-panel-bg)] p-4 sm:p-6">
                 {selectedProduct.imageUrl ? (
                   <div className="relative h-[280px] w-full overflow-hidden rounded-2xl sm:h-[340px]" style={{ boxShadow: "var(--shop-image-shadow)" }}>
@@ -2702,9 +1312,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                   {selectedModalStock.label}
                 </span>
               </div>
-              {/* RIGHT: flex-col with scrollable body + sticky footer */}
               <div className="flex max-h-[80vh] flex-col overflow-hidden">
-                {/* Scrollable content */}
                 <div className="flex-1 space-y-4 overflow-y-auto p-6">
                   <DialogHeader>
                     <DialogTitle>{selectedProduct.title}</DialogTitle>
@@ -2762,7 +1370,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       ))}
                     </select>
                   ) : null}
-                  {/* Qty stepper */}
                   <div className="flex items-center justify-between gap-2 rounded-full border px-3 py-1" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
                     <button
                       type="button"
@@ -2795,7 +1402,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     </Link>
                   </Button>
                 </div>
-                {/* Sticky footer */}
                 <div className="shrink-0 border-t p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
                   <Button
                     className={`w-full ${selectedModalSoldOut ? "bg-[#b9c8a3] text-white" : "bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] text-white hover:opacity-90"}`}
@@ -2808,7 +1414,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     <ShoppingCartIcon className="h-5 w-5" />{" "}
                     {selectedModalSoldOut
                       ? "Agotado"
-                      : `Agregar ×${getProductQty(selectedProduct.id)}`}
+                      : `Agregar ×${getProductQty(selectedProduct.id)}`}
                   </Button>
                 </div>
               </div>

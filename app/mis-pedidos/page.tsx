@@ -115,7 +115,7 @@ export default function MisPedidosPage(): React.JSX.Element {
   const [user, setUser] = useState<User | null | undefined>(undefined);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [orders, setOrders] = useState<Order[] | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [fetchDone, setFetchDone] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -127,22 +127,38 @@ export default function MisPedidosPage(): React.JSX.Element {
     return () => subscription.unsubscribe();
   }, []);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (!user) return;
-    setLoading(true);
-    setError(null);
-    void fetch("/api/orders")
-      .then(async (res) => {
+
+    let cancelled = false;
+    const controller = new AbortController();
+    setFetchDone(false);
+
+    void (async () => {
+      try {
+        const res = await fetch("/api/orders", { signal: controller.signal });
+        if (cancelled) return;
         if (!res.ok) throw new Error("Error al obtener pedidos");
         const data = (await res.json()) as { orders: Order[] };
-        setOrders(data.orders);
-      })
-      .catch((e: unknown) => {
+        if (!cancelled) {
+          setOrders(data.orders);
+          setError(null);
+        }
+      } catch (e: unknown) {
+        if (cancelled) return;
         setError((e as Error).message ?? "Error desconocido");
-      })
-      .finally(() => setLoading(false));
+      } finally {
+        if (!cancelled) setFetchDone(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      controller.abort();
+    };
   }, [user]);
+
+  const loading = !!user && !fetchDone;
 
   if (user === undefined) {
     return (

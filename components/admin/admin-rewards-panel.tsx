@@ -1,8 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { PlusIcon, PencilIcon, TrashIcon, CheckIcon } from "@heroicons/react/24/solid";
-import { ClockIcon } from "@heroicons/react/24/outline";
+import { PencilIcon, TrashIcon, CheckIcon } from "@heroicons/react/24/solid";
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────────
 

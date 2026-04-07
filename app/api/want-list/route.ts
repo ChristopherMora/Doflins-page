@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db/client";
 import { figureWantList, doflins } from "@/lib/db/schema";
 import { eq, and, desc } from "drizzle-orm";
+import { checkRateLimit } from "@/lib/server/rate-limit";
+import { getClientIp } from "@/lib/server/request";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +45,15 @@ export async function GET(request: NextRequest) {
 
 // POST - Add figure to want list
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`wantlist_write:${ip}`, 20, 60_000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   const supabase = createSupabaseServerClientForRoute(request);
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -102,6 +113,15 @@ export async function POST(request: NextRequest) {
 
 // DELETE - Remove figure from want list
 export async function DELETE(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`wantlist_write:${ip}`, 20, 60_000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   const supabase = createSupabaseServerClientForRoute(request);
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -135,6 +155,15 @@ export async function DELETE(request: NextRequest) {
 
 // PATCH - Update want list item
 export async function PATCH(request: NextRequest) {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`wantlist_write:${ip}`, 20, 60_000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes" },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   const supabase = createSupabaseServerClientForRoute(request);
   const { data: { user } } = await supabase.auth.getUser();
 
