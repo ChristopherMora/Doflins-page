@@ -712,3 +712,205 @@ html[data-universe="multiverse"][data-theme="dark"] body {
 .catalog-deco--2 { opacity: .10; --deco-dur: 5.5s; --deco-delay: -2s;  font-size: 1.1rem; top: 15%; right: 3%; }
 .catalog-deco--3 { opacity: .12; --deco-dur: 4.8s; --deco-delay: -3s;  font-size: 2rem;   top: 55%; left:  1%; }
 .catalog-deco--4 { opacity: .10; --deco-dur: 4.4s; --deco-delay: -1s;  font-size: 1.5rem; top: 38%; right: 2%; }
+
+/* ═══════════════════════════════════════════════════════════
+   MEGA DOFLINS — Cinematic Scale Experience
+   ═══════════════════════════════════════════════════════════ */
+
+/* Cinematic intro overlay — zooms "MEGA" text from distance */
+@keyframes mega-intro-zoom {
+  0%   { opacity: 0; transform: scale(0.15) translateZ(0); letter-spacing: 0.6em; }
+  40%  { opacity: 1; }
+  75%  { transform: scale(1.08) translateZ(0); letter-spacing: 0.04em; }
+  100% { opacity: 0; transform: scale(1.3) translateZ(0); letter-spacing: 0.02em; }
+}
+
+@keyframes mega-intro-bg {
+  0%   { opacity: 1; }
+  70%  { opacity: 1; }
+  100% { opacity: 0; pointer-events: none; }
+}
+
+.mega-intro-overlay {
+  animation: mega-intro-bg 1.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.mega-intro-text {
+  animation: mega-intro-zoom 1.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Screen rumble on mega entry */
+@keyframes mega-rumble {
+  0%, 100% { transform: translate(0, 0); }
+  10%  { transform: translate(-3px, 2px); }
+  20%  { transform: translate(4px, -2px); }
+  30%  { transform: translate(-2px, 3px); }
+  40%  { transform: translate(3px, -1px); }
+  50%  { transform: translate(-1px, 2px); }
+  60%  { transform: translate(2px, -3px); }
+  70%  { transform: translate(-3px, 1px); }
+  80%  { transform: translate(1px, -2px); }
+  90%  { transform: translate(-2px, 3px); }
+}
+
+.mega-rumble {
+  animation: mega-rumble 0.5s ease-out;
+}
+
+/* Mega hero title — dramatic scale entrance */
+@keyframes mega-title-entrance {
+  0%   { opacity: 0; transform: scale(0.3) translateY(40px); filter: blur(8px); }
+  60%  { opacity: 1; transform: scale(1.05) translateY(-4px); filter: blur(0); }
+  80%  { transform: scale(0.98) translateY(2px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+.mega-title-entrance {
+  animation: mega-title-entrance 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  animation-delay: 0.15s;
+}
+
+/* Mega breathing pulse — subtle scale oscillation for "alive" feeling */
+@keyframes mega-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.015); }
+}
+
+.mega-breathe {
+  animation: mega-breathe 4s ease-in-out infinite;
+}
+
+/* Mega card — image overflow effect (figure "breaks" the card boundary) */
+.mega-card-image-overflow {
+  transform: scale(1.2) translateY(-12%);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  filter: drop-shadow(0 20px 40px rgba(160, 100, 20, 0.35));
+}
+
+.mega-card-image-overflow:hover {
+  transform: scale(1.35) translateY(-16%);
+}
+
+/* Mega card entrance — dramatic zoom from far away */
+@keyframes mega-card-entrance {
+  0%   { opacity: 0; transform: scale(0.4) translateY(60px); }
+  50%  { opacity: 1; }
+  75%  { transform: scale(1.04) translateY(-5px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* Mega ground impact cracks */
+@keyframes mega-impact-crack {
+  0%   { opacity: 0; transform: scaleX(0); }
+  30%  { opacity: 0.7; transform: scaleX(1.1); }
+  100% { opacity: 0.3; transform: scaleX(1); }
+}
+
+.mega-impact-line {
+  animation: mega-impact-crack 0.6s ease-out both;
+  transform-origin: center;
+}
+
+/* Mega floating debris particles (larger than normal) */
+@keyframes mega-debris-float {
+  0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 0; }
+  15%  { opacity: 0.6; }
+  100% { transform: translateY(-120px) rotate(180deg) scale(0.3); opacity: 0; }
+}
+
+.mega-debris {
+  animation: mega-debris-float 3s ease-out infinite;
+}
+
+/* Mega XL badge pulse */
+@keyframes mega-xl-pulse {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(196, 124, 32, 0.5); }
+  50%      { transform: scale(1.05); box-shadow: 0 0 20px 6px rgba(196, 124, 32, 0.3); }
+}
+
+.mega-xl-pulse {
+  animation: mega-xl-pulse 2s ease-in-out infinite;
+}
+
+/* Mega section separator — earthquake crack line */
+.mega-section-sep {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 0.5rem;
+  margin: 1rem 0 2rem;
+}
+.mega-section-sep::before,
+.mega-section-sep::after {
+  content: "";
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(196,124,32,0.45), rgba(196,124,32,0.6), rgba(196,124,32,0.45), transparent);
+}
+
+/* Mega footprint deco — scale indicators */
+.mega-deco-footprint {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  opacity: 0.08;
+  font-size: 4rem;
+  animation: mega-footprint-drift 8s ease-in-out infinite;
+}
+
+@keyframes mega-footprint-drift {
+  0%, 100% { transform: translateY(0) rotate(-5deg) scale(1); }
+  50%      { transform: translateY(-15px) rotate(5deg) scale(1.05); }
+}
+
+/* Mega comparison silhouette fade */
+@keyframes mega-silhouette-fade {
+  0%   { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 0.5; transform: translateY(0); }
+}
+
+.mega-silhouette {
+  animation: mega-silhouette-fade 0.6s ease-out both;
+  animation-delay: 0.8s;
+}
+
+/* Mega grid: bigger cards, 2 columns max */
+.mega-card-grid {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+@media (min-width: 640px) {
+  .mega-card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Mega card scale — larger than standard cards */
+.mega-card-scale {
+  transform-origin: center bottom;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+
+.mega-card-scale:hover {
+  transform: translateY(-8px) scale(1.04);
+  box-shadow: 0 30px 60px rgba(160, 100, 20, 0.25);
+}
+
+/* Mega ambient glow ring behind cards */
+@keyframes mega-ambient-glow {
+  0%, 100% { opacity: 0.3; transform: scale(0.95); }
+  50%      { opacity: 0.6; transform: scale(1.05); }
+}
+
+.mega-ambient-glow {
+  position: absolute;
+  inset: -20px;
+  border-radius: 2.5rem;
+  background: radial-gradient(ellipse, rgba(220, 160, 40, 0.2), transparent 70%);
+  animation: mega-ambient-glow 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}

@@ -138,19 +138,22 @@ export function UniverseCards({ initialFeatured }: UniverseCardsProps = {}): Rea
               </span>
 
               {/* Figure fan */}
-              <div className="relative h-[116px] w-full shrink-0">
+              <div className={`relative w-full shrink-0 ${u.key === "mega" ? "h-[136px]" : "h-[116px]"}`}>
                 {hasFigs ? (
                   figs.slice(0, 3).map((fig, i) => {
                     const f = FAN[i]!;
+                    const isMega = u.key === "mega";
+                    const cardW = isMega ? 88 : 76;
+                    const cardH = isMega ? 116 : 100;
                     return (
                       <div
                         key={fig.id}
                         className="absolute left-1/2"
                         style={{
-                          transform: `translateX(calc(-50% + ${f.dx}px)) translateY(${f.dy}px) rotate(${f.rotate}) scale(${f.scale})`,
+                          transform: `translateX(calc(-50% + ${isMega ? f.dx * 1.15 : f.dx}px)) translateY(${f.dy}px) rotate(${f.rotate}) scale(${f.scale})`,
                           zIndex: f.z,
-                          width: 76,
-                          height: 100,
+                          width: cardW,
+                          height: cardH,
                           transformOrigin: "bottom center",
                         }}
                       >
@@ -161,8 +164,8 @@ export function UniverseCards({ initialFeatured }: UniverseCardsProps = {}): Rea
                           <Image
                             src={fig.imagenUrl}
                             alt={fig.nombre}
-                            width={76}
-                            height={100}
+                            width={cardW}
+                            height={cardH}
                             className="h-full w-full object-cover"
                             priority
                           />
@@ -198,9 +201,15 @@ export function UniverseCards({ initialFeatured }: UniverseCardsProps = {}): Rea
 
               {/* Text */}
               <div className="space-y-1.5 relative z-10">
-                <h3 className={`font-title text-xl font-bold sm:text-2xl ${u.titleColor}`}>
-                  {u.title}
-                </h3>
+                {u.key === "mega" ? (
+                  <h3 className={`font-title text-2xl font-black sm:text-3xl ${u.titleColor}`} style={{ textShadow: "0 2px 12px rgba(196,124,32,0.15)" }}>
+                    MEGA
+                  </h3>
+                ) : (
+                  <h3 className={`font-title text-xl font-bold sm:text-2xl ${u.titleColor}`}>
+                    {u.title}
+                  </h3>
+                )}
                 <p className={`text-sm leading-relaxed ${u.tagColor}`}>{u.tagline}</p>
                 <p className={`text-xs leading-relaxed transition-all duration-200 ${u.tagColor} opacity-0 group-hover:opacity-80 -mt-0.5`}>
                   {u.hoverDesc}

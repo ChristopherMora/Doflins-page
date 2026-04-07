@@ -561,6 +561,81 @@ function useDarkMode(): boolean {
 
 // ─── Subcomponentes extraídos ──────────────────────────────────────────────
 
+/** Cinematic intro overlay when entering Mega universe */
+function MegaCinematicIntro({ show, onComplete }: { show: boolean; onComplete: () => void }): React.JSX.Element | null {
+  useEffect(() => {
+    if (!show) return;
+    const timer = setTimeout(onComplete, 1600);
+    return () => clearTimeout(timer);
+  }, [show, onComplete]);
+
+  if (!show) return null;
+
+  return (
+    <div className="mega-intro-overlay fixed inset-0 z-[9999] flex items-center justify-center bg-[#1a0e00]/95 backdrop-blur-sm">
+      <div className="mega-intro-text flex flex-col items-center gap-2">
+        <span className="text-[6rem] font-black tracking-[0.1em] text-amber-400 sm:text-[10rem] md:text-[14rem]" style={{ fontFamily: "var(--font-title), Trebuchet MS, sans-serif", textShadow: "0 0 80px rgba(220,160,40,0.6), 0 0 160px rgba(196,124,32,0.3)" }}>
+          MEGA
+        </span>
+        <span className="text-lg font-bold uppercase tracking-[0.5em] text-amber-300/70 sm:text-xl">
+          Animals
+        </span>
+      </div>
+      {/* Impact particles */}
+      {Array.from({ length: 12 }, (_, i) => (
+        <span
+          key={i}
+          className="mega-debris absolute rounded-full"
+          style={{
+            width: 4 + (i % 4) * 2,
+            height: 4 + (i % 4) * 2,
+            backgroundColor: `rgba(220, 160, 40, ${0.4 + (i % 3) * 0.2})`,
+            left: `${15 + i * 6}%`,
+            bottom: "35%",
+            animationDuration: `${1.8 + i * 0.2}s`,
+            animationDelay: `${0.3 + i * 0.08}s`,
+          }}
+        />
+      ))}
+    </div>
+  );
+}
+
+/** Scale comparison visual — tiny human silhouette vs mega figure */
+function MegaScaleComparison(): React.JSX.Element {
+  return (
+    <div className="mega-silhouette flex items-end gap-3 rounded-2xl border border-amber-200/50 bg-amber-50/60 px-4 py-3">
+      <div className="flex flex-col items-center gap-1">
+        <svg width="16" height="32" viewBox="0 0 16 32" fill="none" className="text-amber-800/40">
+          <circle cx="8" cy="4" r="3.5" fill="currentColor" />
+          <path d="M8 8v10M3 12h10M5 28l3-10 3 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+        </svg>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700/60">Normal</span>
+      </div>
+      <div className="flex flex-col items-center gap-1">
+        <span className="text-5xl leading-none">🦣</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider text-amber-700">MEGA</span>
+      </div>
+      <div className="ml-2 flex flex-col text-[10px] font-semibold text-amber-800/70">
+        <span>Presencia XL</span>
+        <span className="text-amber-600">Escala masiva</span>
+      </div>
+    </div>
+  );
+}
+
+/** Mega floating decorations — giant footprints and impact marks */
+function MegaDecorations(): React.JSX.Element {
+  return (
+    <div aria-hidden className="pointer-events-none absolute inset-0 select-none overflow-hidden">
+      <span className="mega-deco-footprint" style={{ top: "6%", left: "2%", animationDelay: "0s" }}>🦶</span>
+      <span className="mega-deco-footprint" style={{ top: "18%", right: "3%", animationDelay: "-2s", fontSize: "3rem", opacity: 0.06 }}>💥</span>
+      <span className="mega-deco-footprint" style={{ top: "45%", left: "1%", animationDelay: "-4s", fontSize: "3.5rem", opacity: 0.05 }}>🦶</span>
+      <span className="mega-deco-footprint" style={{ top: "60%", right: "2%", animationDelay: "-1.5s", fontSize: "4.5rem" }}>🦣</span>
+    </div>
+  );
+}
+
 interface DoflinModalProps {
   selectedDoflin: CollectionItemDTO | null;
   onClose: () => void;
@@ -1042,6 +1117,9 @@ export function RevealExperience({
   const [isAuthActionLoading, setIsAuthActionLoading] = useState(false);
   const [isAuthPromptOpen, setIsAuthPromptOpen] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
+  const [showMegaIntro, setShowMegaIntro] = useState(false);
+  const [megaRumble, setMegaRumble] = useState(false);
+  const megaIntroShownRef = useRef<Set<string>>(new Set());
   const [packPrices, setPackPrices] = useState<Record<number, { amount: string; currencyCode: string; variantId: string; productTitle: string; availableForSale: boolean; imageUrl: string | null }>>({});
 
   useEffect(() => {
@@ -1069,6 +1147,19 @@ export function RevealExperience({
       })
       .catch(() => null);
   }, [activeUniverse]);
+
+  // Trigger mega cinematic intro on initial landing
+  useEffect(() => {
+    if (initialUniverse === "mega") {
+      megaIntroShownRef.current.add("initial");
+      setShowMegaIntro(true);
+      setMegaRumble(true);
+      setTimeout(() => setMegaRumble(false), 500);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleMegaIntroComplete = useCallback(() => setShowMegaIntro(false), []);
 
   const featuredCollection = useMemo(() => {
     const subset = collection.filter((item) =>
@@ -1542,6 +1633,14 @@ export function RevealExperience({
       setActiveUniverse(target);
       setCatalogAnimKey((k) => k + 1);
 
+      // Mega cinematic intro — show once per session per entry
+      if (target === "mega" && !megaIntroShownRef.current.has(source)) {
+        megaIntroShownRef.current.add(source);
+        setShowMegaIntro(true);
+        setMegaRumble(true);
+        setTimeout(() => setMegaRumble(false), 500);
+      }
+
       if (sectionId) {
         scrollToSection(sectionId);
       }
@@ -1879,7 +1978,10 @@ export function RevealExperience({
     activeUniverse === "animals" ? "!text-[#1f3b12]" : "!text-[#243271]";
 
   return (
-    <main className={`relative overflow-hidden pb-36 transition-colors duration-500 md:pb-24 ${mainInkScopeClass}`} style={themeVars}>
+    <main className={`relative overflow-hidden pb-36 transition-colors duration-500 md:pb-24 ${mainInkScopeClass} ${megaRumble ? "mega-rumble" : ""}`} style={themeVars}>
+      {/* Mega cinematic intro overlay */}
+      <MegaCinematicIntro show={showMegaIntro} onComplete={handleMegaIntroComplete} />
+
       {isOffline ? (
         <div className="sticky top-14 z-50 flex items-center justify-center gap-2 bg-amber-100 px-4 py-2 text-center text-xs font-semibold text-amber-900 ring-1 ring-amber-300">
           <WifiIcon className="h-4 w-4" />
@@ -1901,16 +2003,41 @@ export function RevealExperience({
           </div>
         ) : null}
 
+        {/* Mega floating decorations — giant footprints and scale indicators */}
+        {activeUniverse === "mega" ? <MegaDecorations /> : null}
+
         <section className="mx-auto w-full max-w-6xl px-5 pb-6 pt-10 sm:px-8 lg:px-10">
           <div className="grid gap-8 lg:grid-cols-[1.2fr_1fr] lg:items-end">
           <div className="space-y-6">
             <Badge className={activeTheme.heroBadge}>{activeTheme.heroTag}</Badge>
-            <h1 className="font-title text-5xl leading-[0.95] tracking-tight text-[var(--ink-900)] sm:text-6xl">
-              {activeTheme.heroTitle}
-            </h1>
-            <p className="max-w-2xl text-[1.15rem] leading-relaxed text-[var(--ink-700)]">
-              {activeTheme.heroDescription}
-            </p>
+
+            {/* Mega enhanced hero title — dramatically larger with cinematic entrance */}
+            {activeUniverse === "mega" ? (
+              <>
+                <div className="mega-title-entrance space-y-1">
+                  <h1 className="mega-breathe font-title text-7xl leading-[0.85] tracking-tighter text-[var(--ink-900)] sm:text-8xl md:text-9xl">
+                    <span className="block text-amber-600/90" style={{ textShadow: "0 4px 30px rgba(196,124,32,0.25)" }}>MEGA</span>
+                    <span className="block text-4xl tracking-tight sm:text-5xl">Animals</span>
+                  </h1>
+                  <p className="max-w-lg text-lg font-semibold leading-relaxed text-amber-800/80 sm:text-xl">
+                    Figuras de escala masiva. Presencia que se siente.
+                  </p>
+                </div>
+                <p className="max-w-2xl text-[1.05rem] leading-relaxed text-[var(--ink-700)]">
+                  {activeTheme.heroDescription}
+                </p>
+                <MegaScaleComparison />
+              </>
+            ) : (
+              <>
+                <h1 className="font-title text-5xl leading-[0.95] tracking-tight text-[var(--ink-900)] sm:text-6xl">
+                  {activeTheme.heroTitle}
+                </h1>
+                <p className="max-w-2xl text-[1.15rem] leading-relaxed text-[var(--ink-700)]">
+                  {activeTheme.heroDescription}
+                </p>
+              </>
+            )}
 
             <div className="flex flex-wrap gap-3">
               <Button size="lg" className={`h-12 ${activeTheme.primaryButton}`} onClick={() => scrollToSection("catalogo")}>
@@ -2014,9 +2141,22 @@ export function RevealExperience({
         </div>
       ) : null}
 
+      {/* Mega — earthquake crack section separator */}
+      {activeUniverse === "mega" ? (
+        <div aria-hidden className="mega-section-sep mx-6 sm:mx-10">
+          <span className="text-2xl" style={{ filter: "grayscale(0.3)" }}>⚡</span>
+        </div>
+      ) : null}
+
       <section className="mx-auto w-full max-w-6xl px-5 pt-4 pb-8 sm:px-8 lg:px-10" id="universo-activo">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-title text-3xl text-[var(--ink-900)]">{activeConfig.sectionTitle}</h3>
+          {activeUniverse === "mega" ? (
+            <h3 className="font-title text-4xl text-[var(--ink-900)] sm:text-5xl">
+              <span className="text-amber-600">MEGA</span> Animals
+            </h3>
+          ) : (
+            <h3 className="font-title text-3xl text-[var(--ink-900)]">{activeConfig.sectionTitle}</h3>
+          )}
           <div className="flex flex-wrap items-center gap-2">
             <Badge className={activeConfig.badgeClass}>{activeConfig.count} figuras</Badge>
             <Badge className={activeConfig.badgeClass}>
@@ -2107,7 +2247,13 @@ export function RevealExperience({
 
       <section className="mx-auto w-full max-w-6xl px-5 py-8 sm:px-8 lg:px-10" id="catalogo">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h3 className="font-title text-3xl text-[var(--ink-900)]">Catálogo de {activeConfig.label}</h3>
+          {activeUniverse === "mega" ? (
+            <h3 className="font-title text-4xl text-[var(--ink-900)] sm:text-5xl">
+              Catálogo <span className="text-amber-600">MEGA</span>
+            </h3>
+          ) : (
+            <h3 className="font-title text-3xl text-[var(--ink-900)]">Catálogo de {activeConfig.label}</h3>
+          )}
           <div className="flex flex-wrap items-center gap-2">
             <Badge className={activeConfig.badgeClass}>{activeCatalogCards.length} animales base visibles</Badge>
             <Badge className={activeConfig.badgeClass}>
@@ -2251,15 +2397,15 @@ export function RevealExperience({
         ) : null}
 
         <div
-          className="mt-5 grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]"
+          className={`mt-5 ${activeUniverse === "mega" ? "mega-card-grid" : "grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(210px,1fr))]"}`}
         >
           {isLoadingCollection
-            ? Array.from({ length: 8 }, (_, skI) => (
+            ? Array.from({ length: activeUniverse === "mega" ? 4 : 8 }, (_, skI) => (
                 <div
                   key={`skel-${skI}`}
                   className={`space-y-3 overflow-hidden rounded-[2rem] border p-3.5 ${activeConfig.cardClass}`}
                 >
-                  <div className="h-[132px] animate-pulse rounded-xl bg-black/[0.07] sm:h-[145px]" />
+                  <div className={`${activeUniverse === "mega" ? "h-[200px] sm:h-[220px]" : "h-[132px] sm:h-[145px]"} animate-pulse rounded-xl bg-black/[0.07]`} />
                   <div className="mt-3 h-4 w-2/3 animate-pulse rounded bg-black/[0.06]" />
                   <div className="h-3 w-1/2 animate-pulse rounded bg-black/[0.05]" />
                   <div className="flex gap-1.5">
@@ -2279,17 +2425,24 @@ export function RevealExperience({
             return (
               <div
                 key={item.id}
-                className="transition-transform duration-200 hover:-translate-y-1.5 hover:scale-[1.025] active:scale-[0.97]"
-                style={index < 12 ? { animation: `fadeInUp 0.3s ease both`, animationDelay: `${Math.min(index, 11) * 0.04}s` } : undefined}
+                className={`transition-transform duration-200 ${activeUniverse === "mega" ? "mega-card-scale" : "hover:-translate-y-1.5 hover:scale-[1.025]"} active:scale-[0.97]`}
+                style={
+                  activeUniverse === "mega"
+                    ? { animation: `mega-card-entrance 0.5s cubic-bezier(0.34,1.56,0.64,1) both`, animationDelay: `${Math.min(index, 5) * 0.12}s` }
+                    : index < 12 ? { animation: `fadeInUp 0.3s ease both`, animationDelay: `${Math.min(index, 11) * 0.04}s` } : undefined
+                }
               >
               <Card
                 style={{
                   contentVisibility: "auto",
-                  containIntrinsicSize: "0 280px",
+                  containIntrinsicSize: activeUniverse === "mega" ? "0 380px" : "0 280px",
                   boxShadow: RARITY_GLOW_CSS[item.rarity] ?? undefined,
                 }}
                 className={`relative overflow-hidden rounded-[2rem] border ${activeConfig.cardClass} ${isOwned ? "ring-2 ring-[var(--brand-primary)]/40" : ""}`}
               >
+                {/* Mega ambient glow behind card */}
+                {activeUniverse === "mega" ? <div className="mega-ambient-glow" /> : null}
+
                 {item.rarity === "LEGENDARY" || item.rarity === "ULTRA" || item.rarity === "MYTHIC" ? (
                   <RarityParticles rarity={item.rarity} />
                 ) : null}
@@ -2305,19 +2458,32 @@ export function RevealExperience({
                         <CheckCircleIcon className="h-4 w-4 text-white" />
                       </span>
                     ) : null}
-                    <Figure3D
-                      src={item.imageUrl}
-                      fallbackSrc={FALLBACK_DOFLIN_IMAGE}
-                      alt={item.name}
-                      rarity={item.rarity}
-                      imageClassName="h-[132px] w-[132px] sm:h-[145px] sm:w-[145px] mx-auto"
-                      className="rounded-[1.25rem] p-2.5"
-                      modelUrl={modelConfig?.modelUrl}
-                      modelOrientation={modelConfig?.orientation}
-                      modelCameraOrbit={modelConfig?.cameraOrbit}
-                      modelFieldOfView={modelConfig?.fieldOfView}
-                      lazyModel={index >= 4}
-                    />
+
+                    {/* Mega XL badge */}
+                    {activeUniverse === "mega" ? (
+                      <span className="mega-xl-pulse absolute left-2 top-2 z-10 rounded-full bg-amber-500 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider text-white shadow-lg">
+                        XL
+                      </span>
+                    ) : null}
+
+                    <div className={activeUniverse === "mega" ? "mega-card-image-overflow" : ""}>
+                      <Figure3D
+                        src={item.imageUrl}
+                        fallbackSrc={FALLBACK_DOFLIN_IMAGE}
+                        alt={item.name}
+                        rarity={item.rarity}
+                        imageClassName={activeUniverse === "mega"
+                          ? "h-[200px] w-[200px] sm:h-[220px] sm:w-[220px] mx-auto"
+                          : "h-[132px] w-[132px] sm:h-[145px] sm:w-[145px] mx-auto"
+                        }
+                        className="rounded-[1.25rem] p-2.5"
+                        modelUrl={modelConfig?.modelUrl}
+                        modelOrientation={modelConfig?.orientation}
+                        modelCameraOrbit={modelConfig?.cameraOrbit}
+                        modelFieldOfView={modelConfig?.fieldOfView}
+                        lazyModel={index >= 4}
+                      />
+                    </div>
                   </button>
 
                   <div className="flex flex-1 flex-col space-y-1">
