@@ -1,4 +1,4 @@
-export type UniverseFilter = "animals" | "multiverse";
+export type UniverseFilter = "animals" | "multiverse" | "mega";
 
 export interface ShopifyMoney {
   amount: string;

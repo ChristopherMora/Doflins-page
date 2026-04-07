@@ -509,6 +509,9 @@ function normalizeVariant(node: ShopifyProductVariantNode): ShopProductVariant {
 
 function inferUniverse(tags: string[], productType: string): UniverseFilter | null {
   const normalizedType = productType.toLowerCase();
+  if (normalizedType.includes("mega")) {
+    return "mega";
+  }
   if (normalizedType.includes("animals")) {
     return "animals";
   }
@@ -517,6 +520,9 @@ function inferUniverse(tags: string[], productType: string): UniverseFilter | nu
   }
 
   const normalizedTags = tags.map((tag) => tag.toLowerCase());
+  if (normalizedTags.some((tag) => tag.includes("mega"))) {
+    return "mega";
+  }
   if (normalizedTags.some((tag) => tag.includes("animals"))) {
     return "animals";
   }
@@ -596,6 +602,9 @@ function assertNoUserErrors(
 function universeToCollectionHandle(universe: UniverseFilter): string | null {
   if (universe === "animals") {
     return process.env.SHOPIFY_COLLECTION_ANIMALS_HANDLE?.trim() || "animals";
+  }
+  if (universe === "mega") {
+    return process.env.SHOPIFY_COLLECTION_MEGA_HANDLE?.trim() || "mega";
   }
 
   return process.env.SHOPIFY_COLLECTION_MULTIVERSE_HANDLE?.trim() || "multiverse";

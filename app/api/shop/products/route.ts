@@ -59,7 +59,7 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       {
         status: "error",
         code: "invalid_query",
-        message: "El parámetro universe debe ser animals o multiverse.",
+        message: "El parámetro universe debe ser animals, multiverse o mega.",
       },
       {
         status: 400,

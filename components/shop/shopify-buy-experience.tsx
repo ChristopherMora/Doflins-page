@@ -29,6 +29,7 @@ import {
   Squares2X2Icon,
   TruckIcon,
   TrashIcon,
+  FireIcon,
 } from "@heroicons/react/24/solid";
 
 import type { ShopCart, ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
@@ -80,6 +81,7 @@ type ApiError = Error & {
 const UNIVERSE_LABELS: Record<UniverseFilter, string> = {
   animals: "Animals",
   multiverse: "Multiverse",
+  mega: "MEGA",
 };
 const BEST_SELLER_HANDLES = new Set(["safari-15"]);
 
@@ -492,11 +494,18 @@ function getProductDescription(product: ShopProduct, universe: UniverseFilter): 
     return "Pack oficial del universo Animals para ampliar tu colección con estilo natural.";
   }
 
+  if (universe === "mega") {
+    return "Pack oficial MEGA — figuras gigantes para los coleccionistas más ambiciosos.";
+  }
+
   return "Pack oficial del universo Multiverse con estética futurista y variantes especiales.";
 }
 
 function toUniverseFromSeries(series: string): UniverseFilter | null {
   const normalized = series.trim().toLowerCase();
+  if (normalized.includes("mega")) {
+    return "mega";
+  }
   if (normalized.includes("animal")) {
     return "animals";
   }
@@ -552,7 +561,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const u = params.get("universe");
-    if (u === "animals" || u === "multiverse") {
+    if (u === "animals" || u === "multiverse" || u === "mega") {
       setActiveUniverse(u);
       setVisualUniverse(u);
     } else {
@@ -561,7 +570,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
 
     return onUniverseChange((nextUniverse) => {
       setVisualUniverse(nextUniverse);
-      if (nextUniverse === "animals" || nextUniverse === "multiverse") {
+      if (nextUniverse === "animals" || nextUniverse === "multiverse" || nextUniverse === "mega") {
         setActiveUniverse(nextUniverse);
         setGridAnimKey((current) => current + 1);
         setShopSearch("");
@@ -587,11 +596,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const [collectionByUniverse, setCollectionByUniverse] = useState<Record<UniverseFilter, CollectionItemDTO[]>>({
     animals: [],
     multiverse: [],
+    mega: [],
   });
   const [cart, setCart] = useState<ShopCart | null>(null);
   const [liveNewProducts, setLiveNewProducts] = useState<Record<UniverseFilter, string[]>>({
     animals: [],
     multiverse: [],
+    mega: [],
   });
   const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);
   const [selectedVariantByProduct, setSelectedVariantByProduct] = useState<Record<string, string>>({});
@@ -622,6 +633,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
   const knownProductIdsRef = useRef<Record<UniverseFilter, Set<string>>>({
     animals: new Set(),
     multiverse: new Set(),
+    mega: new Set(),
   });
   const prevStockRef = useRef<Map<string, boolean>>(new Map());
   const liveRefreshInFlightRef = useRef(false);
@@ -927,6 +939,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
         const grouped: Record<UniverseFilter, CollectionItemDTO[]> = {
           animals: [],
           multiverse: [],
+          mega: [],
         };
 
         for (const item of payload.collection) {
@@ -946,6 +959,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           setCollectionByUniverse({
             animals: [],
             multiverse: [],
+            mega: [],
           });
         }
       } finally {
@@ -1935,7 +1949,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           </div>
 
           {/* ── Universe selector ── */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <button
               type="button"
               onClick={() => activateUniverse("animals")}
@@ -1950,11 +1964,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               }`}>
                 <SparklesIcon className="h-5 w-5" />
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 hidden sm:block">
                 <p className={`text-sm font-bold leading-tight ${ visualUniverse === "animals" ? "text-[#1f2a1a]" : "text-[var(--ink-700)]" }`}>Animals</p>
-                <p className={`truncate text-xs ${ visualUniverse === "animals" ? "text-[#3d5230]" : "text-[var(--ink-600)]" }`}>Criaturas &amp; rarezas naturales</p>
+                <p className={`truncate text-xs ${ visualUniverse === "animals" ? "text-[#3d5230]" : "text-[var(--ink-600)]" }`}>Criaturas naturales</p>
               </div>
-              {visualUniverse === "animals" ? <CheckCircleIcon className="ml-auto h-5 w-5 shrink-0 text-[#4e6f2a]" /> : null}
+              {visualUniverse === "animals" ? <CheckCircleIcon className="ml-auto h-5 w-5 shrink-0 text-[#4e6f2a] hidden sm:block" /> : null}
             </button>
 
             <button
@@ -1971,11 +1985,32 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               }`}>
                 <BoltIcon className="h-5 w-5" />
               </span>
-              <div className="min-w-0">
+              <div className="min-w-0 hidden sm:block">
                 <p className={`text-sm font-bold leading-tight ${ visualUniverse === "multiverse" ? "text-[#1c2960]" : "text-[var(--ink-700)]" }`}>Multiverse</p>
-                <p className={`truncate text-xs ${ visualUniverse === "multiverse" ? "text-[#2d3f7a]" : "text-[var(--ink-600)]" }`}>Sci-fi &amp; rarezas de alto impacto</p>
+                <p className={`truncate text-xs ${ visualUniverse === "multiverse" ? "text-[#2d3f7a]" : "text-[var(--ink-600)]" }`}>Sci-fi &amp; alto impacto</p>
               </div>
-              {visualUniverse === "multiverse" ? <CheckCircleIcon className="ml-auto h-5 w-5 shrink-0 text-[#4b5fc0]" /> : null}
+              {visualUniverse === "multiverse" ? <CheckCircleIcon className="ml-auto h-5 w-5 shrink-0 text-[#4b5fc0] hidden sm:block" /> : null}
+            </button>
+
+            <button
+              type="button"
+              onClick={() => activateUniverse("mega")}
+              className={`group flex items-center gap-2 sm:gap-3 rounded-2xl border-2 p-2.5 sm:p-4 text-left transition-all duration-200 ${
+                visualUniverse === "mega"
+                  ? "border-[#c47c20] bg-[linear-gradient(135deg,#fffbee,#fdf0c8)] shadow-[0_8px_20px_rgba(196,124,32,0.22)]"
+                  : "border-black/10 bg-white/60 hover:bg-white/80 hover:border-black/20"
+              }`}
+            >
+              <span className={`flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-lg sm:rounded-xl transition-all ${
+                visualUniverse === "mega" ? "bg-[linear-gradient(135deg,#c47c20,#e8a830)] text-white shadow-md" : "bg-black/[0.06] text-[var(--ink-600)]"
+              }`}>
+                <FireIcon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0 hidden sm:block">
+                <p className={`text-sm font-bold leading-tight ${ visualUniverse === "mega" ? "text-[#6a3f10]" : "text-[var(--ink-700)]" }`}>MEGA</p>
+                <p className={`truncate text-xs ${ visualUniverse === "mega" ? "text-[#7a4e14]" : "text-[var(--ink-600)]" }`}>Figuras gigantes</p>
+              </div>
+              {visualUniverse === "mega" ? <CheckCircleIcon className="ml-auto h-5 w-5 shrink-0 text-[#c47c20] hidden sm:block" /> : null}
             </button>
           </div>
           <div className="flex gap-2">

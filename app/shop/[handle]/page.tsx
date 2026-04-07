@@ -98,7 +98,7 @@ function universeLabel(product: ShopProduct): string {
 }
 
 function resolveUniverse(product: ShopProduct): UniverseFilter {
-  return product.universe === "multiverse" ? "multiverse" : "animals";
+  return product.universe ?? "animals";
 }
 
 function isBestSellerProduct(product: ShopProduct): boolean {

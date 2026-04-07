@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-const universeSchema = z.union([z.literal("animals"), z.literal("multiverse")]);
+const universeSchema = z.union([z.literal("animals"), z.literal("multiverse"), z.literal("mega")]);
 
 const cartLineInputSchema = z.object({
   merchandiseId: z.string().trim().min(1),
