@@ -6,6 +6,7 @@ import {
   BoltIcon,
   CheckCircleIcon,
   EyeIcon,
+  FireIcon,
   PhotoIcon,
   ShoppingCartIcon,
   SparklesIcon,
@@ -86,16 +87,59 @@ function pickRecommendedVariant(product: ShopProduct): ShopProductVariant | null
 }
 
 function universeLabel(product: ShopProduct): string {
-  if (product.universe === "multiverse") {
-    return "Multiverse";
-  }
-
-  if (product.universe === "animals") {
-    return "Animals";
-  }
-
+  if (product.universe === "multiverse") return "Multiverse";
+  if (product.universe === "mega") return "MEGA";
+  if (product.universe === "animals") return "Animals";
   return "Doflins";
 }
+
+const UNIVERSE_PAGE_THEME = {
+  animals: {
+    card: "border-[#d9cfad] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)] shadow-[0_18px_36px_rgba(74,79,41,0.15)]",
+    imageBg: "bg-[linear-gradient(155deg,#f7f8eb,#e8efde)]",
+    badge: "bg-[#e8f2d6] text-[var(--ink-800)]",
+    badgeIcon: "animals" as const,
+    priceBorder: "border-[#d9d2b3]",
+    trustBg: "border-[#cfdab2] bg-[#eef5df]",
+    variantAvail: "border-[#cfdab2] bg-[#f4f8e8]",
+    variantRing: "ring-[#b8d493]",
+    variantRecBg: "bg-[#e2f1cc] text-[#2f5b1f]",
+    btnPrimary: "bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] hover:opacity-90",
+    btnSecondary: "border-[#b8d493] bg-[#eef5df] text-[#2f5b1f] hover:bg-[#e4f2d0]",
+    relatedBorder: "border-[#d9d0b0]",
+    relatedBg: "hover:bg-[#f7f9ef]",
+  },
+  multiverse: {
+    card: "border-[#c0caee] bg-[linear-gradient(145deg,#f0f4ff,#e6ebff)] shadow-[0_18px_36px_rgba(60,80,180,0.12)]",
+    imageBg: "bg-[linear-gradient(155deg,#eef0ff,#dce4ff)]",
+    badge: "bg-[#dbe4ff] text-[#24336c]",
+    badgeIcon: "multiverse" as const,
+    priceBorder: "border-[#c0caee]",
+    trustBg: "border-[#b8c4f0] bg-[#eef0ff]",
+    variantAvail: "border-[#b8c4f0] bg-[#eef0ff]",
+    variantRing: "ring-[#8a9ee0]",
+    variantRecBg: "bg-[#d4dcff] text-[#1c2960]",
+    btnPrimary: "bg-[linear-gradient(135deg,#4b5fc0,#687ff1)] hover:opacity-90",
+    btnSecondary: "border-[#8a9ee0] bg-[#eef0ff] text-[#1c2960] hover:bg-[#e0e6ff]",
+    relatedBorder: "border-[#c0caee]",
+    relatedBg: "hover:bg-[#eef0ff]",
+  },
+  mega: {
+    card: "border-[#e0c870] bg-[linear-gradient(145deg,#fffbee,#fdf0c8)] shadow-[0_18px_36px_rgba(160,100,20,0.18)]",
+    imageBg: "bg-[linear-gradient(155deg,#fff8e8,#faeac8)]",
+    badge: "bg-[#fff0c8] text-[#7a4e14]",
+    badgeIcon: "mega" as const,
+    priceBorder: "border-[#e0c870]",
+    trustBg: "border-[#d8b060] bg-[#fef6de]",
+    variantAvail: "border-[#d8b060] bg-[#fef6de]",
+    variantRing: "ring-[#d8a840]",
+    variantRecBg: "bg-[#fde8a0] text-[#7a4e14]",
+    btnPrimary: "bg-[linear-gradient(135deg,#c47c20,#e8a830)] hover:opacity-90",
+    btnSecondary: "border-[#d8a840] bg-[#fef0c0] text-[#7a4e14] hover:bg-[#fee8a0]",
+    relatedBorder: "border-[#e0c870]",
+    relatedBg: "hover:bg-[#fef6de]",
+  },
+} as const;
 
 function resolveUniverse(product: ShopProduct): UniverseFilter {
   return product.universe ?? "animals";
@@ -149,6 +193,7 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
   const availableVariants = product.variants.filter((variant) => variant.availableForSale).length;
   const isBestSeller = isBestSellerProduct(product);
   const productUniverse = resolveUniverse(product);
+  const t = UNIVERSE_PAGE_THEME[productUniverse] ?? UNIVERSE_PAGE_THEME.animals;
 
   let relatedProducts: ShopProduct[] = [];
   try {
@@ -177,9 +222,9 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
           </p>
         </div>
 
-        <Card className="ink-light overflow-hidden border border-[#d9cfad] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)] shadow-[0_18px_36px_rgba(74,79,41,0.15)]">
+        <Card className={`ink-light overflow-hidden border ${t.card}`}>
           <CardContent className="grid gap-0 p-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="relative flex min-h-[360px] items-center justify-center overflow-hidden bg-[linear-gradient(155deg,#f7f8eb,#e8efde)] p-6">
+            <div className={`relative flex min-h-[360px] items-center justify-center overflow-hidden ${t.imageBg} p-6`}>
               {product.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
@@ -206,8 +251,8 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
 
             <div className="space-y-5 p-6 sm:p-7">
               <div className="flex flex-wrap items-center gap-2">
-                <Badge className={product.universe === "multiverse" ? "bg-[#dbe4ff] text-[#24336c]" : "bg-[#e8f2d6] text-[var(--ink-800)]"}>
-                  {product.universe === "multiverse" ? <BoltIcon className="h-4 w-4" /> : <SparklesIcon className="h-4 w-4" />}
+                <Badge className={t.badge}>
+                  {productUniverse === "multiverse" ? <BoltIcon className="h-4 w-4" /> : productUniverse === "mega" ? <FireIcon className="h-4 w-4" /> : <SparklesIcon className="h-4 w-4" />}
                   {universeLabel(product)}
                 </Badge>
                 {isBestSeller ? (
@@ -227,12 +272,12 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-[#d9d2b3] bg-white/88 p-4">
+              <div className={`rounded-2xl border ${t.priceBorder} bg-white/88 p-4`}>
                 <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio base</p>
                 <p className="font-title text-4xl text-[var(--ink-900)]">{formatMoney(recommendedVariant?.price ?? product.price)}</p>
               </div>
 
-              <div className="rounded-2xl border border-[#cfdab2] bg-[#eef5df] p-4 text-sm text-[var(--ink-700)]">
+              <div className={`rounded-2xl border ${t.trustBg} p-4 text-sm text-[var(--ink-700)]`}>
                 <p className="font-semibold text-[var(--ink-900)]">Compra segura desde DOFLINS</p>
                 <p className="mt-1">Agrega tus packs en el catálogo y paga en Shopify Checkout sin salir de tu flujo de compra.</p>
               </div>
@@ -248,14 +293,14 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                         key={variant.id}
                         className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
                           variant.availableForSale
-                            ? "border-[#cfdab2] bg-[#f4f8e8] text-[var(--ink-800)]"
+                            ? `${t.variantAvail} text-[var(--ink-800)]`
                             : "border-[#dfcdcd] bg-[#f9f0f0] text-[var(--ink-600)]"
-                        } ${isRecommended ? "ring-1 ring-[#b8d493]" : ""}`}
+                        } ${isRecommended ? `ring-1 ${t.variantRing}` : ""}`}
                       >
                         <span className="flex items-center gap-2 font-medium">
                           {variant.title && variant.title !== "Default Title" ? variant.title : null}
                           {isRecommended ? (
-                            <span className="rounded-full bg-[#e2f1cc] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] text-[#2f5b1f]">
+                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${t.variantRecBg}`}>
                               Recomendada
                             </span>
                           ) : null}
@@ -287,7 +332,7 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                     isSoldOut={isSoldOut}
                   />
                 ) : null}
-                <Button asChild className="h-12 w-full bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)] opacity-80">
+                <Button asChild className={`h-12 w-full ${t.btnPrimary} opacity-80`}>
                   <Link href="/#compras">
                     <ShoppingCartIcon className="h-5 w-5" /> Ver catálogo completo
                   </Link>
@@ -303,7 +348,7 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
           </CardContent>
         </Card>
 
-        <Card className="ink-light overflow-hidden border border-[#d9cfad] bg-[linear-gradient(145deg,#fffaf1,#f3f7e8)] shadow-[0_14px_30px_rgba(74,79,41,0.12)]">
+        <Card className={`ink-light overflow-hidden border ${t.relatedBorder} bg-[linear-gradient(145deg,#fffaf1,#f3f7e8)] shadow-[0_14px_30px_rgba(74,79,41,0.12)]`}>
           <CardContent className="space-y-5 p-6 sm:p-7">
             <div className="flex flex-wrap items-end justify-between gap-3">
               <div className="space-y-1">
@@ -330,9 +375,9 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                   return (
                     <article
                       key={item.id}
-                      className="overflow-hidden rounded-2xl border border-[#d8d2b3] bg-[linear-gradient(160deg,#ffffff,#f5f7eb)] shadow-[0_10px_20px_rgba(68,75,35,0.12)]"
+                      className={`overflow-hidden rounded-2xl border ${t.relatedBorder} bg-[linear-gradient(160deg,#ffffff,#f5f7eb)] shadow-[0_10px_20px_rgba(68,75,35,0.12)]`}
                     >
-                      <div className="relative aspect-[4/3] w-full overflow-hidden bg-[linear-gradient(145deg,#eef3e1,#e4ecda)]">
+                      <div className={`relative aspect-[4/3] w-full overflow-hidden ${t.imageBg}`}>
                         {item.imageUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={item.imageUrl} alt={item.imageAlt ?? item.title} className="h-full w-full object-cover" />
@@ -363,7 +408,7 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                         </div>
                         <h3 className="font-title text-2xl leading-tight text-[var(--ink-900)]">{item.title}</h3>
                         <p className="text-sm text-[var(--ink-700)]">{formatMoney(itemVariant?.price ?? item.price)}</p>
-                        <Button asChild variant="ghost" className="w-full rounded-full border border-[#d8d2b3] bg-white/80">
+                        <Button asChild variant="ghost" className={`w-full rounded-full border ${t.relatedBorder} bg-white/80`}>
                           <Link href={`/shop/${item.handle}`}>
                             <EyeIcon className="h-4 w-4" /> Ver detalle
                           </Link>
@@ -374,13 +419,13 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                 })}
               </div>
             ) : (
-              <div className="rounded-2xl border border-[#d8d3b2] bg-white/82 p-4">
+              <div className={`rounded-2xl border ${t.relatedBorder} bg-white/82 p-4`}>
                 <p className="text-sm text-[var(--ink-700)]">Pronto agregaremos más packs en este universo.</p>
               </div>
             )}
 
             <div className="grid gap-2 sm:grid-cols-2">
-              <Button asChild className="h-11 bg-[linear-gradient(135deg,#4e6f2a,#6d8a3a)]">
+              <Button asChild className={`h-11 ${t.btnPrimary}`}>
                 <Link href="/#compras">
                   <ShoppingCartIcon className="h-4 w-4" /> Ir al catálogo y ver todos los productos
                 </Link>

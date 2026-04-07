@@ -2672,7 +2672,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           }
         }}
       >
-        <DialogContent className="w-[min(94vw,920px)] gap-0 overflow-hidden p-0">
+        <DialogContent className="w-[min(94vw,920px)] gap-0 overflow-hidden p-0" style={universeThemeVars}>
           {selectedProduct ? (
             <div className="grid gap-0 md:grid-cols-[1.05fr_0.95fr]">
               {/* LEFT: image panel */}
