@@ -1253,8 +1253,8 @@ export function RevealExperience({
       }
       if (activeUniverse === "mega") {
         return {
-            label: "Mega Animals",
-            sectionTitle: "Sección Mega Animals",
+            label: "MEGA",
+            sectionTitle: "Sección MEGA",
             packs: MEGA_PACKS,
             cards: megaFiltered,
             count: collectionCounts.mega,
@@ -1264,7 +1264,7 @@ export function RevealExperience({
             cardClass: dark
               ? "ink-light border-[#e8cc90] bg-[linear-gradient(180deg,#fff8e4,#f8ead0)]"
               : "border-[#e8cc90] bg-[linear-gradient(180deg,#fff8e4,#f8ead0)]",
-            ctaTitle: "Completa tu colección Mega Animals",
+            ctaTitle: "Completa tu colección MEGA",
         };
       }
       return {
@@ -2052,9 +2052,9 @@ export function RevealExperience({
               <Button asChild variant="secondary" size="lg" className="h-12 touch-manipulation">
                 <a
                   href={shopUrl}
-                  onClick={() => handlePurchaseIntent({ source: "hero_buy", packSize: 15 })}
+                  onClick={() => handlePurchaseIntent({ source: "hero_buy", packSize: activeUniverse === "mega" ? undefined : 15 })}
                 >
-                  <ShoppingCartIcon className="h-5 w-5" /> Comprar {activeConfig.label}
+                  <ShoppingCartIcon className="h-5 w-5" /> {activeUniverse === "mega" ? "Ver figuras MEGA" : `Comprar ${activeConfig.label}`}
                 </a>
               </Button>
             </div>
@@ -2177,7 +2177,17 @@ export function RevealExperience({
             variant={activeUniverse === "animals" ? "primary" : "secondary"}
             onClick={() => switchUniverse("animals", "active_universe_toggle")}
           >
-            Ver Animals
+            🌿 Animals
+          </Button>
+          <Button
+            role="tab"
+            aria-selected={activeUniverse === "mega"}
+            size="sm"
+            className={activeUniverse === "mega" ? activeTheme.primaryButton : undefined}
+            variant={activeUniverse === "mega" ? "primary" : "secondary"}
+            onClick={() => switchUniverse("mega", "active_universe_toggle")}
+          >
+            🦣 MEGA
           </Button>
           <Button
             role="tab"
@@ -2187,7 +2197,7 @@ export function RevealExperience({
             variant={activeUniverse === "multiverse" ? "primary" : "secondary"}
             onClick={() => switchUniverse("multiverse", "active_universe_toggle")}
           >
-            Ver Multiverse
+            ⚡ Multiverse
           </Button>
         </div>
 
@@ -2222,6 +2232,22 @@ export function RevealExperience({
           </CardContent>
         </Card>
 
+        {activeUniverse === "mega" ? (
+          /* MEGA: individual figures, no mystery packs */
+          <Card className={`overflow-hidden border-0 bg-[linear-gradient(135deg,#fde8d0,#f8d0a8,#f0b870)] shadow-[0_18px_34px_rgba(180,90,20,0.22)]`}>
+            <CardContent className="flex flex-col items-center gap-3 p-6 text-center sm:flex-row sm:text-left">
+              <div className="flex-1 space-y-1">
+                <h4 className="font-title text-2xl text-[#5a3610]">Elige tu figura MEGA</h4>
+                <p className="text-sm text-[#7a4e14]">Las figuras MEGA se compran individualmente. Escoge la que más te guste en la tienda.</p>
+              </div>
+              <Button asChild className="shrink-0 bg-[linear-gradient(135deg,#b06a18,#d49a1a)] text-white shadow-sm">
+                <a href={shopUrl}>
+                  <ShoppingCartIcon className="h-4 w-4" /> Ver figuras MEGA
+                </a>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
         <div className="grid gap-4 md:grid-cols-3">
           {activeConfig.packs.map((pack) => {
             const Icon = pack.icon;
@@ -2245,6 +2271,7 @@ export function RevealExperience({
             );
           })}
         </div>
+        )}
       </section>
 
 
@@ -2273,8 +2300,8 @@ export function RevealExperience({
             {filteredCollection.length > 0 ? <><span className="font-semibold text-[var(--ink-700)]">{filteredCollection.length}</span> figuras en {activeConfig.label}</> : null}
           </p>
           <Button asChild size="sm" variant="secondary" className="shrink-0">
-            <a href={shopUrl} onClick={() => handlePurchaseIntent({ source: "catalog_universe_buy", packSize: 15 })}>
-              <ShoppingCartIcon className="h-3.5 w-3.5" /> Comprar x15
+            <a href={shopUrl} onClick={() => handlePurchaseIntent({ source: "catalog_universe_buy", packSize: activeUniverse === "mega" ? undefined : 15 })}>
+              <ShoppingCartIcon className="h-3.5 w-3.5" /> {activeUniverse === "mega" ? "Comprar figuras" : "Comprar x15"}
             </a>
           </Button>
         </div>
@@ -2914,40 +2941,55 @@ export function RevealExperience({
 
       <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.08] bg-[var(--background)] px-3 pb-[calc(env(safe-area-inset-bottom)+6px)] pt-2.5 md:hidden">
         <div className="mx-auto flex w-full max-w-lg items-center gap-2">
-          {/* Pack size chips */}
-          <div className="flex shrink-0 gap-1">
-            {BUY_PACK_OPTIONS.map((pack) => {
-              const isSelected = selectedPackSize === pack.packSize;
-              return (
-                <button
-                  key={pack.packSize}
-                  type="button"
-                  onClick={() => setSelectedPackSize(pack.packSize)}
-                  className={`relative flex h-9 min-w-[48px] items-center justify-center rounded-full px-3 text-xs font-bold transition-all active:scale-95 ${
-                    isSelected
-                      ? `${activeTheme.primaryButton} text-white shadow-sm`
-                      : "bg-black/[0.06] text-[var(--ink-700)] hover:bg-black/[0.1]"
-                  }`}
-                >
-                  ×{pack.packSize}
-                  {pack.packSize === 15 && !isSelected ? (
-                    <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[var(--brand-primary)]" />
-                  ) : null}
-                </button>
-              );
-            })}
-          </div>
+          {activeUniverse === "mega" ? (
+            /* MEGA: direct buy button without pack chips */
+            <Button asChild className={`h-10 flex-1 ${activeTheme.primaryButton}`}>
+              <a
+                href={shopUrl}
+                onClick={() => handlePurchaseIntent({ source: "sticky_mobile_buy" })}
+              >
+                <ShoppingCartIcon className="h-4 w-4 shrink-0" />
+                <span className="truncate">Comprar figuras MEGA</span>
+              </a>
+            </Button>
+          ) : (
+            <>
+              {/* Pack size chips */}
+              <div className="flex shrink-0 gap-1">
+                {BUY_PACK_OPTIONS.map((pack) => {
+                  const isSelected = selectedPackSize === pack.packSize;
+                  return (
+                    <button
+                      key={pack.packSize}
+                      type="button"
+                      onClick={() => setSelectedPackSize(pack.packSize)}
+                      className={`relative flex h-9 min-w-[48px] items-center justify-center rounded-full px-3 text-xs font-bold transition-all active:scale-95 ${
+                        isSelected
+                          ? `${activeTheme.primaryButton} text-white shadow-sm`
+                          : "bg-black/[0.06] text-[var(--ink-700)] hover:bg-black/[0.1]"
+                      }`}
+                    >
+                      ×{pack.packSize}
+                      {pack.packSize === 15 && !isSelected ? (
+                        <span className="absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-[var(--brand-primary)]" />
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
 
-          {/* Buy CTA */}
-          <Button asChild className={`h-10 flex-1 ${activeTheme.primaryButton}`}>
-            <a
-              href={shopUrl}
-              onClick={() => handlePurchaseIntent({ source: "sticky_mobile_buy", packSize: selectedPackSize })}
-            >
-              <ShoppingCartIcon className="h-4 w-4 shrink-0" />
-              <span className="truncate">Comprar ×{selectedPackSize}</span>
-            </a>
-          </Button>
+              {/* Buy CTA */}
+              <Button asChild className={`h-10 flex-1 ${activeTheme.primaryButton}`}>
+                <a
+                  href={shopUrl}
+                  onClick={() => handlePurchaseIntent({ source: "sticky_mobile_buy", packSize: selectedPackSize })}
+                >
+                  <ShoppingCartIcon className="h-4 w-4 shrink-0" />
+                  <span className="truncate">Comprar ×{selectedPackSize}</span>
+                </a>
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </main>
