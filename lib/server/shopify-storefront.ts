@@ -507,7 +507,7 @@ function normalizeVariant(node: ShopifyProductVariantNode): ShopProductVariant {
   };
 }
 
-function inferUniverse(tags: string[], productType: string): UniverseFilter | null {
+function inferUniverse(tags: string[], productType: string, title?: string): UniverseFilter | null {
   const normalizedType = productType.toLowerCase();
   if (normalizedType.includes("mega")) {
     return "mega";
@@ -530,6 +530,14 @@ function inferUniverse(tags: string[], productType: string): UniverseFilter | nu
     return "multiverse";
   }
 
+  // Fallback: infer from product title
+  if (title) {
+    const normalizedTitle = title.toLowerCase();
+    if (normalizedTitle.includes("mega")) {
+      return "mega";
+    }
+  }
+
   return null;
 }
 
@@ -547,7 +555,7 @@ function normalizeProduct(node: ShopifyProductNode): ShopProduct {
     tags: node.tags ?? [],
     productType: node.productType ?? "",
     variants: node.variants.nodes.map(normalizeVariant),
-    universe: inferUniverse(node.tags ?? [], node.productType ?? ""),
+    universe: inferUniverse(node.tags ?? [], node.productType ?? "", node.title),
   };
 }
 
@@ -625,7 +633,10 @@ export async function fetchShopProducts(universe: UniverseFilter): Promise<ShopP
     });
 
     if (data.collection?.products.nodes) {
-      return data.collection.products.nodes.map(normalizeProduct);
+      return data.collection.products.nodes.map((node) => ({
+        ...normalizeProduct(node),
+        universe,
+      }));
     }
   }
 
@@ -639,7 +650,10 @@ export async function fetchShopProducts(universe: UniverseFilter): Promise<ShopP
     first: MAX_PRODUCTS_PER_QUERY,
   });
 
-  return fallbackData.products.nodes.map(normalizeProduct);
+  return fallbackData.products.nodes.map((node) => ({
+    ...normalizeProduct(node),
+    universe,
+  }));
 }
 
 export async function fetchShopProductByHandle(handle: string): Promise<ShopProduct | null> {
