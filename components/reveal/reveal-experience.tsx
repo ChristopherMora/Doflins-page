@@ -2912,7 +2912,7 @@ export function RevealExperience({
         onLogin={() => void handleUserLogin()}
       />
 
-      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.08] bg-[var(--background)]/95 px-3 pb-[calc(env(safe-area-inset-bottom)+6px)] pt-2.5 backdrop-blur-md md:hidden">
+      <div className="fixed inset-x-0 bottom-0 z-40 border-t border-black/[0.08] bg-[var(--background)] px-3 pb-[calc(env(safe-area-inset-bottom)+6px)] pt-2.5 md:hidden">
         <div className="mx-auto flex w-full max-w-lg items-center gap-2">
           {/* Pack size chips */}
           <div className="flex shrink-0 gap-1">
