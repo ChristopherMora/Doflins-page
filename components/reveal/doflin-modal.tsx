@@ -306,7 +306,7 @@ export function DoflinModal({
                           if (isOwned) { onClearOwned(selectedDoflin.id); } else { onMarkOwned(selectedDoflin.id); }
                         }}
                       >
-                        {!isAuthenticated ? "Entrar" : isOwned ? "Quitar" : "Marcar"}
+                        {!isAuthenticated ? "Iniciar sesión" : isOwned ? "Quitar" : "Marcar"}
                       </Button>
                     </div>
                   </div>

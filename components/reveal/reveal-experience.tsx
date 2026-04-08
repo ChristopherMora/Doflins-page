@@ -317,12 +317,14 @@ export function RevealExperience({
           ) : (
             <h3 className="font-title text-3xl text-[var(--ink-900)]">{activeConfig.sectionTitle}</h3>
           )}
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className={activeConfig.badgeClass}>{activeConfig.count} figuras</Badge>
-            <Badge className={activeConfig.badgeClass}>
-              Progreso {ownedActiveUniverseCount}/{activeUniverseCollection.length} · {ownedActiveUniversePercent}%
-            </Badge>
-          </div>
+          {activeConfig.count > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className={activeConfig.badgeClass}>{activeConfig.count} figuras</Badge>
+              <Badge className={activeConfig.badgeClass}>
+                Progreso {ownedActiveUniverseCount}/{activeUniverseCollection.length} · {ownedActiveUniversePercent}%
+              </Badge>
+            </div>
+          ) : null}
         </div>
 
         <div className="mb-5 flex flex-wrap gap-2" role="tablist" aria-label="Universo activo">
@@ -358,6 +360,7 @@ export function RevealExperience({
           </Button>
         </div>
 
+        {activeConfig.count > 0 ? (
         <Card className={`mb-5 ${activeTheme.panelCard}`}>
           <CardContent className="space-y-2 p-4">
             <div className="flex items-center justify-between text-sm font-semibold text-[var(--ink-700)]">
@@ -388,6 +391,7 @@ export function RevealExperience({
             ) : null}
           </CardContent>
         </Card>
+        ) : null}
 
         {activeUniverse === "mega" ? (
           /* MEGA: individual figures, no mystery packs */
@@ -441,15 +445,17 @@ export function RevealExperience({
           ) : (
             <h3 className="font-title text-3xl text-[var(--ink-900)]">Catálogo de {activeConfig.label}</h3>
           )}
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className={activeConfig.badgeClass}>{activeCatalogCards.length} animales base visibles</Badge>
-            <Badge className={activeConfig.badgeClass}>
-              {activeBaseModelStats.baseCount} base · {activeBaseModelStats.variantCount} variantes
-            </Badge>
-            <Badge className={activeConfig.badgeClass}>
-              Colección total {ownedTotalCount}/{featuredCollection.length} · {ownedTotalPercent}%
-            </Badge>
-          </div>
+          {activeConfig.count > 0 ? (
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className={activeConfig.badgeClass}>{activeCatalogCards.length} animales base visibles</Badge>
+              <Badge className={activeConfig.badgeClass}>
+                {activeBaseModelStats.baseCount} base · {activeBaseModelStats.variantCount} variantes
+              </Badge>
+              <Badge className={activeConfig.badgeClass}>
+                Colección total {ownedTotalCount}/{featuredCollection.length} · {ownedTotalPercent}%
+              </Badge>
+            </div>
+          ) : null}
         </div>
 
         <div className="mb-3 flex items-center justify-between gap-3 px-1">

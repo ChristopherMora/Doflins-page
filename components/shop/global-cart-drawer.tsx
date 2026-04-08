@@ -313,11 +313,11 @@ export function GlobalCartDrawer() {
                     {!isFree ? (
                       <button
                         aria-label="Eliminar producto"
-                        className="shrink-0 rounded-full p-1 text-[#9aa390] transition hover:bg-red-50 hover:text-red-500"
+                        className="shrink-0 rounded-full p-1.5 text-[#9aa390] transition hover:bg-red-50 hover:text-red-500"
                         disabled={isMut}
                         onClick={() => void removeLine(line.id)}
                       >
-                        <TrashIcon className="h-3.5 w-3.5" />
+                        <TrashIcon className="h-4.5 w-4.5" />
                       </button>
                     ) : (
                       <LockClosedIcon className="h-4 w-4 shrink-0 text-[#4a7a2a] opacity-40" />
@@ -342,9 +342,13 @@ export function GlobalCartDrawer() {
                             void updateQuantity(line.id, line.quantity - 1);
                           }
                         }}
-                        className="flex h-7 w-7 items-center justify-center rounded-full border border-[#cdd8bb] bg-[#f3f8e7] text-[#4a5542] transition hover:bg-[#e4f0d0] disabled:opacity-30"
+                        className={`flex h-8 w-8 items-center justify-center rounded-full border transition disabled:opacity-30 ${
+                          line.quantity <= 1
+                            ? "border-red-200 bg-red-50 text-red-500 hover:bg-red-100"
+                            : "border-[#cdd8bb] bg-[#f3f8e7] text-[#4a5542] hover:bg-[#e4f0d0]"
+                        }`}
                       >
-                        {line.quantity <= 1 ? <TrashIcon className="h-3 w-3" /> : <MinusIcon className="h-3 w-3" />}
+                        {line.quantity <= 1 ? <TrashIcon className="h-3.5 w-3.5" /> : <MinusIcon className="h-3.5 w-3.5" />}
                       </button>
                       <span className="min-w-[1.75rem] text-center text-sm font-bold text-[#1a2010]">
                         {line.quantity}
@@ -353,9 +357,9 @@ export function GlobalCartDrawer() {
                         aria-label="Aumentar"
                         disabled={isMut}
                         onClick={() => void updateQuantity(line.id, line.quantity + 1)}
-                        className="flex h-7 w-7 items-center justify-center rounded-full border border-[#cdd8bb] bg-[#f3f8e7] text-[#4a5542] transition hover:bg-[#e4f0d0]"
+                        className="flex h-8 w-8 items-center justify-center rounded-full border border-[#cdd8bb] bg-[#f3f8e7] text-[#4a5542] transition hover:bg-[#e4f0d0]"
                       >
-                        <PlusIcon className="h-3 w-3" />
+                        <PlusIcon className="h-3.5 w-3.5" />
                       </button>
                       {isMut ? (
                         <ArrowPathIcon className="h-3.5 w-3.5 animate-spin text-[#4a7a4a]" />

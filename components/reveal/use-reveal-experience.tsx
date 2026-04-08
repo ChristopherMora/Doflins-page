@@ -630,11 +630,11 @@ export function useRevealExperience({
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (activeUniverse !== "animals") params.set("universe", activeUniverse);
+    params.set("universe", activeUniverse);
     if (rarityFilter !== "all") params.set("rarity", rarityFilter.toLowerCase());
     const normalizedQuery = searchQuery.trim();
     if (normalizedQuery) params.set("q", normalizedQuery);
-    const nextUrl = params.toString() ? `${pathname}?${params.toString()}` : pathname;
+    const nextUrl = `${pathname}?${params.toString()}`;
     router.replace(nextUrl, { scroll: false });
   }, [activeUniverse, pathname, rarityFilter, router, searchQuery]);
 
