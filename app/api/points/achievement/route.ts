@@ -4,6 +4,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db/client";
 import { pointTransactions } from "@/lib/db/schema";
 import { POINTS, awardPoints } from "@/lib/server/points";
+import { checkRateLimit } from "@/lib/server/rate-limit";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
 
 export const runtime = "nodejs";
@@ -19,14 +20,22 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const rl = checkRateLimit(`achievement:${user.id}`, 10, 60_000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Demasiadas solicitudes. Intenta de nuevo después." },
+      { status: 429, headers: { "Retry-After": String(rl.retryAfter) } },
+    );
+  }
+
   const body = (await request.json()) as { achievementId?: string };
 
   if (!body.achievementId || typeof body.achievementId !== "string") {
     return NextResponse.json({ error: "achievementId requerido" }, { status: 400 });
   }
 
-  // Validar que el achievementId no sea demasiado largo (evitar abusos)
-  if (body.achievementId.length > 64) {
+  // Validar que el achievementId no sea demasiado largo ni tenga caracteres inválidos
+  if (body.achievementId.length > 64 || !/^[a-zA-Z0-9_-]+$/.test(body.achievementId)) {
     return NextResponse.json({ error: "achievementId inválido" }, { status: 400 });
   }
 

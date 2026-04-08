@@ -125,7 +125,7 @@ export async function POST(
 
   // Incrementar quantity para figuras ya poseídas
   if (toIncrement.length > 0) {
-    void db
+    await db
       .update(userCollectionProgress)
       .set({ quantity: sql`${userCollectionProgress.quantity} + 1` })
       .where(
@@ -134,7 +134,7 @@ export async function POST(
           inArray(userCollectionProgress.doflinId, toIncrement),
         ),
       )
-      .catch(() => { /* no bloquear el flujo principal */ });
+      .catch((err) => { console.error("[bolsa save] quantity increment failed:", err); });
   }
 
   if (toInsert.length === 0) {

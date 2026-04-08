@@ -193,67 +193,72 @@ export async function POST(request: NextRequest) {
   const totalPoints = dailyFigure.pointsReward + streakBonus;
 
   // Transaction: Create claim, update streak, award points
-  await db.transaction(async (tx) => {
-    // Create daily claim
-    await tx.insert(dailyClaims).values({
-      supabaseUserId: user.id,
-      dailyFigureId: dailyFigure.id,
-      pointsAwarded: dailyFigure.pointsReward,
-      streakBonus: streakBonus,
-    });
-
-    // Update or create streak
-    if (streak) {
-      await tx
-        .update(userStreaks)
-        .set({
-          currentStreak: newStreak,
-          longestStreak: Math.max(streak.longestStreak, newStreak),
-          lastClaimDate: today,
-        })
-        .where(eq(userStreaks.supabaseUserId, user.id));
-    } else {
-      await tx.insert(userStreaks).values({
+  try {
+    await db.transaction(async (tx) => {
+      // Create daily claim
+      await tx.insert(dailyClaims).values({
         supabaseUserId: user.id,
-        currentStreak: 1,
-        longestStreak: 1,
-        lastClaimDate: today,
+        dailyFigureId: dailyFigure.id,
+        pointsAwarded: dailyFigure.pointsReward,
+        streakBonus: streakBonus,
       });
-    }
 
-    // Award base points
-    await tx.insert(pointTransactions).values({
-      supabaseUserId: user.id,
-      amount: dailyFigure.pointsReward,
-      reason: "daily_claim",
-      meta: JSON.stringify({ dailyFigureId: dailyFigure.id }),
-    });
+      // Update or create streak
+      if (streak) {
+        await tx
+          .update(userStreaks)
+          .set({
+            currentStreak: newStreak,
+            longestStreak: Math.max(streak.longestStreak, newStreak),
+            lastClaimDate: today,
+          })
+          .where(eq(userStreaks.supabaseUserId, user.id));
+      } else {
+        await tx.insert(userStreaks).values({
+          supabaseUserId: user.id,
+          currentStreak: 1,
+          longestStreak: 1,
+          lastClaimDate: today,
+        });
+      }
 
-    // Award streak bonus if applicable
-    if (streakBonus > 0) {
+      // Award base points
       await tx.insert(pointTransactions).values({
         supabaseUserId: user.id,
-        amount: streakBonus,
-        reason: "streak_bonus",
-        meta: JSON.stringify({ streak: newStreak }),
+        amount: dailyFigure.pointsReward,
+        reason: "daily_claim",
+        meta: JSON.stringify({ dailyFigureId: dailyFigure.id }),
       });
-    }
 
-    // Update user points balance
-    await tx
-      .insert(userPoints)
-      .values({
-        supabaseUserId: user.id,
-        balance: totalPoints,
-        totalEarned: totalPoints,
-      })
-      .onDuplicateKeyUpdate({
-        set: {
-          balance: sql`${userPoints.balance} + ${totalPoints}`,
-          totalEarned: sql`${userPoints.totalEarned} + ${totalPoints}`,
-        },
-      });
-  });
+      // Award streak bonus if applicable
+      if (streakBonus > 0) {
+        await tx.insert(pointTransactions).values({
+          supabaseUserId: user.id,
+          amount: streakBonus,
+          reason: "streak_bonus",
+          meta: JSON.stringify({ streak: newStreak }),
+        });
+      }
+
+      // Update user points balance
+      await tx
+        .insert(userPoints)
+        .values({
+          supabaseUserId: user.id,
+          balance: totalPoints,
+          totalEarned: totalPoints,
+        })
+        .onDuplicateKeyUpdate({
+          set: {
+            balance: sql`${userPoints.balance} + ${totalPoints}`,
+            totalEarned: sql`${userPoints.totalEarned} + ${totalPoints}`,
+          },
+        });
+    });
+  } catch (err) {
+    console.error("[daily POST] transaction failed:", err);
+    return NextResponse.json({ error: "No se pudieron guardar los puntos. Intenta de nuevo." }, { status: 500 });
+  }
 
   return NextResponse.json({
     success: true,

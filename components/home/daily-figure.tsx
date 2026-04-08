@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -58,6 +58,14 @@ export function DailyFigure() {
   const [claiming, setClaiming] = useState(false);
   const [justClaimed, setJustClaimed] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const celebrationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Cleanup celebration timer on unmount
+  useEffect(() => {
+    return () => {
+      if (celebrationTimerRef.current) clearTimeout(celebrationTimerRef.current);
+    };
+  }, []);
 
   // Observe auth state
   useEffect(() => {
@@ -122,7 +130,7 @@ export function DailyFigure() {
       );
 
       // Reset celebration after 3 seconds
-      setTimeout(() => setJustClaimed(false), 3000);
+      celebrationTimerRef.current = setTimeout(() => setJustClaimed(false), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al reclamar puntos");
     } finally {

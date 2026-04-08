@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { toast } from "sonner";
 import {
   ArrowPathIcon,
   ChatBubbleLeftRightIcon,
@@ -92,7 +93,10 @@ export function GlobalCartDrawer() {
       debouncedLoadCart();
     };
     window.addEventListener("doflins:open-cart", onOpen);
-    return () => window.removeEventListener("doflins:open-cart", onOpen);
+    return () => {
+      window.removeEventListener("doflins:open-cart", onOpen);
+      if (loadDebounceRef.current) clearTimeout(loadDebounceRef.current);
+    };
   }, [debouncedLoadCart]);
 
   // Refrescar cuando se agrega algo al carrito
@@ -183,9 +187,12 @@ export function GlobalCartDrawer() {
         body: JSON.stringify({ code }),
       });
       const data = await parseApiResponse<CartResponse>(res);
-      if (data.cart) setCart(data.cart);
-    } catch {
-      // ignorar
+      if (data.cart) {
+        setCart(data.cart);
+        toast.success("Código aplicado");
+      }
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo aplicar el código");
     } finally {
       setIsMutating(false);
     }
@@ -202,8 +209,8 @@ export function GlobalCartDrawer() {
       }
       setIsOpen(false);
       window.location.href = url;
-    } catch {
-      // ignorar
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "No se pudo abrir checkout");
     } finally {
       setIsMutating(false);
     }

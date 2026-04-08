@@ -70,7 +70,7 @@ export async function GET(
         updatedAt: new Date(),
       })
       .where(eq(codigosBolsa.id, bag.id))
-      .catch(console.error);
+      .catch((err) => console.error("[bolsa GET] scan count update failed:", err));
 
     return NextResponse.json({
       bag: {

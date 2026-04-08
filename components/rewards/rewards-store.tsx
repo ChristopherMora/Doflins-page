@@ -88,6 +88,7 @@ export function RewardsStore() {
   useEffect(() => { void load(); }, [load]);
 
   const redeem = async (rewardId: number) => {
+    if (redeeming !== null) return;
     setRedeeming(rewardId);
     setMessage(null);
     try {

@@ -31,10 +31,11 @@ export function UserAuthModal({ onClose, onAuthenticated: _onAuthenticated, redi
     setIsLoading(true);
     setError(null);
     try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
       const { error: supabaseError } = await supabase.auth.signInWithOtp({
         email: email.trim(),
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/user/callback?next=${redirectTo}`,
+          emailRedirectTo: `${origin}/auth/user/callback?next=${redirectTo}`,
         },
       });
       if (supabaseError) throw supabaseError;
@@ -50,10 +51,11 @@ export function UserAuthModal({ onClose, onAuthenticated: _onAuthenticated, redi
     setIsLoading(true);
     setError(null);
     try {
+      const origin = typeof window !== "undefined" ? window.location.origin : "";
       const { error: supabaseError } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/auth/user/callback?next=${redirectTo}`,
+          redirectTo: `${origin}/auth/user/callback?next=${redirectTo}`,
         },
       });
       if (supabaseError) throw supabaseError;
