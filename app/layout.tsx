@@ -133,6 +133,9 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        {/* Early connection to Shopify CDN — saves ~100-200ms on first image */}
+        <link rel="preconnect" href="https://cdn.shopify.com" />
+        <link rel="dns-prefetch" href="https://cdn.shopify.com" />
         {/* Anti-flash: restore theme before paint */}
         <script
           dangerouslySetInnerHTML={{
