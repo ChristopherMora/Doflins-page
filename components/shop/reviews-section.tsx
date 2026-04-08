@@ -29,16 +29,9 @@ const REVIEWS = [
   { name: "B.7.", pack: "Explorador (5)", stars: 5, text: "Todo.", likes: 0 },
 ] as const;
 
-/** Real stats from Shopify: 42 reviews, distribution: 5★=32, 4★=6, 3★=2, 2★=1, 1★=1 → avg ≈ 4.6 (shown as 4.5) */
+/** Real stats from Shopify: 42 reviews total, 4.5 overall score */
 const TOTAL_REVIEWS = 42;
-const RATING_BREAKDOWN: { stars: number; count: number }[] = [
-  { stars: 5, count: 32 },
-  { stars: 4, count: 6 },
-  { stars: 3, count: 2 },
-  { stars: 2, count: 1 },
-  { stars: 1, count: 1 },
-];
-const AVG_RATING = RATING_BREAKDOWN.reduce((sum, r) => sum + r.stars * r.count, 0) / TOTAL_REVIEWS;
+const AVG_RATING = 4.5;
 
 const STAR_PATH = "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z";
 
@@ -126,33 +119,11 @@ export function ReviewsSection({ universeThemeVars }: { universeThemeVars: React
           </h3>
         </div>
 
-        {/* Rating summary + breakdown */}
-        <div className="mx-auto flex max-w-md flex-col items-center gap-4 sm:flex-row sm:items-start">
-          {/* Average score */}
-          <div className="flex shrink-0 flex-col items-center gap-1">
-            <span className="text-5xl font-black leading-none text-[var(--ink-900)]">{AVG_RATING.toFixed(1)}</span>
-            <Stars rating={AVG_RATING} size="h-5 w-5" />
-            <p className="text-xs font-medium text-[var(--ink-500)]">{TOTAL_REVIEWS} reseñas verificadas</p>
-          </div>
-          {/* Breakdown bars */}
-          <div className="flex w-full flex-1 flex-col gap-1.5">
-            {RATING_BREAKDOWN.map(({ stars, count }) => {
-              const pct = (count / TOTAL_REVIEWS) * 100;
-              return (
-                <div key={stars} className="flex items-center gap-2">
-                  <span className="w-4 text-right text-xs font-semibold text-[var(--ink-600)]">{stars}</span>
-                  <svg className="h-3 w-3 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d={STAR_PATH} /></svg>
-                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--ink-100)]">
-                    <div
-                      className="h-full rounded-full bg-amber-400"
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <span className="w-8 text-right text-[11px] tabular-nums text-[var(--ink-500)]">{count}</span>
-                </div>
-              );
-            })}
-          </div>
+        {/* Rating summary */}
+        <div className="flex flex-col items-center gap-1 text-center">
+          <span className="text-5xl font-black leading-none text-[var(--ink-900)]">{AVG_RATING.toFixed(1)}</span>
+          <Stars rating={AVG_RATING} size="h-5 w-5" />
+          <p className="text-xs font-medium text-[var(--ink-500)]">{TOTAL_REVIEWS} reseñas verificadas</p>
         </div>
 
         {/* Auto-scroll carousel */}
