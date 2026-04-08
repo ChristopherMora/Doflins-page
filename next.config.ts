@@ -75,6 +75,7 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: [
       "@heroicons/react",
+      "@supabase/supabase-js",
       "framer-motion",
     ],
   },

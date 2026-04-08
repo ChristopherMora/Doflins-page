@@ -32,6 +32,16 @@ button, a, [role="tab"], [role="button"] {
   to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-72px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes iconSpin {
+  from { opacity: 0; transform: rotate(90deg) scale(0.5); }
+  to   { opacity: 1; transform: rotate(0deg) scale(1); }
+}
+
 @keyframes particleFloat {
   0%   { transform: translateY(0) scale(0.5); opacity: 0; }
   20%  { opacity: 0.9; }

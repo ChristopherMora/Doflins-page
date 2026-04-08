@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
-import { motion } from "framer-motion";
 import {
   ArrowRightStartOnRectangleIcon,
   GiftIcon,
@@ -208,11 +207,10 @@ export function SiteHeader(): React.JSX.Element {
   };
 
   return (
-    <motion.header
-      initial={{ y: -72, opacity: 0 }}
-      animate={{ y: headerHidden ? "-100%" : 0, opacity: headerHidden ? 0 : 1 }}
-      transition={{ duration: 0.3, ease: "easeInOut" }}
-      className="sticky top-0 z-40 w-full border-b transition-all duration-300"
+    <header
+      className={`sticky top-0 z-40 w-full border-b transition-[transform,opacity] duration-300 ease-in-out animate-[slideDown_0.3s_ease-in-out] ${
+        headerHidden ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
+      }`}
       style={{
         background: headerBg,
         borderColor: headerBorder,
@@ -388,7 +386,7 @@ export function SiteHeader(): React.JSX.Element {
           </Link>
         </div>
       </div>
-    </motion.header>
+    </header>
   );
 }
 
