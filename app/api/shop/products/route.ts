@@ -81,6 +81,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       cached: true,
       fetchedAt: cached.fetchedAt,
       products: cached.products,
+    }, {
+      headers: {
+        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+      },
     });
   }
 
@@ -103,6 +107,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       realtime: forceRealtime,
       fetchedAt,
       products,
+    }, {
+      headers: {
+        "Cache-Control": "public, s-maxage=30, stale-while-revalidate=60",
+      },
     });
   } catch (error) {
     console.error("shop/products error", error);

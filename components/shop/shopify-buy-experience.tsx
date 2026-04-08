@@ -100,8 +100,8 @@ function LazyCard({ children, skeleton, eager }: { children: React.ReactNode; sk
   return <div ref={ref}>{visible ? children : skeleton}</div>;
 }
 
-export function ShopifyBuyExperience(): React.JSX.Element {
-  const shop = useShopExperience();
+export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: import("@/lib/shopify/types").ShopProduct[] }): React.JSX.Element {
+  const shop = useShopExperience({ initialProducts });
 
   const {
     activeUniverse,

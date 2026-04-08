@@ -46,7 +46,13 @@ import {
   writeCartSnapshot,
 } from "./shop-utils";
 
-export function useShopExperience() {
+export interface ShopExperienceOptions {
+  initialProducts?: ShopProduct[];
+}
+
+export function useShopExperience(options: ShopExperienceOptions = {}) {
+  const { initialProducts } = options;
+  const hasInitialProducts = !!initialProducts?.length;
   const [activeUniverse, setActiveUniverse] = useState<UniverseFilter>("animals");
   const [visualUniverse, setVisualUniverse] = useState<Universe>("neutral");
 
@@ -84,7 +90,7 @@ export function useShopExperience() {
     broadcastUniverse(visualUniverse);
   }, [visualUniverse]);
 
-  const [products, setProducts] = useState<ShopProduct[]>([]);
+  const [products, setProducts] = useState<ShopProduct[]>(initialProducts ?? []);
   const [collectionByUniverse, setCollectionByUniverse] = useState<Record<UniverseFilter, CollectionItemDTO[]>>({
     animals: [],
     multiverse: [],
@@ -97,10 +103,18 @@ export function useShopExperience() {
     mega: [],
   });
   const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);
-  const [selectedVariantByProduct, setSelectedVariantByProduct] = useState<Record<string, string>>({});
+  const [selectedVariantByProduct, setSelectedVariantByProduct] = useState<Record<string, string>>(() => {
+    if (!initialProducts?.length) return {};
+    const initial: Record<string, string> = {};
+    for (const product of initialProducts) {
+      const defaultVariant = pickDefaultVariant(product);
+      if (defaultVariant) initial[product.id] = defaultVariant.id;
+    }
+    return initial;
+  });
   const [, setDiscountCode] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-  const [isLoadingProducts, setIsLoadingProducts] = useState(true);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(!hasInitialProducts);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
   const [isMutatingCart, setIsMutatingCart] = useState(false);
   const [lastAddedProductId, setLastAddedProductId] = useState<string | null>(null);
@@ -121,9 +135,9 @@ export function useShopExperience() {
   const [collectionPreviewError, setCollectionPreviewError] = useState(false);
 
   const knownProductIdsRef = useRef<Record<UniverseFilter, Set<string>>>({
-    animals: new Set(),
-    multiverse: new Set(),
-    mega: new Set(),
+    animals: new Set(initialProducts?.filter(p => p.universe === "animals").map(p => p.id)),
+    multiverse: new Set(initialProducts?.filter(p => p.universe === "multiverse").map(p => p.id)),
+    mega: new Set(initialProducts?.filter(p => p.universe === "mega").map(p => p.id)),
   });
   const prevStockRef = useRef<Map<string, boolean>>(new Map());
   const liveRefreshInFlightRef = useRef(false);
@@ -459,7 +473,15 @@ export function useShopExperience() {
     return () => clearInterval(id);
   }, []);
 
-  useEffect(() => { void loadProducts(activeUniverse); }, [activeUniverse, loadProducts]);
+  const skipInitialFetchRef = useRef(hasInitialProducts);
+
+  useEffect(() => {
+    if (skipInitialFetchRef.current) {
+      skipInitialFetchRef.current = false;
+      return;
+    }
+    void loadProducts(activeUniverse);
+  }, [activeUniverse, loadProducts]);
 
   useEffect(() => {
     const refreshCatalog = async () => {

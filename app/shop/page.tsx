@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { ShopifyBuyExperience } from "@/components/shop/shopify-buy-experience";
+import { fetchShopProducts } from "@/lib/server/shopify-storefront";
 
 export const metadata: Metadata = {
   title: "Tienda | DOFLINS",
@@ -15,11 +16,18 @@ export const metadata: Metadata = {
   robots: { index: true },
 };
 
-export default function ShopPage(): React.JSX.Element {
+export default async function ShopPage(): Promise<React.JSX.Element> {
+  let initialProducts;
+  try {
+    initialProducts = await fetchShopProducts("animals");
+  } catch {
+    // Silently fall through — client will retry via useEffect
+  }
+
   return (
     <>
       <main className="mx-auto w-full max-w-7xl px-4 py-4 pb-28 sm:px-8 sm:py-5 sm:pb-10">
-        <ShopifyBuyExperience />
+        <ShopifyBuyExperience initialProducts={initialProducts} />
       </main>
       <BottomNav />
     </>
