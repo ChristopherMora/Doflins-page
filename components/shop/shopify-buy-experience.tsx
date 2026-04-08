@@ -132,7 +132,6 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
     addToCart,
     totals,
     setDiscountCode,
-    freeGiftProgress,
     pricingCurrencyCode,
     selectedProduct,
     setSelectedProduct,
@@ -874,16 +873,16 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
       {/* ── Reseñas de clientes ── */}
       <ReviewsSection universeThemeVars={universeThemeVars} />
 
-      {/* FAB carrito flotante */}
-      {cartItemCount > 0 ? (
-        <div
-          className="fixed bottom-[calc(env(safe-area-inset-bottom)+9rem)] right-4 z-40 flex flex-col items-end gap-2 sm:bottom-[calc(env(safe-area-inset-bottom)+6.5rem)] lg:hidden"
-          onMouseEnter={() => setIsFabHovered(true)}
-          onMouseLeave={() => setIsFabHovered(false)}
-          onFocus={() => setIsFabHovered(true)}
-          onBlur={() => setIsFabHovered(false)}
-        >
-          {isFabHovered && cart?.lines.length ? (
+      {/* FAB carrito flotante — siempre visible en móvil */}
+      <div
+        className="fixed z-40 flex flex-col items-end gap-2 lg:hidden"
+        style={{ bottom: "calc(env(safe-area-inset-bottom) + 4.5rem)", right: "1rem" }}
+        onMouseEnter={() => setIsFabHovered(true)}
+        onMouseLeave={() => setIsFabHovered(false)}
+        onFocus={() => setIsFabHovered(true)}
+        onBlur={() => setIsFabHovered(false)}
+      >
+        {isFabHovered && cart?.lines.length ? (
             <div className="w-64 rounded-2xl border border-[#d7d7c3] bg-white p-3 shadow-[0_8px_24px_rgba(44,47,23,0.18)] animate-catalog-fadein">
               <p className="mb-2 text-xs font-semibold text-[var(--ink-900)]">En tu carrito</p>
               {cart.lines.slice(-2).map((line) => (
@@ -912,64 +911,18 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
           ) : null}
           <button
             type="button"
-            aria-label={`Abrir carrito — ${cartItemCount} item${cartItemCount === 1 ? "" : "s"}`}
-            className="flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] text-white shadow-[0_8px_24px_rgba(50,80,25,0.42)] transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-primary-from)]"
+            aria-label={cartItemCount > 0 ? `Abrir carrito — ${cartItemCount} item${cartItemCount === 1 ? "" : "s"}` : "Abrir carrito"}
+            className="relative flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] text-white shadow-[0_8px_24px_rgba(50,80,25,0.42)] transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-primary-from)]"
             onClick={() => window.dispatchEvent(new Event("doflins:open-cart"))}
           >
             <ShoppingCartIcon className="h-6 w-6" />
-            <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-white">
-              {cartItemCount > 9 ? "9+" : cartItemCount}
-            </span>
+            {cartItemCount > 0 ? (
+              <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-white">
+                {cartItemCount > 9 ? "9+" : cartItemCount}
+              </span>
+            ) : null}
           </button>
         </div>
-      ) : null}
-
-      {/* Sticky product bar */}
-      {stickyProduct && stickyVariant ? (
-        <div className="fixed inset-x-0 bottom-14 z-40 px-3 pb-1.5 sm:bottom-0 sm:pb-[calc(env(safe-area-inset-bottom)+0.65rem)] lg:hidden">
-          <div
-            className={`${visualTheme.shellClassName} mx-auto w-full max-w-3xl rounded-2xl border p-3 shadow-[0_-10px_30px_rgba(51,57,26,0.26)]`}
-            style={{ borderColor: "var(--shop-shell-border)", background: "var(--shop-shell-bg)" }}
-          >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">Pack recomendado</p>
-                  <p className="text-sm font-semibold text-[var(--ink-900)]">{stickyProduct.title}</p>
-                </div>
-                <p className="font-title text-2xl leading-none text-[var(--ink-900)]">{formatMoney(stickyVariant.price)}</p>
-              </div>
-
-              {freeGiftProgress.enabled ? (
-                <div className="space-y-1.5 rounded-xl border border-[#d7e2bc] bg-[#f4fae8] p-2.5">
-                  <p className="text-xs font-medium text-[var(--ink-700)]">
-                    {freeGiftProgress.unlocked
-                      ? "Regalo gratis desbloqueado"
-                      : `Te faltan ${formatCurrencyAmount(freeGiftProgress.remaining, pricingCurrencyCode)} para tu regalo`}
-                  </p>
-                  <div className="h-2 overflow-hidden rounded-full bg-[#d9e7c2]">
-                    <div
-                      className="h-full rounded-full bg-[linear-gradient(90deg,var(--shop-primary-from),var(--shop-primary-to))] transition-all duration-500"
-                      style={{ width: `${freeGiftProgress.percent}%` }}
-                    />
-                  </div>
-                </div>
-              ) : null}
-
-              <Button
-                className={`h-11 w-full touch-manipulation ${
-                  stickyVariant.availableForSale ? "bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]" : "bg-[#c3cfb0] text-white"
-                }`}
-                disabled={stickyCtaDisabled}
-                onClick={() => void addToCart(stickyProduct, 1)}
-              >
-                <ShoppingCartIcon className="h-5 w-5" />
-                {stickyVariant.availableForSale ? "Agregar al carrito" : "Agotado"}
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       {/* Quick view modal */}
       <Dialog

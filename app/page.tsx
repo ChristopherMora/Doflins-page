@@ -4,7 +4,6 @@ import { eq } from "drizzle-orm";
 import {
   ShieldCheckIcon,
   SparklesIcon,
-  ShoppingCartIcon,
   Squares2X2Icon,
 } from "@heroicons/react/24/solid";
 
@@ -150,15 +149,6 @@ export default async function Home(): Promise<React.JSX.Element> {
           </div>
         </main>
       </div>
-      {/* FAB móvil: visible solo en mobile, por encima del bottom-nav */}
-      <Link
-        href="#compras"
-        className="fixed bottom-24 right-4 z-40 flex items-center gap-2 rounded-full bg-[var(--brand-primary)] px-5 py-3 text-sm font-bold text-white shadow-xl transition-transform active:scale-95 sm:hidden"
-        aria-label="Comprar packs"
-      >
-        <ShoppingCartIcon className="h-4 w-4" />
-        Comprar packs
-      </Link>
       <BottomNav />
     </>
   );
