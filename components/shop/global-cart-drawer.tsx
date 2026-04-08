@@ -123,6 +123,8 @@ export function GlobalCartDrawer() {
   useEffect(() => {
     const onOpen = () => {
       setIsOpen(true);
+      // Show loading until we get fresh data so stale items don't flash
+      setIsLoading(true);
       debouncedLoadCart();
     };
     window.addEventListener("doflins:open-cart", onOpen);
