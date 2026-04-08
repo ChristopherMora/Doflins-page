@@ -20,15 +20,45 @@ const REVIEWS = [
   { name: "J.H.", pack: "Salvaje (30)", stars: 5, text: "Muy bonitos y de buen material. Solo que se repiten los animales pero con diferentes colores.", likes: 0 },
   { name: "C.", pack: "Explorador (5)", stars: 5, text: "Muy lindos están bien tiernos.", likes: 0 },
   { name: "C.R.", pack: "Explorador (5)", stars: 5, text: "Me gustaron mucho.", likes: 0 },
+  { name: "L.", pack: "Explorador (5)", stars: 5, text: "10/10 muy buena calidad y adorables.", likes: 0 },
+  { name: "B.N.", pack: "Explorador (5)", stars: 5, text: "Me encantaron!! Super tiernos.", likes: 0 },
+  { name: "D.B.", pack: "Explorador (5)", stars: 5, text: "Están súper bonitos.", likes: 0 },
+  { name: "S.M.", pack: "Explorador (5)", stars: 5, text: "Estuvieron bonito.", likes: 1 },
+  { name: "H.", pack: "Explorador (5)", stars: 5, text: "Resistentes.", likes: 1 },
+  { name: "V.P.", pack: "Explorador (5)", stars: 5, text: "Muy lindos.", likes: 0 },
+  { name: "B.7.", pack: "Explorador (5)", stars: 5, text: "Todo.", likes: 0 },
 ] as const;
+
+/** Real stats from Shopify: 42 reviews, distribution: 5★=32, 4★=6, 3★=2, 2★=1, 1★=1 → avg ≈ 4.6 (shown as 4.5) */
+const TOTAL_REVIEWS = 42;
+const RATING_BREAKDOWN: { stars: number; count: number }[] = [
+  { stars: 5, count: 32 },
+  { stars: 4, count: 6 },
+  { stars: 3, count: 2 },
+  { stars: 2, count: 1 },
+  { stars: 1, count: 1 },
+];
+const AVG_RATING = RATING_BREAKDOWN.reduce((sum, r) => sum + r.stars * r.count, 0) / TOTAL_REVIEWS;
 
 const STAR_PATH = "M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z";
 
-function Stars({ count, size = "h-3.5 w-3.5" }: { count: number; size?: string }): React.JSX.Element {
+function Stars({ rating, size = "h-3.5 w-3.5" }: { rating: number; size?: string }): React.JSX.Element {
+  const full = Math.floor(rating);
+  const hasHalf = rating - full >= 0.25;
+  const empty = 5 - full - (hasHalf ? 1 : 0);
   return (
     <div className="flex">
-      {Array.from({ length: count }, (_, i) => (
-        <svg key={i} className={`${size} text-amber-400`} fill="currentColor" viewBox="0 0 20 20"><path d={STAR_PATH} /></svg>
+      {Array.from({ length: full }, (_, i) => (
+        <svg key={`f${i}`} className={`${size} text-amber-400`} fill="currentColor" viewBox="0 0 20 20"><path d={STAR_PATH} /></svg>
+      ))}
+      {hasHalf ? (
+        <svg key="h" className={`${size} text-amber-400`} viewBox="0 0 20 20">
+          <defs><linearGradient id={`half-${size}`}><stop offset="50%" stopColor="currentColor" /><stop offset="50%" stopColor="#d1d5db" /></linearGradient></defs>
+          <path fill={`url(#half-${size})`} d={STAR_PATH} />
+        </svg>
+      ) : null}
+      {Array.from({ length: empty }, (_, i) => (
+        <svg key={`e${i}`} className={`${size} text-gray-300`} fill="currentColor" viewBox="0 0 20 20"><path d={STAR_PATH} /></svg>
       ))}
     </div>
   );
@@ -47,7 +77,7 @@ function ReviewCard({ review }: { review: typeof REVIEWS[number] }): React.JSX.E
             <p className="text-[10px] text-[var(--ink-500)]">{review.pack}</p>
           </div>
         </div>
-        <Stars count={review.stars} />
+        <Stars rating={review.stars} />
       </div>
       <p className="text-sm leading-relaxed text-[var(--ink-700)]">&ldquo;{review.text}&rdquo;</p>
       {review.likes > 0 ? (
@@ -89,19 +119,30 @@ export function ReviewsSection({ universeThemeVars }: { universeThemeVars: React
   return (
     <Card className="overflow-hidden border-0 shadow-none" style={{ ...universeThemeVars, background: "var(--shop-control-bg)" }}>
       <CardContent className="space-y-5 p-5 sm:p-8">
-        {/* Header */}
-        <div className="flex flex-col items-center gap-2 text-center">
-          <div className="flex items-center gap-1.5">
-            <span className="text-3xl font-black text-[var(--ink-900)]">4.5</span>
-            <div className="flex">
-              <Stars count={4} size="h-5 w-5" />
-              <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20">
-                <defs><linearGradient id="half-star-rv"><stop offset="50%" stopColor="currentColor" /><stop offset="50%" stopColor="#e5e7eb" /></linearGradient></defs>
-                <path fill="url(#half-star-rv)" d={STAR_PATH} />
-              </svg>
-            </div>
+        {/* Header with real rating + breakdown */}
+        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
+          {/* Average */}
+          <div className="flex flex-col items-center gap-1">
+            <span className="text-4xl font-black text-[var(--ink-900)]">{AVG_RATING.toFixed(1)}</span>
+            <Stars rating={AVG_RATING} size="h-5 w-5" />
+            <p className="text-xs text-[var(--ink-500)]">{TOTAL_REVIEWS} reseñas</p>
           </div>
-          <p className="text-sm font-semibold text-[var(--ink-700)]">42 reseñas de clientes verificados</p>
+          {/* Breakdown bars */}
+          <div className="flex flex-1 flex-col gap-1.5">
+            {RATING_BREAKDOWN.map(({ stars, count }) => (
+              <div key={stars} className="flex items-center gap-2">
+                <span className="w-5 text-right text-xs font-medium text-[var(--ink-600)]">{stars}</span>
+                <svg className="h-3 w-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d={STAR_PATH} /></svg>
+                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[var(--ink-200)]">
+                  <div
+                    className="h-full rounded-full bg-amber-400 transition-all"
+                    style={{ width: `${(count / TOTAL_REVIEWS) * 100}%` }}
+                  />
+                </div>
+                <span className="w-6 text-right text-xs text-[var(--ink-500)]">{count}</span>
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* Auto-scroll carousel */}
