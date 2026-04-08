@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { LazySection } from "@/components/ui/lazy-section";
 import { LiveFigureCount } from "@/components/ui/live-figure-count";
 import { HowItWorks } from "@/components/home/how-it-works";
-import { Testimonials } from "@/components/home/testimonials";
 import { HeroFloatingFigures } from "@/components/home/hero-floating-figures";
 import { ShopifyBuyExperienceWrapper } from "@/components/home/shopify-buy-wrapper";
 import { DailyFigureWrapper } from "@/components/home/daily-figure-wrapper";
@@ -147,10 +146,7 @@ export default async function Home(): Promise<React.JSX.Element> {
               <HowItWorks />
             </LazySection>
 
-            {/* ── Testimonios ── */}
-            <LazySection>
-              <Testimonials />
-            </LazySection>
+
           </div>
         </main>
       </div>

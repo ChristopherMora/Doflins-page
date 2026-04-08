@@ -118,30 +118,40 @@ export function ReviewsSection({ universeThemeVars }: { universeThemeVars: React
 
   return (
     <Card className="overflow-hidden border-0 shadow-none" style={{ ...universeThemeVars, background: "var(--shop-control-bg)" }}>
-      <CardContent className="space-y-5 p-5 sm:p-8">
-        {/* Header with real rating + breakdown */}
-        <div className="flex flex-col items-center gap-4 text-center sm:flex-row sm:items-start sm:text-left">
-          {/* Average */}
-          <div className="flex flex-col items-center gap-1">
-            <span className="text-4xl font-black text-[var(--ink-900)]">{AVG_RATING.toFixed(1)}</span>
+      <CardContent className="space-y-6 p-5 sm:p-8">
+        {/* Title */}
+        <div className="text-center">
+          <h3 className="text-xl font-bold tracking-tight text-[var(--ink-900)] sm:text-2xl">
+            Lo que dicen nuestros clientes
+          </h3>
+        </div>
+
+        {/* Rating summary + breakdown */}
+        <div className="mx-auto flex max-w-md flex-col items-center gap-4 sm:flex-row sm:items-start">
+          {/* Average score */}
+          <div className="flex shrink-0 flex-col items-center gap-1">
+            <span className="text-5xl font-black leading-none text-[var(--ink-900)]">{AVG_RATING.toFixed(1)}</span>
             <Stars rating={AVG_RATING} size="h-5 w-5" />
-            <p className="text-xs text-[var(--ink-500)]">{TOTAL_REVIEWS} reseñas</p>
+            <p className="text-xs font-medium text-[var(--ink-500)]">{TOTAL_REVIEWS} reseñas verificadas</p>
           </div>
           {/* Breakdown bars */}
-          <div className="flex flex-1 flex-col gap-1.5">
-            {RATING_BREAKDOWN.map(({ stars, count }) => (
-              <div key={stars} className="flex items-center gap-2">
-                <span className="w-5 text-right text-xs font-medium text-[var(--ink-600)]">{stars}</span>
-                <svg className="h-3 w-3 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d={STAR_PATH} /></svg>
-                <div className="h-2.5 flex-1 overflow-hidden rounded-full bg-[var(--ink-200)]">
-                  <div
-                    className="h-full rounded-full bg-amber-400 transition-all"
-                    style={{ width: `${(count / TOTAL_REVIEWS) * 100}%` }}
-                  />
+          <div className="flex w-full flex-1 flex-col gap-1.5">
+            {RATING_BREAKDOWN.map(({ stars, count }) => {
+              const pct = (count / TOTAL_REVIEWS) * 100;
+              return (
+                <div key={stars} className="flex items-center gap-2">
+                  <span className="w-4 text-right text-xs font-semibold text-[var(--ink-600)]">{stars}</span>
+                  <svg className="h-3 w-3 shrink-0 text-amber-400" fill="currentColor" viewBox="0 0 20 20"><path d={STAR_PATH} /></svg>
+                  <div className="h-2 flex-1 overflow-hidden rounded-full bg-[var(--ink-100)]">
+                    <div
+                      className="h-full rounded-full bg-amber-400"
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <span className="w-8 text-right text-[11px] tabular-nums text-[var(--ink-500)]">{count}</span>
                 </div>
-                <span className="w-6 text-right text-xs text-[var(--ink-500)]">{count}</span>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
 
@@ -179,7 +189,7 @@ export function ReviewsSection({ universeThemeVars }: { universeThemeVars: React
             size="sm"
             onClick={() => setShowAll((prev) => !prev)}
           >
-            {showAll ? "Ocultar reseñas" : `Ver las ${REVIEWS.length} reseñas`}
+            {showAll ? "Ocultar reseñas" : `Ver las ${TOTAL_REVIEWS} reseñas`}
           </Button>
         </div>
       </CardContent>
