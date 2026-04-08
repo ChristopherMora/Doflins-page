@@ -6,7 +6,7 @@ import { CheckCircleIcon, ShoppingCartIcon, XCircleIcon } from "@heroicons/react
 
 import { Button } from "@/components/ui/button";
 import type { ShopCart } from "@/lib/shopify/types";
-import { CART_SNAPSHOT_STORAGE_KEY } from "@/lib/constants/shop";
+import { writeCartSnapshot } from "@/components/shop/shop-utils";
 
 interface AddToCartButtonProps {
   variantId: string;
@@ -15,28 +15,6 @@ interface AddToCartButtonProps {
   className?: string;
   label?: string;
   onClick?: () => void;
-}
-
-function writeCartSnapshot(cart: ShopCart): void {
-  try {
-    const lines = cart.lines.map((l) => ({
-      merchandiseId: l.merchandiseId,
-      quantity: l.quantity,
-    }));
-    if (!lines.length) {
-      localStorage.removeItem(CART_SNAPSHOT_STORAGE_KEY);
-      return;
-    }
-    localStorage.setItem(
-      CART_SNAPSHOT_STORAGE_KEY,
-      JSON.stringify({ updatedAt: Date.now(), checkoutUrl: cart.checkoutUrl, lines }),
-    );
-    window.dispatchEvent(
-      new CustomEvent("doflins:cart-updated", { detail: { count: cart.totalQuantity } }),
-    );
-  } catch {
-    // Ignore storage errors in private/incognito mode
-  }
 }
 
 export function AddToCartButton({

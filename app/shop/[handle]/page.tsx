@@ -18,8 +18,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
 import { ProductViewer3D } from "@/components/shop/product-viewer-3d";
+import { formatMoney } from "@/components/shop/shop-utils";
 import { resolveProductModelUrl } from "@/lib/shop/product-model";
-import type { ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
+import type { ShopProduct, ShopProductVariant, UniverseFilter } from "@/lib/shopify/types";
 import { fetchShopProductByHandle, fetchShopProducts, ShopifyStorefrontError } from "@/lib/server/shopify-storefront";
 
 export const dynamic = "force-dynamic";
@@ -63,23 +64,6 @@ interface ShopProductDetailPageProps {
   params: Promise<{
     handle: string;
   }>;
-}
-
-function formatMoney(money: ShopifyMoney | null): string {
-  if (!money) {
-    return "-";
-  }
-
-  const value = Number(money.amount);
-  if (!Number.isFinite(value)) {
-    return `${money.amount} ${money.currencyCode}`;
-  }
-
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: money.currencyCode,
-    maximumFractionDigits: 2,
-  }).format(value);
 }
 
 function pickRecommendedVariant(product: ShopProduct): ShopProductVariant | null {

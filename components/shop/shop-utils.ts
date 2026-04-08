@@ -116,7 +116,7 @@ export function resolveStockBadge(variant: ShopProductVariant | null): StockBadg
   };
 }
 
-export function formatMoney(money: ShopifyMoney | null): string {
+export function formatMoney(money: ShopifyMoney | null | undefined): string {
   if (!money) {
     return "-";
   }

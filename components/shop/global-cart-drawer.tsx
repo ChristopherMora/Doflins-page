@@ -15,7 +15,7 @@ import {
   TruckIcon,
 } from "@heroicons/react/24/solid";
 
-import type { ShopCart, ShopifyMoney } from "@/lib/shopify/types";
+import type { ShopCart } from "@/lib/shopify/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -25,36 +25,8 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-
-const SUPPORT_WHATSAPP_URL =
-  process.env.NEXT_PUBLIC_SUPPORT_WHATSAPP_URL?.trim() ??
-  "https://wa.me/521234567890";
-
-const FREE_GIFT_MIN_SUBTOTAL_ENV = Number(
-  process.env.NEXT_PUBLIC_FREE_GIFT_MIN_SUBTOTAL ?? 250,
-);
-const FREE_GIFT_MIN_SUBTOTAL =
-  Number.isFinite(FREE_GIFT_MIN_SUBTOTAL_ENV) && FREE_GIFT_MIN_SUBTOTAL_ENV > 0
-    ? FREE_GIFT_MIN_SUBTOTAL_ENV
-    : null;
-
-function formatMoney(money: ShopifyMoney | null | undefined): string {
-  if (!money) return "$0.00";
-  const amount = Number.parseFloat(money.amount);
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: money.currencyCode || "MXN",
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
-
-function formatAmount(amount: number, currencyCode: string): string {
-  return new Intl.NumberFormat("es-MX", {
-    style: "currency",
-    currency: currencyCode || "MXN",
-    minimumFractionDigits: 2,
-  }).format(amount);
-}
+import { formatMoney, formatCurrencyAmount, parseApiResponse } from "./shop-utils";
+import { FREE_GIFT_MIN_SUBTOTAL, SUPPORT_WHATSAPP_URL } from "./shop-constants";
 
 interface CartResponse {
   status: "ok";
@@ -63,14 +35,6 @@ interface CartResponse {
 interface CheckoutResponse {
   status: "ok";
   checkoutUrl: string;
-}
-
-async function parseResponse<T>(res: Response): Promise<T> {
-  const data = await res.json();
-  if (!res.ok || data.status === "error") {
-    throw new Error(data.message ?? "Error inesperado");
-  }
-  return data as T;
 }
 
 export function GlobalCartDrawer() {
@@ -98,7 +62,7 @@ export function GlobalCartDrawer() {
     setIsLoading(true);
     try {
       const res = await fetch("/api/cart", { method: "GET", cache: "no-store" });
-      const data = await parseResponse<CartResponse>(res);
+      const data = await parseApiResponse<CartResponse>(res);
       setCart(data.cart);
     } catch {
       // ignorar error silencioso
@@ -170,7 +134,7 @@ export function GlobalCartDrawer() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lines: [{ id: lineId, quantity }] }),
       });
-      const data = await parseResponse<CartResponse>(res);
+      const data = await parseApiResponse<CartResponse>(res);
       setCart(data.cart);
     } catch {
       setCart(prev);
@@ -195,7 +159,7 @@ export function GlobalCartDrawer() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ lineIds: [lineId] }),
       });
-      const data = await parseResponse<CartResponse>(res);
+      const data = await parseApiResponse<CartResponse>(res);
       setCart(data.cart);
     } catch {
       setCart(prev);
@@ -218,7 +182,7 @@ export function GlobalCartDrawer() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ code }),
       });
-      const data = await parseResponse<CartResponse>(res);
+      const data = await parseApiResponse<CartResponse>(res);
       if (data.cart) setCart(data.cart);
     } catch {
       // ignorar
@@ -231,7 +195,7 @@ export function GlobalCartDrawer() {
     setIsMutating(true);
     try {
       const res = await fetch("/api/cart/checkout", { method: "POST" });
-      const data = await parseResponse<CheckoutResponse>(res);
+      const data = await parseApiResponse<CheckoutResponse>(res);
       let url = data.checkoutUrl;
       if (giftNote.trim()) {
         url += (url.includes("?") ? "&" : "?") + `note=${encodeURIComponent(giftNote.trim())}`;
@@ -408,11 +372,11 @@ export function GlobalCartDrawer() {
                   <p className="text-sm font-bold text-[#2f5b1f]">
                     {freeShippingProgress.unlocked
                       ? "¡Envío gratis desbloqueado! 🎉"
-                      : `Faltan ${formatAmount(freeShippingProgress.remaining, currencyCode)} para envío gratis`}
+                      : `Faltan ${formatCurrencyAmount(freeShippingProgress.remaining, currencyCode)} para envío gratis`}
                   </p>
                   {!freeShippingProgress.unlocked ? (
                     <p className="text-[11px] text-[#5a7a4a]">
-                      {formatAmount(freeShippingProgress.paidSubtotal, currencyCode)} de {formatAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, currencyCode)}
+                      {formatCurrencyAmount(freeShippingProgress.paidSubtotal, currencyCode)} de {formatCurrencyAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, currencyCode)}
                     </p>
                   ) : null}
                 </div>

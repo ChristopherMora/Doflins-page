@@ -7,10 +7,8 @@ import { broadcastUniverse, onUniverseChange } from "@/lib/universe-store";
 
 import type {
   ApiError,
-  CartRecoveryLinks,
   CartResponse,
   CartTotals,
-  CheckoutResponse,
   CollectionItemDTO,
   CollectionResponse,
   FreeGiftProgress,
@@ -100,7 +98,7 @@ export function useShopExperience() {
   });
   const [selectedProduct, setSelectedProduct] = useState<ShopProduct | null>(null);
   const [selectedVariantByProduct, setSelectedVariantByProduct] = useState<Record<string, string>>({});
-  const [discountCode, setDiscountCode] = useState("");
+  const [, setDiscountCode] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
@@ -113,15 +111,12 @@ export function useShopExperience() {
   const [productsErrorCode, setProductsErrorCode] = useState<string | null>(null);
   const [gridAnimKey, setGridAnimKey] = useState(0);
   const [brokenShowcaseIds, setBrokenShowcaseIds] = useState<Set<number>>(new Set());
-  const [giftNote, setGiftNote] = useState("");
   const [shopSearch, setShopSearch] = useState("");
-  const [mutatingLineIds, setMutatingLineIds] = useState<Set<string>>(new Set());
   const [promoTimeLeft, setPromoTimeLeft] = useState<string | null>(null);
   const [wishlist, setWishlist] = useState<Set<string>>(new Set());
   const [gridView, setGridView] = useState<GridView>("grid");
   const [showWishlistOnly, setShowWishlistOnly] = useState(false);
   const [isFabHovered, setIsFabHovered] = useState(false);
-  const [showCartQR, setShowCartQR] = useState(false);
   const [isLoadingCollectionPreview, setIsLoadingCollectionPreview] = useState(true);
 
   const knownProductIdsRef = useRef<Record<UniverseFilter, Set<string>>>({
@@ -556,107 +551,7 @@ export function useShopExperience() {
     [activeUniverse, applyCartPayload, getSelectedVariant, loadProducts],
   );
 
-  const updateLineQuantity = useCallback(
-    async (lineId: string, quantity: number) => {
-      if (!Number.isFinite(quantity) || quantity <= 0 || quantity > 99) return;
-      const previousCart = cartRef.current;
-      setMutatingLineIds((prev) => { const next = new Set(prev); next.add(lineId); return next; });
-      setCart((prev) => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          lines: prev.lines.map((l) => {
-            if (l.id !== lineId) return l;
-            const unitPrice = Number(l.pricePerUnit.amount);
-            const newTotal = Number.isFinite(unitPrice) ? String((unitPrice * quantity).toFixed(2)) : l.lineTotal.amount;
-            return { ...l, quantity, lineTotal: { ...l.lineTotal, amount: newTotal } };
-          }),
-        };
-      });
-      setFeedbackMessage(null);
-      try {
-        const response = await fetch("/api/cart/lines/update", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lines: [{ id: lineId, quantity }] }),
-        });
-        const payload = await parseApiResponse<CartResponse>(response);
-        if (!payload.cart) throw new Error("No se pudo actualizar el carrito.");
-        setCart(payload.cart);
-      } catch (error) {
-        setCart(previousCart);
-        setFeedbackMessage(error instanceof Error ? error.message : "No se pudo actualizar la cantidad.");
-      } finally {
-        setMutatingLineIds((prev) => { const next = new Set(prev); next.delete(lineId); return next; });
-      }
-    },
-    [],
-  );
 
-  const removeLine = useCallback(async (lineId: string) => {
-    const previousCart = cartRef.current;
-    setFeedbackMessage(null);
-    setMutatingLineIds((prev) => { const next = new Set(prev); next.add(lineId); return next; });
-    setCart((prev) => {
-      if (!prev) return prev;
-      return { ...prev, lines: prev.lines.filter((l) => l.id !== lineId) };
-    });
-    try {
-      const response = await fetch("/api/cart/lines/remove", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lineIds: [lineId] }),
-      });
-      const payload = await parseApiResponse<CartResponse>(response);
-      if (!payload.cart) throw new Error("No se pudo actualizar el carrito.");
-      setCart(payload.cart);
-    } catch (error) {
-      setCart(previousCart);
-      setFeedbackMessage(error instanceof Error ? error.message : "No se pudo eliminar el item.");
-    } finally {
-      setMutatingLineIds((prev) => { const next = new Set(prev); next.delete(lineId); return next; });
-    }
-  }, []);
-
-  const applyDiscount = useCallback(async () => {
-    const normalized = discountCode.trim();
-    if (!normalized) return;
-    setIsMutatingCart(true);
-    setFeedbackMessage(null);
-    try {
-      const response = await fetch("/api/cart/discount", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code: normalized }),
-      });
-      const payload = await parseApiResponse<CartResponse & { coupon?: { code: string; applied: boolean } }>(response);
-      if (!payload.cart) throw new Error("No se pudo aplicar el cupón.");
-      setCart(payload.cart);
-      setFeedbackMessage(payload.coupon?.applied ? "Cupón aplicado correctamente." : "Cupón enviado, revisa si aplica en tu carrito.");
-    } catch (error) {
-      setFeedbackMessage(error instanceof Error ? error.message : "No se pudo aplicar el cupón.");
-    } finally {
-      setIsMutatingCart(false);
-    }
-  }, [discountCode]);
-
-  const goToCheckout = useCallback(async () => {
-    setIsMutatingCart(true);
-    setFeedbackMessage(null);
-    try {
-      const response = await fetch("/api/cart/checkout", { method: "POST" });
-      const payload = await parseApiResponse<CheckoutResponse>(response);
-      let url = payload.checkoutUrl;
-      if (giftNote.trim()) {
-        url += (url.includes("?") ? "&" : "?") + `note=${encodeURIComponent(giftNote.trim())}`;
-      }
-      window.location.href = url;
-    } catch (error) {
-      setFeedbackMessage(error instanceof Error ? error.message : "No se pudo abrir checkout.");
-    } finally {
-      setIsMutatingCart(false);
-    }
-  }, [giftNote]);
 
   const totals: CartTotals = useMemo(() => {
     if (!cart) return { subtotal: "-", total: "-", tax: "-" };
@@ -700,30 +595,7 @@ export function useShopExperience() {
     void addToCart(stickyProduct, 1);
   }, [addToCart, stickyProduct]);
 
-  const cartRecoveryLinks: CartRecoveryLinks | null = useMemo(() => {
-    if (!cart?.checkoutUrl) return null;
-    const checkoutUrl = cart.checkoutUrl;
-    const recoveryText = `Guardé mi carrito DOFLINS para retomarlo después: ${checkoutUrl}`;
-    return {
-      checkoutUrl,
-      whatsapp: `https://wa.me/?text=${encodeURIComponent(recoveryText)}`,
-      email: `mailto:?subject=${encodeURIComponent("Mi carrito DOFLINS")}&body=${encodeURIComponent(recoveryText)}`,
-    };
-  }, [cart?.checkoutUrl]);
 
-  const copyRecoveryLink = useCallback(async () => {
-    if (!cartRecoveryLinks?.checkoutUrl) return;
-    if (typeof navigator === "undefined" || !navigator.clipboard) {
-      setFeedbackMessage("No se pudo copiar automáticamente. Comparte el enlace desde WhatsApp o email.");
-      return;
-    }
-    try {
-      await navigator.clipboard.writeText(cartRecoveryLinks.checkoutUrl);
-      setFeedbackMessage("Link del carrito copiado.");
-    } catch {
-      setFeedbackMessage("No se pudo copiar el link del carrito.");
-    }
-  }, [cartRecoveryLinks]);
 
   const currencyCode = products[0]?.price.currencyCode ?? "MXN";
   const pricingCurrencyCode = cart?.subtotal.currencyCode ?? currencyCode;
@@ -808,7 +680,6 @@ export function useShopExperience() {
   const selectedModalVariant = selectedProduct ? getSelectedVariant(selectedProduct) : null;
   const selectedModalSoldOut = !selectedModalVariant?.availableForSale;
   const selectedModalStock = resolveStockBadge(selectedModalVariant);
-  const hasCartLines = Boolean(cart?.lines.length);
 
   const retryProductsLoad = useCallback(() => {
     void loadProducts(activeUniverse, { forceRealtime: true });
@@ -850,24 +721,10 @@ export function useShopExperience() {
     // Cart
     cart,
     cartItemCount,
-    isLoadingCart,
     isMutatingCart,
-    mutatingLineIds,
     addToCart,
-    updateLineQuantity,
-    removeLine,
-    hasCartLines,
     totals,
-    discountCode,
     setDiscountCode,
-    applyDiscount,
-    goToCheckout,
-    giftNote,
-    setGiftNote,
-    showCartQR,
-    setShowCartQR,
-    cartRecoveryLinks,
-    copyRecoveryLink,
     freeGiftProgress,
     pricingCurrencyCode,
 
