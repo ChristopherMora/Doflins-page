@@ -37,7 +37,7 @@ const nextConfig: NextConfig = {
       `font-src 'self' https://fonts.gstatic.com`,
       `img-src 'self' data: blob: ${shopifyImgHosts.join(" ")} https://*.supabase.co https://api.qrserver.com https://www.google-analytics.com https://www.googletagmanager.com`,
       `connect-src 'self' https://*.supabase.co https://*.myshopify.com https://www.google-analytics.com https://www.googletagmanager.com`,
-      `frame-src https://checkout.shopify.com https://www.googletagmanager.com`,
+      `frame-src https://checkout.shopify.com https://www.googletagmanager.com https://www.tiktok.com`,
       `object-src 'none'`,
       `base-uri 'self'`,
       `form-action 'self'`,
