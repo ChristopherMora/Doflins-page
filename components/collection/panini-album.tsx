@@ -117,8 +117,22 @@ export function PaniniAlbum({ initialDoflins }: { initialDoflins?: CollectionIte
       if (!user) {
         const res = await fetch("/api/collection");
         if (res.ok) {
-          const d = (await res.json()) as { collection: DoflinRow[] };
-          setData({ doflins: d.collection, ownedIds: [] });
+          const d = (await res.json()) as { collection: CollectionItemDTO[] };
+          setData({
+            doflins: d.collection.map((item) => ({
+              id: item.id,
+              nombre: item.name,
+              modeloBase: item.baseModel,
+              variante: item.variantName,
+              serie: item.series,
+              numeroColeccion: item.collectionNumber,
+              rareza: item.rarity,
+              probabilidad: item.probability,
+              imagenUrl: item.imageUrl,
+              siluetaUrl: item.silhouetteUrl ?? "",
+            })),
+            ownedIds: [],
+          });
         }
       } else {
         const res = await fetch("/api/collection/user");

@@ -751,26 +751,40 @@ export function RevealExperience({
         {!isLoadingCollection && activeCatalogCards.length === 0 ? (
           <Card className={`mt-5 ${activeTheme.panelCard}`}>
             <CardContent className="flex flex-col items-center gap-4 p-8 text-center">
-              <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/[0.06] text-3xl">🔍</div>
-              <div className="space-y-1">
-                <p className="font-semibold text-[var(--ink-900)]">Sin resultados</p>
-                <p className="text-sm text-[var(--ink-700)]">
-                  No hay figuras{rarityFilter !== "all" ? ` con rareza ${CATALOG_RARITY_CONFIG[rarityFilter as CatalogRarity]?.label}` : ""}
-                  {searchQuery.trim() ? ` para "${searchQuery.trim()}"` : ""}.
-                </p>
-              </div>
-              <Button
-                size="sm"
-                variant="secondary"
-                onClick={() => {
-                  setSearchQuery("");
-                  setDebouncedSearchQuery("");
-                  setRarityFilter("all");
-                  setVisiblePages(1);
-                }}
-              >
-                <MagnifyingGlassIcon className="h-4 w-4" /> Limpiar filtros
-              </Button>
+              {activeConfig.count === 0 ? (
+                <>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/[0.06] text-3xl">🚀</div>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-[var(--ink-900)]">Próximamente</p>
+                    <p className="text-sm text-[var(--ink-700)]">
+                      Estamos preparando las figuras de {activeConfig.label}. ¡Vuelve pronto!
+                    </p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-black/[0.06] text-3xl">🔍</div>
+                  <div className="space-y-1">
+                    <p className="font-semibold text-[var(--ink-900)]">Sin resultados</p>
+                    <p className="text-sm text-[var(--ink-700)]">
+                      No hay figuras{rarityFilter !== "all" ? ` con rareza ${CATALOG_RARITY_CONFIG[rarityFilter as CatalogRarity]?.label}` : ""}
+                      {searchQuery.trim() ? ` para "${searchQuery.trim()}"` : ""}.
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="secondary"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setDebouncedSearchQuery("");
+                      setRarityFilter("all");
+                      setVisiblePages(1);
+                    }}
+                  >
+                    <MagnifyingGlassIcon className="h-4 w-4" /> Limpiar filtros
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         ) : null}

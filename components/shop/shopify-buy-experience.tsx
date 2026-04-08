@@ -458,9 +458,10 @@ export function ShopifyBuyExperience(): React.JSX.Element {
           ) : null}
 
           {!isLoadingProducts && !productsError && !products.length ? (
-            <div className="rounded-2xl border border-[#d8d3b2] bg-white/82 p-5">
-              <p className="font-semibold text-[var(--ink-900)]">No hay packs visibles para {UNIVERSE_LABELS[activeUniverse]}.</p>
-              <p className="mt-1 text-sm text-[var(--ink-700)]">Estamos preparando nuevos packs para este universo. Vuelve en unos minutos.</p>
+            <div className="rounded-2xl border border-[#d8d3b2] bg-white/82 p-5 text-center">
+              <p className="text-3xl">🚀</p>
+              <p className="mt-2 font-semibold text-[var(--ink-900)]">Packs de {UNIVERSE_LABELS[activeUniverse]} — Próximamente</p>
+              <p className="mt-1 text-sm text-[var(--ink-700)]">Estamos preparando los packs de este universo. Mientras tanto, explora los packs disponibles en otros universos.</p>
             </div>
           ) : null}
 

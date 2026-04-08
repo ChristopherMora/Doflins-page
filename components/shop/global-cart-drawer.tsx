@@ -333,12 +333,18 @@ export function GlobalCartDrawer() {
                   {!isFree ? (
                     <div className="mt-2 flex items-center gap-1">
                       <button
-                        aria-label="Reducir"
-                        disabled={isMut || line.quantity <= 1}
-                        onClick={() => void updateQuantity(line.id, Math.max(1, line.quantity - 1))}
+                        aria-label={line.quantity <= 1 ? "Eliminar" : "Reducir"}
+                        disabled={isMut}
+                        onClick={() => {
+                          if (line.quantity <= 1) {
+                            void removeLine(line.id);
+                          } else {
+                            void updateQuantity(line.id, line.quantity - 1);
+                          }
+                        }}
                         className="flex h-7 w-7 items-center justify-center rounded-full border border-[#cdd8bb] bg-[#f3f8e7] text-[#4a5542] transition hover:bg-[#e4f0d0] disabled:opacity-30"
                       >
-                        <MinusIcon className="h-3 w-3" />
+                        {line.quantity <= 1 ? <TrashIcon className="h-3 w-3" /> : <MinusIcon className="h-3 w-3" />}
                       </button>
                       <span className="min-w-[1.75rem] text-center text-sm font-bold text-[#1a2010]">
                         {line.quantity}

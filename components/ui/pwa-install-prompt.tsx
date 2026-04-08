@@ -10,18 +10,40 @@ interface BeforeInstallPromptEvent extends Event {
 
 export function PwaInstallPrompt(): React.JSX.Element | null {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    // Don't show again if user already dismissed within the last 7 days
+    if (typeof window === "undefined") return false;
+    try {
+      const dismissedAt = localStorage.getItem("doflins_pwa_dismissed");
+      return !!(dismissedAt && Date.now() - Number(dismissedAt) < 7 * 86_400_000);
+    } catch { return false; }
+  });
+  const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (dismissed) return;
+
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
     };
     window.addEventListener("beforeinstallprompt", handler);
     return () => window.removeEventListener("beforeinstallprompt", handler);
-  }, []);
+  }, [dismissed]);
 
-  if (!deferredPrompt || dismissed) return null;
+  // Delay showing the prompt by 45 seconds after it becomes available
+  useEffect(() => {
+    if (!deferredPrompt || dismissed) return;
+    const timer = setTimeout(() => setVisible(true), 45_000);
+    return () => clearTimeout(timer);
+  }, [deferredPrompt, dismissed]);
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try { localStorage.setItem("doflins_pwa_dismissed", String(Date.now())); } catch { /* ignore */ }
+  };
+
+  if (!deferredPrompt || dismissed || !visible) return null;
 
   return (
     <div className="ink-light fixed bottom-[calc(env(safe-area-inset-bottom)+5.5rem)] left-3 right-3 z-50 mx-auto max-w-sm rounded-2xl border border-[#c9da9a] bg-[linear-gradient(135deg,#f5f8e8,#eef4df)] p-4 shadow-[0_12px_28px_rgba(50,80,25,0.26)] lg:bottom-4 lg:left-auto lg:right-4 lg:max-w-xs">
@@ -52,7 +74,7 @@ export function PwaInstallPrompt(): React.JSX.Element | null {
             <button
               type="button"
               className="rounded-full border border-[#c9da9a] bg-white/80 px-4 py-1.5 text-xs font-semibold text-[var(--ink-700)] transition hover:bg-white active:scale-95"
-              onClick={() => setDismissed(true)}
+              onClick={handleDismiss}
             >
               Ahora no
             </button>
@@ -62,7 +84,7 @@ export function PwaInstallPrompt(): React.JSX.Element | null {
           type="button"
           aria-label="Cerrar sugerencia de instalación"
           className="shrink-0 rounded-full p-1 transition hover:bg-black/[0.07]"
-          onClick={() => setDismissed(true)}
+          onClick={handleDismiss}
         >
           <XMarkIcon className="h-4 w-4 text-[var(--ink-600)]" />
         </button>
