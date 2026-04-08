@@ -166,6 +166,7 @@ export function UniverseCards({ initialFeatured }: UniverseCardsProps = {}): Rea
                             alt={fig.nombre}
                             width={cardW}
                             height={cardH}
+                            sizes="100px"
                             className="h-full w-full object-cover"
                             priority
                           />

@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 
+import sharp from "sharp";
 import { and, eq, ne } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
@@ -177,11 +178,20 @@ async function saveUploadedImage(file: File): Promise<string> {
   const folderPath = path.join(process.cwd(), "public", "uploads", "doflins");
   await mkdir(folderPath, { recursive: true });
 
-  const fileName = `${Date.now()}-${randomUUID().slice(0, 8)}.${extension}`;
-  const outputPath = path.join(folderPath, fileName);
-
   const arrayBuffer = await file.arrayBuffer();
-  await writeFile(outputPath, Buffer.from(arrayBuffer));
+  const inputBuffer = Buffer.from(arrayBuffer);
+
+  // SVG files are kept as-is; raster images are converted to WebP
+  if (extension === "svg") {
+    const fileName = `${Date.now()}-${randomUUID().slice(0, 8)}.svg`;
+    const outputPath = path.join(folderPath, fileName);
+    await writeFile(outputPath, inputBuffer);
+    return `/uploads/doflins/${fileName}`;
+  }
+
+  const fileName = `${Date.now()}-${randomUUID().slice(0, 8)}.webp`;
+  const outputPath = path.join(folderPath, fileName);
+  await sharp(inputBuffer).webp({ quality: 82 }).toFile(outputPath);
 
   return `/uploads/doflins/${fileName}`;
 }

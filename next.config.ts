@@ -73,7 +73,10 @@ const nextConfig: NextConfig = {
   compress: true,
 
   experimental: {
-    optimizePackageImports: ["@heroicons/react"],
+    optimizePackageImports: [
+      "@heroicons/react",
+      "framer-motion",
+    ],
   },
 };
 

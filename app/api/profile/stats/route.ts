@@ -22,43 +22,42 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const db = getDb();
 
-  // Get user profile with creation date
-  const [profile] = await db
-    .select({ createdAt: userProfiles.createdAt })
-    .from(userProfiles)
-    .where(eq(userProfiles.supabaseUserId, user.id))
-    .limit(1);
+  // All 4 queries are independent — run in parallel
+  const [profileRows, totalRows, ownedRows, rarityTotals] = await Promise.all([
+    db
+      .select({ createdAt: userProfiles.createdAt })
+      .from(userProfiles)
+      .where(eq(userProfiles.supabaseUserId, user.id))
+      .limit(1),
+    db
+      .select({ total: count() })
+      .from(doflins)
+      .where(eq(doflins.activo, true)),
+    db
+      .select({
+        rareza: doflins.rareza,
+        serie: doflins.serie,
+      })
+      .from(userCollectionProgress)
+      .innerJoin(doflins, eq(doflins.id, userCollectionProgress.doflinId))
+      .where(
+        and(
+          eq(userCollectionProgress.supabaseUserId, user.id),
+          eq(userCollectionProgress.owned, true)
+        )
+      ),
+    db
+      .select({
+        rareza: doflins.rareza,
+        total: count(),
+      })
+      .from(doflins)
+      .where(eq(doflins.activo, true))
+      .groupBy(doflins.rareza),
+  ]);
 
-  // Get total doflins count
-  const [totalResult] = await db
-    .select({ total: count() })
-    .from(doflins)
-    .where(eq(doflins.activo, true));
-
-  // Get user's collection with rarity breakdown
-  const ownedRows = await db
-    .select({
-      rareza: doflins.rareza,
-      serie: doflins.serie,
-    })
-    .from(userCollectionProgress)
-    .innerJoin(doflins, eq(doflins.id, userCollectionProgress.doflinId))
-    .where(
-      and(
-        eq(userCollectionProgress.supabaseUserId, user.id),
-        eq(userCollectionProgress.owned, true)
-      )
-    );
-
-  // Get total doflins by rarity
-  const rarityTotals = await db
-    .select({
-      rareza: doflins.rareza,
-      total: count(),
-    })
-    .from(doflins)
-    .where(eq(doflins.activo, true))
-    .groupBy(doflins.rareza);
+  const profile = profileRows[0];
+  const totalResult = totalRows[0];
 
   // Build achievement input
   const ownedByRarity: Record<string, number> = {};

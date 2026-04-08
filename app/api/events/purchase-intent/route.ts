@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 
 import { getClientIp, hashIp } from "@/lib/server/request";
 import { rateLimitResponse } from "@/lib/server/shopify-api";
@@ -15,12 +16,14 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const payload = purchaseIntentPayloadSchema.parse(await request.json());
     const ip = getClientIp(request);
 
-    await logPurchaseIntent({
-      code: payload.code,
-      doflinId: payload.doflinId,
-      doflinIds: payload.doflinIds,
-      ipHash: hashIp(ip),
-      userAgent: request.headers.get("user-agent") ?? "unknown",
+    after(async () => {
+      await logPurchaseIntent({
+        code: payload.code,
+        doflinId: payload.doflinId,
+        doflinIds: payload.doflinIds,
+        ipHash: hashIp(ip),
+        userAgent: request.headers.get("user-agent") ?? "unknown",
+      });
     });
 
     return NextResponse.json({ status: "ok" });

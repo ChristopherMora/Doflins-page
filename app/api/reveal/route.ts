@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { after } from "next/server";
 
 import { checkRateLimit } from "@/lib/server/rate-limit";
 import { getClientIp, hashIp } from "@/lib/server/request";
@@ -44,12 +45,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
 
   const rateLimit = checkRateLimit(`reveal:${ip}`);
   if (!rateLimit.success) {
-    await logScanEvent({
-      eventType: "rate_limited",
-      codeInput: rawCode?.trim().toUpperCase() || "N/A",
-      ipHash,
-      userAgent,
-    }).catch(() => null);
+    after(async () => {
+      await logScanEvent({
+        eventType: "rate_limited",
+        codeInput: rawCode?.trim().toUpperCase() || "N/A",
+        ipHash,
+        userAgent,
+      }).catch(() => null);
+    });
 
     return errorResponse(
       429,
@@ -60,12 +63,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   }
 
   if (!normalizedCode) {
-    await logScanEvent({
-      eventType: "invalid",
-      codeInput: rawCode?.trim().toUpperCase() || "N/A",
-      ipHash,
-      userAgent,
-    }).catch(() => null);
+    after(async () => {
+      await logScanEvent({
+        eventType: "invalid",
+        codeInput: rawCode?.trim().toUpperCase() || "N/A",
+        ipHash,
+        userAgent,
+      }).catch(() => null);
+    });
 
     return errorResponse(
       400,
@@ -81,10 +86,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       userAgent,
     });
 
-    // Si el usuario está autenticado y es el primer scan, otorgar puntos
-    // por cada figura revelada (fire-and-forget, sin bloquear la respuesta)
+    // Award points after response is sent (non-blocking)
     if (reveal.firstScan && reveal.doflins.length > 0) {
-      void (async () => {
+      after(async () => {
         try {
           const supabase = createSupabaseServerClientForRoute(request);
           const { data: { user } } = await supabase.auth.getUser();
@@ -94,9 +98,9 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
             }
           }
         } catch {
-          // No bloquear el reveal si falla la autenticación o los puntos
+          // Points failure should not affect the user experience
         }
-      })();
+      });
     }
 
     return NextResponse.json(reveal, {
