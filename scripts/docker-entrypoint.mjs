@@ -35,6 +35,15 @@ function splitByStatementBreakpoint(sqlText) {
     .filter(Boolean);
 }
 
+// MySQL error codes that indicate a statement is already applied (idempotent).
+const IDEMPOTENT_MYSQL_ERRORS = new Set([
+  1050, // ER_TABLE_EXISTS_ERROR  — CREATE TABLE when table exists
+  1060, // ER_DUP_FIELDNAME      — ALTER TABLE ADD column that exists
+  1061, // ER_DUP_KEYNAME        — CREATE INDEX / ADD KEY that exists
+  1091, // ER_CANT_DROP_FIELD_OR_KEY — DROP FK/KEY that doesn't exist
+  1826, // ER_DUP_CONSTRAINT_NAME — ADD CONSTRAINT with existing name
+]);
+
 async function waitForDb(databaseUrl, timeoutSeconds, intervalSeconds) {
   const started = Date.now();
 
@@ -137,7 +146,15 @@ async function runMigrations(databaseUrl) {
       console.log(`[entrypoint] Aplicando migración ${entry.tag} (${statements.length} bloque(s))...`);
 
       for (const statement of statements) {
-        await conn.query(statement);
+        try {
+          await conn.query(statement);
+        } catch (err) {
+          if (IDEMPOTENT_MYSQL_ERRORS.has(err.errno)) {
+            console.log(`[entrypoint]   ↳ Ignorado (errno ${err.errno}): ${err.sqlMessage}`);
+            continue;
+          }
+          throw err;
+        }
       }
 
       await conn.query(`INSERT INTO \`${MIGRATIONS_TABLE}\` (tag) VALUES (?)`, [entry.tag]);
