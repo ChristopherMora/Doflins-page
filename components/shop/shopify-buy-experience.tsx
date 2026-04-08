@@ -141,6 +141,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
     isFabHovered,
     setIsFabHovered,
     isLoadingCollectionPreview,
+    collectionPreviewError,
+    retryCollectionPreview,
     activeCollectionPreviewHead,
     activeCollectionPreviewRemaining,
     activeCollectionShowcaseItems,
@@ -827,6 +829,13 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                     ) : null}
                   </div>
                 </>
+              ) : collectionPreviewError ? (
+                <div className="flex flex-col items-center gap-2 py-4">
+                  <p className="text-sm text-[var(--ink-700)]">No se pudo cargar el catálogo de personajes.</p>
+                  <Button variant="secondary" size="sm" onClick={retryCollectionPreview}>
+                    Reintentar
+                  </Button>
+                </div>
               ) : (
                 <p className="text-sm text-[var(--ink-700)]">Aún no hay personajes visibles para este universo.</p>
               )}

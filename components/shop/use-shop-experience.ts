@@ -118,6 +118,7 @@ export function useShopExperience() {
   const [showWishlistOnly, setShowWishlistOnly] = useState(false);
   const [isFabHovered, setIsFabHovered] = useState(false);
   const [isLoadingCollectionPreview, setIsLoadingCollectionPreview] = useState(true);
+  const [collectionPreviewError, setCollectionPreviewError] = useState(false);
 
   const knownProductIdsRef = useRef<Record<UniverseFilter, Set<string>>>({
     animals: new Set(),
@@ -366,14 +367,14 @@ export function useShopExperience() {
 
   useEffect(() => { void loadCart(); }, [loadCart]);
 
-  useEffect(() => {
-    let cancelled = false;
-    const loadCollectionPreview = async () => {
-      setIsLoadingCollectionPreview(true);
+  const loadCollectionPreview = useCallback(async () => {
+    setIsLoadingCollectionPreview(true);
+    setCollectionPreviewError(false);
+    const MAX_RETRIES = 3;
+    for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
       try {
         const response = await fetch("/api/collection", { method: "GET", cache: "no-store" });
         const payload = await parseApiResponse<CollectionResponse>(response);
-        if (cancelled) return;
 
         const grouped: Record<UniverseFilter, CollectionItemDTO[]> = { animals: [], multiverse: [], mega: [] };
         for (const item of payload.collection) {
@@ -383,15 +384,20 @@ export function useShopExperience() {
           grouped[universe].push(item);
         }
         setCollectionByUniverse(grouped);
+        setIsLoadingCollectionPreview(false);
+        return;
       } catch {
-        if (!cancelled) setCollectionByUniverse({ animals: [], multiverse: [], mega: [] });
-      } finally {
-        if (!cancelled) setIsLoadingCollectionPreview(false);
+        if (attempt < MAX_RETRIES - 1) {
+          await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        }
       }
-    };
-    void loadCollectionPreview();
-    return () => { cancelled = true; };
+    }
+    // All retries exhausted
+    setCollectionPreviewError(true);
+    setIsLoadingCollectionPreview(false);
   }, []);
+
+  useEffect(() => { void loadCollectionPreview(); }, [loadCollectionPreview]);
 
   // Restore wishlist from localStorage on mount
   useEffect(() => {
@@ -765,6 +771,8 @@ export function useShopExperience() {
     isFabHovered,
     setIsFabHovered,
     isLoadingCollectionPreview,
+    collectionPreviewError,
+    retryCollectionPreview: loadCollectionPreview,
 
     // Collection showcase
     collectionByUniverse,
