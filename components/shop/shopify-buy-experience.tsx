@@ -64,19 +64,39 @@ import { useShopExperience } from "./use-shop-experience";
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHUlEQVQIW2NkYGD4z8BQDwIMjIz1DEDMSNMAACb9Av9aFEHzAAAAAElFTkSuQmCC";
 
-function LazyCard({ children, skeleton }: { children: React.ReactNode; skeleton: React.ReactNode }): React.JSX.Element {
+/** Number of product cards rendered eagerly (no IntersectionObserver). */
+const EAGER_CARD_COUNT = 6;
+
+/**
+ * Custom loader that builds Shopify CDN resize URLs directly,
+ * bypassing the Next.js `/_next/image` proxy for much faster delivery.
+ */
+function shopifyLoader({ src, width, quality }: { src: string; width: number; quality?: number }): string {
+  try {
+    const url = new URL(src);
+    url.searchParams.set("width", String(width));
+    if (quality) url.searchParams.set("quality", String(quality));
+    return url.toString();
+  } catch {
+    return src;
+  }
+}
+
+function LazyCard({ children, skeleton, eager }: { children: React.ReactNode; skeleton: React.ReactNode; eager?: boolean }): React.JSX.Element {
   const ref = useRef<HTMLDivElement>(null);
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(eager ?? false);
   useEffect(() => {
+    if (eager) return;
     const el = ref.current;
     if (!el) return;
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
-      { rootMargin: "160px" },
+      { rootMargin: "400px" },
     );
     obs.observe(el);
     return () => obs.disconnect();
-  }, []);
+  }, [eager]);
+  if (eager) return <>{children}</>;
   return <div ref={ref}>{visible ? children : skeleton}</div>;
 }
 
@@ -520,17 +540,19 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               className={gridView === "grid" ? "grid gap-5 md:grid-cols-2 xl:grid-cols-3" : "grid gap-3"}
               style={{ animation: "catalog-fadein 0.35s ease" }}
             >
-              {filteredProducts.map((product) => {
+              {filteredProducts.map((product, productIndex) => {
                 const selectedVariant = getSelectedVariant(product);
                 const isSoldOut = !selectedVariant?.availableForSale;
                 const isLiveNew = liveNewProducts[activeUniverse].includes(product.id);
                 const isBestSeller = BEST_SELLER_HANDLES.has(product.handle.toLowerCase());
                 const stockBadge = resolveStockBadge(selectedVariant);
                 const isJustAdded = lastAddedProductId === product.id;
+                const isEager = productIndex < EAGER_CARD_COUNT;
 
                 return (
                   <LazyCard
                     key={product.id}
+                    eager={isEager}
                     skeleton={
                       gridView === "list" ? (
                         <div className="flex h-20 overflow-hidden rounded-3xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
@@ -582,9 +604,11 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                           src={product.imageUrl}
                           alt={product.imageAlt ?? product.title}
                           fill
+                          loader={shopifyLoader}
+                          priority={isEager}
                           placeholder="blur"
                           blurDataURL={BLUR_DATA_URL}
-                          sizes="(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"
+                          sizes={gridView === "list" ? "128px" : "(max-width: 768px) 100vw, (max-width: 1280px) 50vw, 33vw"}
                           className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.06]"
                           style={imageFilterStyle}
                         />
@@ -793,6 +817,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                                 src={item.imageUrl}
                                 alt={item.name}
                                 fill
+                                loader={shopifyLoader}
                                 sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 16vw"
                                 className="object-cover"
                                 onError={() => setBrokenShowcaseIds(prev => new Set(prev).add(item.id))}
@@ -861,7 +886,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                 <div key={line.id} className="flex items-center gap-2 py-1">
                   {line.imageUrl ? (
                     <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-[#ddd9c5] bg-[#f1f2e6]">
-                      <Image src={line.imageUrl} alt={line.productTitle} fill sizes="36px" className="object-cover" />
+                      <Image src={line.imageUrl} alt={line.productTitle} fill loader={shopifyLoader} sizes="36px" className="object-cover" />
                     </div>
                   ) : null}
                   <div className="min-w-0 flex-1">
@@ -959,6 +984,8 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       src={selectedProduct.imageUrl}
                       alt={selectedProduct.imageAlt ?? selectedProduct.title}
                       fill
+                      loader={shopifyLoader}
+                      priority
                       placeholder="blur"
                       blurDataURL={BLUR_DATA_URL}
                       sizes="(max-width: 640px) 100vw, 50vw"

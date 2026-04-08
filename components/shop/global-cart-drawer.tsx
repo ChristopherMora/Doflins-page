@@ -19,6 +19,18 @@ import {
 import type { ShopCart } from "@/lib/shopify/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+/** Shopify CDN image loader — bypasses /_next/image proxy. */
+function shopifyLoader({ src, width, quality }: { src: string; width: number; quality?: number }): string {
+  try {
+    const url = new URL(src);
+    url.searchParams.set("width", String(width));
+    if (quality) url.searchParams.set("quality", String(quality));
+    return url.toString();
+  } catch {
+    return src;
+  }
+}
 import {
   Sheet,
   SheetContent,
@@ -299,9 +311,9 @@ export function GlobalCartDrawer() {
                       src={line.imageUrl}
                       alt={line.imageAlt ?? line.productTitle}
                       fill
+                      loader={shopifyLoader}
                       sizes="72px"
                       className="object-cover"
-                      unoptimized
                     />
                   </div>
                 ) : null}
