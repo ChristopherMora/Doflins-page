@@ -8,6 +8,7 @@ import {
   ExclamationTriangleIcon,
   FireIcon,
   GiftIcon,
+  PhotoIcon,
   SparklesIcon,
   UserGroupIcon,
 } from "@heroicons/react/24/solid";
@@ -556,6 +557,203 @@ export function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Herramientas — Convertir imágenes a WebP */}
+      <WebPConverter />
     </div>
+  );
+}
+
+// ─── WebP Image Converter ──────────────────────────────────────────────────────
+
+interface ConvertResult {
+  doflin: string;
+  field: string;
+  from: string;
+  to: string;
+  savedKB: number;
+  status: "converted" | "skipped" | "error";
+  reason?: string;
+}
+
+interface ConvertResponse {
+  status: string;
+  dryRun: boolean;
+  summary: {
+    totalDoflins: number;
+    converted: number;
+    skipped: number;
+    errors: number;
+    savedMB: string;
+  };
+  results: ConvertResult[];
+}
+
+function WebPConverter(): React.JSX.Element {
+  const [phase, setPhase] = useState<"idle" | "previewing" | "converting" | "done">("idle");
+  const [preview, setPreview] = useState<ConvertResponse | null>(null);
+  const [result, setResult] = useState<ConvertResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const callEndpoint = async (dry: boolean) => {
+    setError(null);
+    const url = dry ? "/api/admin/convert-webp?dry=true" : "/api/admin/convert-webp";
+    const res = await fetch(url, { method: "POST" });
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      throw new Error(body.message ?? `Error ${res.status}`);
+    }
+    return (await res.json()) as ConvertResponse;
+  };
+
+  const handlePreview = async () => {
+    setPhase("previewing");
+    try {
+      const data = await callEndpoint(true);
+      setPreview(data);
+      setPhase("done");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error desconocido");
+      setPhase("idle");
+    }
+  };
+
+  const handleConvert = async () => {
+    setPhase("converting");
+    try {
+      const data = await callEndpoint(false);
+      setResult(data);
+      setPreview(null);
+      setPhase("done");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error desconocido");
+      setPhase("idle");
+    }
+  };
+
+  const convertible = preview?.results.filter((r) => r.status === "converted") ?? [];
+  const data = result ?? preview;
+
+  return (
+    <Card className="border border-[#d8d2b4] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)]">
+      <CardContent className="p-6 space-y-4">
+        <div className="flex items-center gap-3">
+          <PhotoIcon className="h-6 w-6 text-[#4e6f2a]" />
+          <div>
+            <h2 className="font-title text-xl text-[var(--ink-900)]">Convertir imágenes a WebP</h2>
+            <p className="text-xs text-[var(--ink-500)]">
+              Convierte PNG/JPG existentes a WebP para reducir tamaño ~30-60%. Las nuevas subidas ya se convierten automáticamente.
+            </p>
+          </div>
+        </div>
+
+        {error && (
+          <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+            {error}
+          </div>
+        )}
+
+        <div className="flex flex-wrap gap-3">
+          {!result && (
+            <button
+              type="button"
+              onClick={handlePreview}
+              disabled={phase === "previewing" || phase === "converting"}
+              className="inline-flex items-center gap-2 rounded-full bg-[#e8edd8] px-5 py-2.5 text-sm font-semibold text-[#2f5b1f] transition-colors hover:bg-[#dde5c8] disabled:opacity-50"
+            >
+              {phase === "previewing" ? (
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+              ) : (
+                <PhotoIcon className="h-4 w-4" />
+              )}
+              {phase === "previewing" ? "Analizando…" : "Analizar imágenes"}
+            </button>
+          )}
+
+          {preview && convertible.length > 0 && !result && (
+            <button
+              type="button"
+              onClick={handleConvert}
+              disabled={phase === "converting"}
+              className="inline-flex items-center gap-2 rounded-full bg-[#4e6f2a] px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-[#3d5820] disabled:opacity-50"
+            >
+              {phase === "converting" ? (
+                <ArrowPathIcon className="h-4 w-4 animate-spin" />
+              ) : (
+                <SparklesIcon className="h-4 w-4" />
+              )}
+              {phase === "converting" ? "Convirtiendo…" : `Convertir ${convertible.length} imagen${convertible.length === 1 ? "" : "es"}`}
+            </button>
+          )}
+
+          {result && (
+            <button
+              type="button"
+              onClick={() => { setResult(null); setPreview(null); setPhase("idle"); }}
+              className="inline-flex items-center gap-2 rounded-full bg-[#e8edd8] px-5 py-2.5 text-sm font-semibold text-[#2f5b1f] transition-colors hover:bg-[#dde5c8]"
+            >
+              <ArrowPathIcon className="h-4 w-4" />
+              Verificar de nuevo
+            </button>
+          )}
+        </div>
+
+        {data && (
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="rounded-xl bg-white/70 px-4 py-3 text-center">
+                <p className="text-2xl font-bold text-[var(--ink-900)]">{data.summary.totalDoflins}</p>
+                <p className="text-xs text-[var(--ink-500)]">Doflins total</p>
+              </div>
+              <div className="rounded-xl bg-white/70 px-4 py-3 text-center">
+                <p className="text-2xl font-bold text-[#4e6f2a]">{data.summary.converted}</p>
+                <p className="text-xs text-[var(--ink-500)]">{data.dryRun ? "Por convertir" : "Convertidos"}</p>
+              </div>
+              <div className="rounded-xl bg-white/70 px-4 py-3 text-center">
+                <p className="text-2xl font-bold text-[var(--ink-600)]">{data.summary.skipped}</p>
+                <p className="text-xs text-[var(--ink-500)]">Ya optimizados</p>
+              </div>
+              {!data.dryRun && Number(data.summary.savedMB) > 0 && (
+                <div className="rounded-xl bg-white/70 px-4 py-3 text-center">
+                  <p className="text-2xl font-bold text-[#4e6f2a]">{data.summary.savedMB} MB</p>
+                  <p className="text-xs text-[var(--ink-500)]">Espacio ahorrado</p>
+                </div>
+              )}
+            </div>
+
+            {data.results.filter((r) => r.status !== "skipped").length > 0 && (
+              <details className="rounded-xl border border-[#d8d2b4] bg-white/50">
+                <summary className="cursor-pointer px-4 py-2.5 text-sm font-medium text-[var(--ink-700)]">
+                  Ver detalle ({data.results.filter((r) => r.status !== "skipped").length} archivos)
+                </summary>
+                <div className="max-h-64 overflow-y-auto px-4 pb-3 space-y-1">
+                  {data.results
+                    .filter((r) => r.status !== "skipped")
+                    .map((r, i) => (
+                      <div key={i} className="flex items-center gap-2 text-xs">
+                        <span className={r.status === "converted" ? "text-[#4e6f2a]" : "text-red-600"}>
+                          {r.status === "converted" ? "✓" : "✗"}
+                        </span>
+                        <span className="truncate text-[var(--ink-700)]">{r.doflin}</span>
+                        <span className="text-[var(--ink-400)]">({r.field})</span>
+                        {r.savedKB > 0 && (
+                          <span className="ml-auto text-[#4e6f2a] font-medium">-{r.savedKB}KB</span>
+                        )}
+                        {r.reason && <span className="ml-auto text-[var(--ink-400)]">{r.reason}</span>}
+                      </div>
+                    ))}
+                </div>
+              </details>
+            )}
+
+            {data.summary.converted === 0 && data.summary.errors === 0 && (
+              <p className="text-sm text-[#4e6f2a] font-medium">
+                ✓ Todas las imágenes ya están en WebP o SVG. No hay nada que convertir.
+              </p>
+            )}
+          </div>
+        )}
+      </CardContent>
+    </Card>
   );
 }
