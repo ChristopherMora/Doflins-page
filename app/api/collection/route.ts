@@ -7,16 +7,18 @@ import { getCollection } from "@/lib/server/reveal-service";
 export const revalidate = 60;
 
 export async function GET(): Promise<NextResponse> {
+  const cacheHeaders = { "Cache-Control": "public, s-maxage=60, stale-while-revalidate=120" };
+
   try {
     const collection = await getCollection();
 
-    return NextResponse.json({ status: "ok", collection });
+    return NextResponse.json({ status: "ok", collection }, { headers: cacheHeaders });
   } catch {
     return NextResponse.json({
       status: "ok",
       collection: FALLBACK_COLLECTION,
       source: "fallback",
       message: "Colección cargada en modo respaldo temporal.",
-    });
+    }, { headers: cacheHeaders });
   }
 }

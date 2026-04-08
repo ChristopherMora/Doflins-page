@@ -665,6 +665,7 @@ export function RevealExperience({
                         fallbackSrc={FALLBACK_DOFLIN_IMAGE}
                         alt={item.name}
                         rarity={item.rarity}
+                        eager={index < 8}
                         imageClassName={activeUniverse === "mega"
                           ? "h-[200px] w-[200px] sm:h-[220px] sm:w-[220px] mx-auto"
                           : "h-[132px] w-[132px] sm:h-[145px] sm:w-[145px] mx-auto"

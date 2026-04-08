@@ -23,6 +23,8 @@ interface Figure3DProps {
   enableModelControls?: boolean;
   autoRotateModel?: boolean;
   lazyModel?: boolean;
+  /** Mark as high-priority (preload) for above-the-fold cards */
+  eager?: boolean;
 }
 
 let modelViewerLoader: Promise<void> | null = null;
@@ -48,11 +50,13 @@ function SmartImage({
   fallbackSrc,
   alt,
   className,
+  eager,
 }: {
   src: string;
   fallbackSrc: string;
   alt: string;
   className?: string;
+  eager?: boolean;
 }): React.JSX.Element {
   const [failedSrc, setFailedSrc] = useState<string | null>(null);
   const hasError = failedSrc === src;
@@ -64,6 +68,9 @@ function SmartImage({
       alt={alt}
       width={700}
       height={700}
+      sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 220px"
+      priority={eager}
+      loading={eager ? undefined : "lazy"}
       className={cn(className)}
       onError={() => setFailedSrc(src)}
     />
@@ -161,6 +168,7 @@ export function Figure3D({
   enableModelControls = false,
   autoRotateModel = false,
   lazyModel = true,
+  eager = false,
 }: Figure3DProps): React.JSX.Element {
   const rarityColor = CATALOG_RARITY_CONFIG[toCatalogRarity(rarity)].color;
   const [viewerReady, setViewerReady] = useState(false);
@@ -308,6 +316,7 @@ export function Figure3D({
               src={src}
               fallbackSrc={fallbackSrc}
               alt={alt}
+              eager={eager}
               className={cn(
                 "pointer-events-none absolute inset-0 z-10 mx-auto h-full max-h-[260px] w-full object-contain drop-shadow-[0_22px_30px_rgba(44,50,23,0.26)] [transform:translateZ(36px)]",
                 imageClassName,
@@ -326,6 +335,7 @@ export function Figure3D({
             src={src}
             fallbackSrc={fallbackSrc}
             alt={alt}
+            eager={eager}
             className="h-full w-full object-cover"
           />
         </div>
