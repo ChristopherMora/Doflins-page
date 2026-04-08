@@ -9,9 +9,7 @@ import {
   BoltIcon,
   ChatBubbleLeftRightIcon,
   CheckCircleIcon,
-  ClipboardDocumentIcon,
   ClockIcon,
-  EnvelopeIcon,
   ExclamationTriangleIcon,
   FireIcon,
   HeartIcon,
@@ -24,7 +22,6 @@ import {
   ShoppingCartIcon,
   SparklesIcon,
   Squares2X2Icon,
-  TrashIcon,
 } from "@heroicons/react/24/solid";
 
 import { Badge } from "@/components/ui/badge";
@@ -39,14 +36,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+
 
 import {
   BEST_SELLER_HANDLES,
@@ -57,9 +47,7 @@ import {
   FREE_GIFT_MIN_SUBTOTAL,
   FREE_GIFT_PROMO_LABEL,
   LOW_STOCK_THRESHOLD,
-  SHOPPING_FAQ_ITEMS,
   SUPPORT_WHATSAPP_URL,
-  TRUST_PROMISES,
   UNIVERSE_LABELS,
   getPackTier,
 } from "./shop-constants";
@@ -119,26 +107,10 @@ export function ShopifyBuyExperience(): React.JSX.Element {
     setShopSearch,
     cart,
     cartItemCount,
-    isCartOpen,
-    setIsCartOpen,
-    isLoadingCart,
     isMutatingCart,
-    mutatingLineIds,
     addToCart,
-    updateLineQuantity,
-    removeLine,
-    hasCartLines,
     totals,
-    discountCode,
     setDiscountCode,
-    applyDiscount,
-    goToCheckout,
-    giftNote,
-    setGiftNote,
-    showCartQR,
-    setShowCartQR,
-    cartRecoveryLinks,
-    copyRecoveryLink,
     freeGiftProgress,
     pricingCurrencyCode,
     selectedProduct,
@@ -148,7 +120,6 @@ export function ShopifyBuyExperience(): React.JSX.Element {
     getSelectedVariant,
     getProductQty,
     setProductQty,
-    getLineQtyAvailable,
     selectedModalVariant,
     selectedModalSoldOut,
     selectedModalStock,
@@ -222,332 +193,17 @@ export function ShopifyBuyExperience(): React.JSX.Element {
               </Button>
             </div>
 
-            <Sheet open={isCartOpen} onOpenChange={setIsCartOpen}>
-              <SheetTrigger asChild>
-                <Button className="h-12 shrink-0 flex-col gap-0 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] px-5 leading-none">
-                  <span className="flex items-center gap-1.5 text-sm font-semibold">
-                    <ShoppingCartIcon className="h-4 w-4" /> Carrito ({cartItemCount})
-                  </span>
-                  {cartItemCount > 0 ? (
-                    <span className="text-[0.68rem] font-medium opacity-85">{totals.total}</span>
-                  ) : null}
-                </Button>
-              </SheetTrigger>
-              <SheetContent className="flex h-full w-[min(100vw,460px)] flex-col p-0" side="right">
-                <div className="flex-1 space-y-3 overflow-y-auto p-5 pb-28">
-                  <SheetHeader className="space-y-0.5">
-                    <SheetTitle>Tu carrito DOFLINS</SheetTitle>
-                    <SheetDescription>
-                      {cartItemCount > 0
-                        ? `${cartItemCount} pack${cartItemCount === 1 ? "" : "s"} · ${totals.total}`
-                        : "Agrega packs y paga en Shopify Checkout"}
-                    </SheetDescription>
-                  </SheetHeader>
-
-                  {isLoadingCart ? (
-                    <div className="flex items-center gap-2 text-sm text-[var(--ink-700)]">
-                      <ArrowPathIcon className="h-4 w-4 animate-spin text-[var(--shop-primary-from)]" />
-                      <span className="skeleton-shimmer inline-block h-4 w-28 rounded" style={{ background: 'var(--shop-skeleton-base)' }} />
-                    </div>
-                  ) : null}
-
-                  {!isLoadingCart && (!cart || cart.lines.length === 0) ? (
-                    <div className="rounded-2xl border p-5 text-center" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
-                      <ShoppingCartIcon className="mx-auto mb-2 h-7 w-7 text-[var(--ink-400)]" />
-                      <p className="text-sm font-medium text-[var(--ink-700)]">Tu carrito está vacío</p>
-                      <p className="mt-0.5 text-xs text-[var(--ink-500)]">Elige un pack para comenzar tu colección</p>
-                    </div>
-                  ) : null}
-
-                  {!isLoadingCart && hasCartLines ? (
-                    <div className="flex items-center gap-1 text-[0.7rem] font-medium">
-                      {(["Carrito", "Pago", "Confirmación"] as const).map((step, i) => (
-                        <span key={step} className="flex items-center gap-1">
-                          {i > 0 && <span className="text-[var(--ink-300)] text-sm leading-none">›</span>}
-                          <span className={`rounded-full px-2 py-0.5 ${
-                            i < 2
-                              ? "bg-[var(--shop-chip-bg)] text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]"
-                              : "bg-[var(--shop-control-bg)] text-[var(--ink-400)] ring-1 ring-[var(--shop-control-border)]"
-                          }`}>{i + 1}. {step}</span>
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  {cart?.lines.map((line) => {
-                    const isFreeLine = Number(line.pricePerUnit.amount) <= 0;
-                    const isMutating = mutatingLineIds.has(line.id);
-
-                    return (
-                      <article key={line.id} className={`rounded-2xl border p-3 transition-opacity ${
-                        isMutating ? "opacity-60" : ""
-                      } ${
-                        isFreeLine
-                          ? "border-[var(--shop-chip-ring)] bg-[var(--shop-chip-bg)]"
-                          : "border-[var(--shop-card-border)] bg-[var(--shop-control-bg)]"
-                      }`}>
-                        {isFreeLine ? (
-                          <p className="mb-2 flex items-center gap-1.5 rounded-lg px-2 py-0.5 text-[0.68rem] font-bold uppercase tracking-[0.08em] text-[var(--shop-chip-text)]">
-                            🎁 Regalo gratis — se agrega al checkout
-                          </p>
-                        ) : null}
-                        <div className="flex items-center gap-3">
-                          {line.imageUrl ? (
-                            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-skeleton-base)" }}>
-                              <Image
-                                src={line.imageUrl}
-                                alt={line.imageAlt ?? line.productTitle}
-                                fill
-                                sizes="56px"
-                                className="object-cover"
-                              />
-                            </div>
-                          ) : null}
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold leading-tight text-[var(--ink-900)]">{line.productTitle}</p>
-                                {line.variantTitle && line.variantTitle !== "Default Title" ? (
-                                  <p className="text-xs text-[var(--ink-500)]">{line.variantTitle}</p>
-                                ) : null}
-                                <p className="mt-0.5">
-                                  {isFreeLine ? (
-                                    <span className="rounded-full bg-[var(--shop-chip-bg)] px-2 py-0.5 text-xs font-bold text-[var(--shop-chip-text)] ring-1 ring-[var(--shop-chip-ring)]">Gratis</span>
-                                  ) : (
-                                    <span className="text-sm font-semibold text-[var(--ink-900)]">{formatMoney(line.lineTotal)}</span>
-                                  )}
-                                </p>
-                                {!isFreeLine && (() => {
-                                  const avail = getLineQtyAvailable(line.merchandiseId);
-                                  return avail !== null && avail > 0 && avail <= 5 ? (
-                                    <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold text-amber-700">
-                                      <ExclamationTriangleIcon className="h-3 w-3" /> Solo {avail} restantes
-                                    </p>
-                                  ) : null;
-                                })()}
-                              </div>
-                              {!isFreeLine ? (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-7 w-7 shrink-0 p-0 text-[var(--ink-400)] hover:text-red-500"
-                                  disabled={isMutating}
-                                  onClick={() => void removeLine(line.id)}
-                                >
-                                  <TrashIcon className="h-3.5 w-3.5" />
-                                </Button>
-                              ) : (
-                                <LockClosedIcon className="h-4 w-4 shrink-0 text-[var(--shop-chip-text)] opacity-50" />
-                              )}
-                            </div>
-                            {!isFreeLine ? (
-                              <div className="mt-2 flex items-center gap-1.5">
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  className="h-7 w-7 p-0"
-                                  disabled={isMutating || line.quantity <= 1}
-                                  onClick={() => void updateLineQuantity(line.id, Math.max(1, line.quantity - 1))}
-                                >
-                                  <MinusIcon className="h-3.5 w-3.5" />
-                                </Button>
-                                <span className="min-w-[1.75rem] text-center text-sm font-bold text-[var(--ink-900)]">{line.quantity}</span>
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  className="h-7 w-7 p-0"
-                                  disabled={isMutating}
-                                  onClick={() => void updateLineQuantity(line.id, line.quantity + 1)}
-                                >
-                                  <PlusIcon className="h-3.5 w-3.5" />
-                                </Button>
-                                {isMutating ? (
-                                  <ArrowPathIcon className="h-3.5 w-3.5 animate-spin text-[var(--shop-primary-from)]" />
-                                ) : null}
-                              </div>
-                            ) : null}
-                          </div>
-                        </div>
-                      </article>
-                    );
-                  })}
-
-                  {freeGiftProgress.enabled && cart?.lines.length ? (
-                    <div className="overflow-hidden rounded-2xl border" style={{ borderColor: "var(--shop-chip-ring)", background: "var(--shop-chip-bg)" }}>
-                      <div className="h-1.5 w-full" style={{ background: "var(--shop-card-border)" }}>
-                        <div
-                          className="h-full bg-[linear-gradient(90deg,var(--shop-primary-from),var(--shop-primary-to))] transition-all duration-500"
-                          style={{ width: `${freeGiftProgress.percent}%` }}
-                        />
-                      </div>
-                      <div className="px-4 py-3">
-                        <p className="text-sm font-semibold text-[var(--shop-chip-text)]">
-                          {freeGiftProgress.unlocked
-                            ? "🎁 ¡Regalo gratis desbloqueado!"
-                            : `🎁 Faltan ${formatCurrencyAmount(freeGiftProgress.remaining, pricingCurrencyCode)} para tu regalo gratis`}
-                        </p>
-                        <p className="mt-0.5 text-xs text-[var(--ink-600)]">
-                          {formatCurrencyAmount(freeGiftProgress.paidSubtotal, pricingCurrencyCode)} de{" "}
-                          {formatCurrencyAmount(FREE_GIFT_MIN_SUBTOTAL ?? 0, pricingCurrencyCode)}
-                        </p>
-                      </div>
-                    </div>
-                  ) : null}
-
-                  <div className="space-y-2 rounded-2xl border p-4 text-sm text-[var(--ink-700)]" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
-                    <p className="flex items-center justify-between">
-                      <span>Subtotal</span>
-                      <strong className="text-[var(--ink-900)]">{totals.subtotal}</strong>
-                    </p>
-                    <p className="flex items-center justify-between">
-                      <span>Impuestos estimados</span>
-                      <strong className="text-[var(--ink-900)]">{totals.tax}</strong>
-                    </p>
-                    <p className="flex items-center justify-between text-base">
-                      <span>Total estimado</span>
-                      <strong className="text-[var(--ink-900)]">{totals.total}</strong>
-                    </p>
-                  </div>
-
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <label htmlFor="discount-code" className="sr-only">Código de descuento</label>
-                      <Input
-                        id="discount-code"
-                        value={discountCode}
-                        onChange={(event) => setDiscountCode(event.target.value)}
-                        placeholder="Cupón"
-                        disabled={isMutatingCart}
-                      />
-                    </div>
-                    <Button variant="secondary" disabled={isMutatingCart || !discountCode.trim()} onClick={() => void applyDiscount()}>
-                      Aplicar
-                    </Button>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label htmlFor="gift-note" className="text-xs font-medium text-[var(--ink-700)]">
-                      🎁 ¿Es un regalo? Agrega una nota (opcional)
-                    </label>
-                    <textarea
-                      id="gift-note"
-                      rows={2}
-                      value={giftNote}
-                      onChange={(event) => setGiftNote(event.target.value)}
-                      placeholder="Ej: ¡Feliz cumpleaños! Esta figura es especial para ti."
-                      className="w-full resize-none rounded-xl border border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] px-3 py-2.5 text-sm text-[var(--ink-900)] placeholder:text-[var(--ink-500)] outline-none focus:ring-1 focus:ring-[var(--shop-primary-from)]"
-                      maxLength={280}
-                    />
-                    {giftNote.length > 0 ? (
-                      <p className="text-right text-xs text-[var(--ink-600)]">{giftNote.length}/280</p>
-                    ) : null}
-                  </div>
-
-                  <div className="space-y-3 rounded-2xl border border-[#d4ddc2] bg-[#f3f8e7] p-4 text-sm text-[var(--ink-700)]">
-                    <p className="font-semibold text-[var(--ink-900)]">Compra con confianza</p>
-                    <div className="space-y-2">
-                      {TRUST_PROMISES.map((promise) => {
-                        const Icon = promise.icon;
-                        return (
-                          <div key={promise.title} className="rounded-xl border border-[#d2ddba] bg-white/70 p-3">
-                            <p className="flex items-center gap-2 font-medium text-[var(--ink-900)]">
-                              <Icon className="h-4 w-4 text-[var(--shop-primary-from)]" />
-                              {promise.title}
-                            </p>
-                            <p className="mt-1 text-xs text-[var(--ink-700)]">{promise.detail}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
-                    <p className="flex items-center gap-2 text-sm">
-                      <LockClosedIcon className="h-4 w-4 text-[var(--shop-primary-from)]" />
-                      No guardamos datos de tarjeta en DOFLINS.
-                    </p>
-                    <a
-                      className="inline-flex items-center gap-2 font-medium text-[var(--ink-900)] underline underline-offset-2"
-                      href={SUPPORT_WHATSAPP_URL}
-                      rel="noreferrer"
-                      target="_blank"
-                    >
-                      <ChatBubbleLeftRightIcon className="h-4 w-4 text-[var(--shop-primary-from)]" />
-                      Hablar con soporte por WhatsApp
-                    </a>
-                  </div>
-
-                  <div className="space-y-2 rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
-                    <p className="text-sm font-semibold text-[var(--ink-900)]">Preguntas rápidas antes de pagar</p>
-                    <div className="space-y-2">
-                      {SHOPPING_FAQ_ITEMS.map((faq) => (
-                        <details key={faq.question} className="rounded-xl border px-3 py-2 text-sm" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-skeleton-base)" }}>
-                          <summary className="cursor-pointer font-medium text-[var(--ink-900)]">{faq.question}</summary>
-                          <p className="pt-2 text-[var(--ink-700)]">{faq.answer}</p>
-                        </details>
-                      ))}
-                    </div>
-                  </div>
-
-                  {cartRecoveryLinks ? (
-                    <div className="space-y-3 rounded-2xl border p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
-                      <p className="text-sm font-semibold text-[var(--ink-900)]">Recupera tu carrito cuando quieras</p>
-                      <p className="text-sm text-[var(--ink-700)]">Si pausas la compra, guárdalo y retómalo después desde tu enlace.</p>
-                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-                        <Button asChild size="sm" variant="secondary" className="h-10">
-                          <a href={cartRecoveryLinks.whatsapp} rel="noreferrer" target="_blank">
-                            <ChatBubbleLeftRightIcon className="h-4 w-4" /> WhatsApp
-                          </a>
-                        </Button>
-                        <Button asChild size="sm" variant="secondary" className="h-10">
-                          <a href={cartRecoveryLinks.email}>
-                            <EnvelopeIcon className="h-4 w-4" /> Email
-                          </a>
-                        </Button>
-                        <Button size="sm" variant="secondary" className="h-10" onClick={() => void copyRecoveryLink()}>
-                          <ClipboardDocumentIcon className="h-4 w-4" /> Copiar link
-                        </Button>
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-
-                <div className="border-t p-4" style={{ borderColor: "var(--shop-card-border)", background: "var(--shop-control-bg)" }}>
-                  <div className="mb-2 flex items-center justify-between text-sm text-[var(--ink-700)]">
-                    <span>Total estimado</span>
-                    <strong className="text-base text-[var(--ink-900)]">{totals.total}</strong>
-                  </div>
-                  <Button className="h-12 w-full bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))]" disabled={isMutatingCart || !cart?.lines.length} onClick={() => void goToCheckout()}>
-                    {isMutatingCart ? <ArrowPathIcon className="h-5 w-5 animate-spin" /> : <ShoppingCartIcon className="h-5 w-5" />}
-                    Pagar en Shopify
-                  </Button>
-                  {cart?.checkoutUrl && (
-                    <div className="mt-2 space-y-1">
-                      <button
-                        onClick={() => setShowCartQR((v) => !v)}
-                        className="w-full rounded-xl border border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] py-2 text-xs font-medium text-[var(--ink-700)] hover:opacity-80 transition flex items-center justify-center gap-1.5"
-                      >
-                        <span>📲</span>
-                        {showCartQR ? "Ocultar QR" : "Ver QR del carrito"}
-                      </button>
-                      {showCartQR && (
-                        <div className="flex justify-center py-2">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={`https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(cart.checkoutUrl)}`}
-                            alt="QR del carrito"
-                            width={160}
-                            height={160}
-                            className="rounded-xl border border-[var(--shop-card-border)]"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  )}
-                  <p className="mt-2 flex items-center justify-center gap-1.5 text-xs text-[var(--ink-700)]">
-                    <LockClosedIcon className="h-3.5 w-3.5 text-[var(--shop-primary-from)]" />
-                    Pago protegido en Shopify Checkout
-                  </p>
-                </div>
-              </SheetContent>
-            </Sheet>
+            <Button
+              className="h-12 shrink-0 flex-col gap-0 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] px-5 leading-none"
+              onClick={() => window.dispatchEvent(new Event("doflins:open-cart"))}
+            >
+              <span className="flex items-center gap-1.5 text-sm font-semibold">
+                <ShoppingCartIcon className="h-4 w-4" /> Carrito ({cartItemCount})
+              </span>
+              {cartItemCount > 0 ? (
+                <span className="text-[0.68rem] font-medium opacity-85">{totals.total}</span>
+              ) : null}
+            </Button>
           </div>
 
           {/* ── Tira: promo + trust ── */}
@@ -835,7 +491,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
                       type="button"
                       className="font-mono font-bold text-[var(--shop-primary-from)] underline"
                       onClick={() => {
-                        setIsCartOpen(true);
+                        window.dispatchEvent(new Event("doflins:open-cart"));
                         setDiscountCode(BUNDLE_PROMO_CODE);
                       }}
                     >
@@ -1219,7 +875,7 @@ export function ShopifyBuyExperience(): React.JSX.Element {
             type="button"
             aria-label={`Abrir carrito — ${cartItemCount} item${cartItemCount === 1 ? "" : "s"}`}
             className="flex h-14 w-14 items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] text-white shadow-[0_8px_24px_rgba(50,80,25,0.42)] transition hover:brightness-110 active:scale-95 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--shop-primary-from)]"
-            onClick={() => setIsCartOpen(true)}
+            onClick={() => window.dispatchEvent(new Event("doflins:open-cart"))}
           >
             <ShoppingCartIcon className="h-6 w-6" />
             <span className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-500 text-xs font-bold text-white ring-2 ring-white">

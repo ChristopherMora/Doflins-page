@@ -102,7 +102,6 @@ export function useShopExperience() {
   const [selectedVariantByProduct, setSelectedVariantByProduct] = useState<Record<string, string>>({});
   const [discountCode, setDiscountCode] = useState("");
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
-  const [isCartOpen, setIsCartOpen] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(true);
   const [isLoadingCart, setIsLoadingCart] = useState(true);
   const [isMutatingCart, setIsMutatingCart] = useState(false);
@@ -482,12 +481,6 @@ export function useShopExperience() {
   }, [activeUniverse, loadProducts]);
 
   useEffect(() => {
-    const onOpenCart = () => setIsCartOpen(true);
-    window.addEventListener("doflins:open-cart", onOpenCart);
-    return () => window.removeEventListener("doflins:open-cart", onOpenCart);
-  }, []);
-
-  useEffect(() => {
     if (isLoadingCart) return;
     if (cart?.lines.length) { writeCartSnapshot(cart); return; }
     clearCartSnapshot();
@@ -495,7 +488,8 @@ export function useShopExperience() {
 
   const applyCartPayload = useCallback((nextCart: ShopCart) => {
     setCart(nextCart);
-    setIsCartOpen(true);
+    window.dispatchEvent(new Event("doflins:cart-updated"));
+    window.dispatchEvent(new Event("doflins:open-cart"));
   }, []);
 
   const getSelectedVariant = useCallback(
@@ -656,7 +650,6 @@ export function useShopExperience() {
       if (giftNote.trim()) {
         url += (url.includes("?") ? "&" : "?") + `note=${encodeURIComponent(giftNote.trim())}`;
       }
-      setIsCartOpen(false);
       window.location.href = url;
     } catch (error) {
       setFeedbackMessage(error instanceof Error ? error.message : "No se pudo abrir checkout.");
@@ -857,8 +850,6 @@ export function useShopExperience() {
     // Cart
     cart,
     cartItemCount,
-    isCartOpen,
-    setIsCartOpen,
     isLoadingCart,
     isMutatingCart,
     mutatingLineIds,

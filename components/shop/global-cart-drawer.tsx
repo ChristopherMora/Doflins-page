@@ -84,6 +84,16 @@ export function GlobalCartDrawer() {
   const cartRef = useRef<ShopCart | null>(null);
   cartRef.current = cart;
 
+  /** Recalculate cart subtotal & total from lines (used for optimistic updates). */
+  const recalcCartTotals = useCallback((c: ShopCart): ShopCart => {
+    const subtotalNum = c.lines.reduce((sum, l) => sum + Number(l.lineTotal.amount), 0);
+    return {
+      ...c,
+      subtotal: { ...c.subtotal, amount: subtotalNum.toFixed(2) },
+      total: { ...c.total, amount: subtotalNum.toFixed(2) },
+    };
+  }, []);
+
   const loadCart = useCallback(async () => {
     setIsLoading(true);
     try {
@@ -97,31 +107,43 @@ export function GlobalCartDrawer() {
     }
   }, []);
 
+  const loadCartRef = useRef(loadCart);
+  loadCartRef.current = loadCart;
+  const loadDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  /** Debounced cart load — coalesces rapid open + updated events into a single fetch. */
+  const debouncedLoadCart = useCallback(() => {
+    if (loadDebounceRef.current) clearTimeout(loadDebounceRef.current);
+    loadDebounceRef.current = setTimeout(() => {
+      void loadCartRef.current();
+    }, 50);
+  }, []);
+
   // Abrir desde cualquier parte de la app
   useEffect(() => {
     const onOpen = () => {
       setIsOpen(true);
-      void loadCart();
+      debouncedLoadCart();
     };
     window.addEventListener("doflins:open-cart", onOpen);
     return () => window.removeEventListener("doflins:open-cart", onOpen);
-  }, [loadCart]);
+  }, [debouncedLoadCart]);
 
   // Refrescar cuando se agrega algo al carrito
   useEffect(() => {
     const onUpdated = () => {
-      void loadCart();
+      debouncedLoadCart();
     };
     window.addEventListener("doflins:cart-updated", onUpdated);
     return () => window.removeEventListener("doflins:cart-updated", onUpdated);
-  }, [loadCart]);
+  }, [debouncedLoadCart]);
 
   const updateQuantity = useCallback(async (lineId: string, quantity: number) => {
     const prev = cartRef.current;
     setMutatingLineIds((s) => new Set(s).add(lineId));
     setCart((c) =>
       c
-        ? {
+        ? recalcCartTotals({
             ...c,
             lines: c.lines.map((l) =>
               l.id === lineId
@@ -137,7 +159,7 @@ export function GlobalCartDrawer() {
                   }
                 : l,
             ),
-          }
+          })
         : c,
     );
     try {
@@ -157,13 +179,13 @@ export function GlobalCartDrawer() {
         return next;
       });
     }
-  }, []);
+  }, [recalcCartTotals]);
 
   const removeLine = useCallback(async (lineId: string) => {
     const prev = cartRef.current;
     setMutatingLineIds((s) => new Set(s).add(lineId));
     setCart((c) =>
-      c ? { ...c, lines: c.lines.filter((l) => l.id !== lineId) } : c,
+      c ? recalcCartTotals({ ...c, lines: c.lines.filter((l) => l.id !== lineId) }) : c,
     );
     try {
       const res = await fetch("/api/cart/lines/remove", {
@@ -182,7 +204,7 @@ export function GlobalCartDrawer() {
         return next;
       });
     }
-  }, []);
+  }, [recalcCartTotals]);
 
   const applyDiscount = useCallback(async () => {
     const code = discountCode.trim();
