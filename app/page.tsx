@@ -17,7 +17,6 @@ import { HowItWorks } from "@/components/home/how-it-works";
 import { TikTokSection } from "@/components/home/tiktok-section";
 import { HeroFloatingFigures } from "@/components/home/hero-floating-figures";
 import { ShopifyBuyExperienceWrapper } from "@/components/home/shopify-buy-wrapper";
-import { DailyFigureWrapper } from "@/components/home/daily-figure-wrapper";
 import { getDb } from "@/lib/db/client";
 import { doflins } from "@/lib/db/schema";
 
@@ -129,11 +128,6 @@ export default async function Home(): Promise<React.JSX.Element> {
             {/* ── Universos ── */}
             <LazySection>
               <UniverseCards initialFeatured={featured} />
-            </LazySection>
-
-            {/* ── Figura del Día ── */}
-            <LazySection>
-              <DailyFigureWrapper />
             </LazySection>
 
             {/* ── Tienda / Packs ── */}
