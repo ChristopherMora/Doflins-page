@@ -11,6 +11,7 @@ export interface NavItem {
 
 /** Ítems del nav de escritorio (sin íconos — site-header los asigna) */
 export const DESKTOP_NAV_ITEMS: NavItem[] = [
+  { href: "/shop", label: "Tienda" },
   { href: "/reveal?universe=animals", label: "Catálogo" },
   { href: "/coleccion", label: "Colección" },
 ];
@@ -18,7 +19,7 @@ export const DESKTOP_NAV_ITEMS: NavItem[] = [
 /** Ítems del bottom nav móvil */
 export const MOBILE_NAV_ITEMS: NavItem[] = [
   { href: "/", label: "Inicio" },
-  { href: "/reveal?universe=animals", label: "Catálogo" },
+  { href: "/shop", label: "Tienda" },
   { href: "/coleccion", label: "Colección" },
   { href: "/perfil", label: "Perfil" },
 ];

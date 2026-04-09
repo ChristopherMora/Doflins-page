@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { HomeIcon, RectangleStackIcon, Squares2X2Icon, UserCircleIcon } from "@heroicons/react/24/solid";
+import { HomeIcon, RectangleStackIcon, ShoppingBagIcon, Squares2X2Icon, UserCircleIcon } from "@heroicons/react/24/solid";
 
 import { MOBILE_NAV_ITEMS } from "@/lib/constants/nav";
 
 const ICON_MAP: Record<string, React.ElementType> = {
   "Inicio": HomeIcon,
+  "Tienda": ShoppingBagIcon,
   "Catálogo": Squares2X2Icon,
   "Colección": RectangleStackIcon,
   "Perfil": UserCircleIcon,

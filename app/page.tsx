@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import {
   ShieldCheckIcon,
   SparklesIcon,
-  Squares2X2Icon,
+  ShoppingCartIcon,
 } from "@heroicons/react/24/solid";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
@@ -100,8 +100,8 @@ export default async function Home(): Promise<React.JSX.Element> {
                   </Link>
                 </Button>
                 <Button asChild variant="secondary" size="lg" className="h-13 min-h-[48px] rounded-full px-8 text-base">
-                  <Link href="/coleccion">
-                    <Squares2X2Icon className="h-5 w-5" /> Ver colección
+                  <Link href="/shop">
+                    <ShoppingCartIcon className="h-5 w-5" /> Ver tienda
                   </Link>
                 </Button>
               </div>

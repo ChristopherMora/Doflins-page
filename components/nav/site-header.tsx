@@ -187,6 +187,7 @@ export function SiteHeader(): React.JSX.Element {
         : dark ? "0 8px 20px rgba(50,120,40,0.30)" : "0 4px 14px rgba(50,120,40,0.25)";
 
   const NAV_ICON_MAP: Record<string, React.ElementType> = {
+    "Tienda": ShoppingBagIcon,
     "Catálogo": Squares2X2Icon,
     "Colección": RectangleStackIcon,
   };
