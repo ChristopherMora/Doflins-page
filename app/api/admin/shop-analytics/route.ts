@@ -26,7 +26,10 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   const sinceWhere = gte(shopEvents.createdAt, since);
 
-  const [
+  let funnelData, dailyEvents, topProducts, topSearches, hourlyActivity, sessionFunnels, universeBreakdown;
+
+  try {
+  [
     funnelData,
     dailyEvents,
     topProducts,
@@ -133,6 +136,27 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       )
       .groupBy(shopEvents.universe),
   ]);
+  } catch (err) {
+    // Table likely doesn't exist yet — return empty data
+    const isTableMissing =
+      err instanceof Error && /shop_events|doesn't exist|ER_NO_SUCH_TABLE/i.test(err.message);
+    if (isTableMissing) {
+      return NextResponse.json({
+        days,
+        funnel: [],
+        funnelTotals: {},
+        dailyEvents: [],
+        productConversion: [],
+        topSearches: [],
+        hourlyActivity: [],
+        universeBreakdown: [],
+        totalSessions: 0,
+        overallConversion: 0,
+        _notice: "La tabla shop_events aún no existe. Ejecuta: npm run db:generate && npm run db:migrate",
+      });
+    }
+    throw err;
+  }
 
   // Build funnel map
   const funnelMap = Object.fromEntries(

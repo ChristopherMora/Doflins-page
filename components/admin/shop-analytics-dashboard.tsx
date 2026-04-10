@@ -61,6 +61,7 @@ interface AnalyticsData {
   universeBreakdown: UniverseBreakdown[];
   totalSessions: number;
   overallConversion: number;
+  _notice?: string;
 }
 
 const FUNNEL_COLORS = [
@@ -285,6 +286,13 @@ export function ShopAnalyticsDashboard(): React.JSX.Element {
             Embudo de compra y comportamiento de usuarios
           </p>
         </div>
+
+        {data._notice ? (
+          <div className="w-full rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+            ⚠️ {data._notice}
+          </div>
+        ) : null}
+
         <div className="flex items-center gap-2">
           {[7, 14, 30, 60].map((d) => (
             <button
