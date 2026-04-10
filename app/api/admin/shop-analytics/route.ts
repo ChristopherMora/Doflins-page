@@ -26,7 +26,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   const sinceWhere = gte(shopEvents.createdAt, since);
 
-  let funnelData, dailyEvents, topProducts, topSearches, hourlyActivity, sessionFunnels, universeBreakdown;
+  let funnelData, dailyEvents, topProducts, topSearches, hourlyActivity, sessionFunnels, universeBreakdown,
+      trafficSources, deviceBreakdown, scrollDepthDist, webVitalsData, visitorTypes, cartTiming;
 
   try {
   [
@@ -37,6 +38,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     hourlyActivity,
     sessionFunnels,
     universeBreakdown,
+    trafficSources,
+    deviceBreakdown,
+    scrollDepthDist,
+    webVitalsData,
+    visitorTypes,
+    cartTiming,
   ] = await Promise.all([
     // 1. Funnel counts: each step
     db
@@ -135,6 +142,104 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         ),
       )
       .groupBy(shopEvents.universe),
+
+    // 8. Traffic sources (UTM breakdown)
+    db
+      .select({
+        source: sql<string>`COALESCE(${shopEvents.utmSource}, 'directo')`,
+        medium: sql<string>`COALESCE(${shopEvents.utmMedium}, 'none')`,
+        campaign: sql<string>`COALESCE(${shopEvents.utmCampaign}, '')`,
+        count: count(),
+        sessions: sql<number>`COUNT(DISTINCT ${shopEvents.sessionId})`,
+      })
+      .from(shopEvents)
+      .where(sinceWhere)
+      .groupBy(
+        sql`COALESCE(${shopEvents.utmSource}, 'directo')`,
+        sql`COALESCE(${shopEvents.utmMedium}, 'none')`,
+        sql`COALESCE(${shopEvents.utmCampaign}, '')`,
+      )
+      .orderBy(sql`count(*) DESC`)
+      .limit(20),
+
+    // 9. Device type distribution
+    db
+      .select({
+        deviceType: sql<string>`COALESCE(${shopEvents.deviceType}, 'unknown')`,
+        count: count(),
+        sessions: sql<number>`COUNT(DISTINCT ${shopEvents.sessionId})`,
+      })
+      .from(shopEvents)
+      .where(sinceWhere)
+      .groupBy(sql`COALESCE(${shopEvents.deviceType}, 'unknown')`),
+
+    // 10. Scroll depth distribution
+    db
+      .select({
+        scrollPercent: shopEvents.scrollPercent,
+        count: count(),
+      })
+      .from(shopEvents)
+      .where(
+        and(
+          sinceWhere,
+          sql`${shopEvents.eventType} = 'scroll_depth'`,
+          sql`${shopEvents.scrollPercent} IS NOT NULL`,
+        ),
+      )
+      .groupBy(shopEvents.scrollPercent)
+      .orderBy(shopEvents.scrollPercent),
+
+    // 11. Web vitals (p75 by metric name)
+    db
+      .select({
+        metricName: shopEvents.metricName,
+        p75: sql<string>`CAST(SUBSTRING_INDEX(SUBSTRING_INDEX(GROUP_CONCAT(${shopEvents.metricValue} ORDER BY CAST(${shopEvents.metricValue} AS DECIMAL(10,2))), ',', CEIL(0.75 * COUNT(*))), ',', -1) AS CHAR)`,
+        avg: sql<string>`ROUND(AVG(CAST(${shopEvents.metricValue} AS DECIMAL(10,2))), 1)`,
+        count: count(),
+      })
+      .from(shopEvents)
+      .where(
+        and(
+          sinceWhere,
+          sql`${shopEvents.eventType} = 'web_vital'`,
+          sql`${shopEvents.metricName} IS NOT NULL`,
+        ),
+      )
+      .groupBy(shopEvents.metricName),
+
+    // 12. Returning vs new visitors
+    db
+      .select({
+        visitorType: sql<string>`CASE WHEN ${shopEvents.visitNumber} <= 1 THEN 'new' WHEN ${shopEvents.visitNumber} BETWEEN 2 AND 3 THEN 'returning' ELSE 'loyal' END`,
+        visitors: sql<number>`COUNT(DISTINCT ${shopEvents.visitorId})`,
+        events: count(),
+      })
+      .from(shopEvents)
+      .where(
+        and(
+          sinceWhere,
+          sql`${shopEvents.visitorId} IS NOT NULL`,
+        ),
+      )
+      .groupBy(sql`CASE WHEN ${shopEvents.visitNumber} <= 1 THEN 'new' WHEN ${shopEvents.visitNumber} BETWEEN 2 AND 3 THEN 'returning' ELSE 'loyal' END`),
+
+    // 13. Cart abandonment timing (avg time on page before exit for sessions with cart events)
+    db
+      .select({
+        hasCart: sql<string>`CASE WHEN EXISTS(SELECT 1 FROM shop_events se2 WHERE se2.session_id = ${shopEvents.sessionId} AND se2.shop_event_type = 'add_to_cart') THEN 'with_cart' ELSE 'no_cart' END`,
+        avgDuration: sql<string>`ROUND(AVG(${shopEvents.durationMs}) / 1000, 1)`,
+        count: count(),
+      })
+      .from(shopEvents)
+      .where(
+        and(
+          sinceWhere,
+          sql`${shopEvents.eventType} = 'page_exit'`,
+          sql`${shopEvents.durationMs} IS NOT NULL`,
+        ),
+      )
+      .groupBy(sql`CASE WHEN EXISTS(SELECT 1 FROM shop_events se2 WHERE se2.session_id = ${shopEvents.sessionId} AND se2.shop_event_type = 'add_to_cart') THEN 'with_cart' ELSE 'no_cart' END`),
   ]);
   } catch (err) {
     // Table likely doesn't exist yet — return empty data
@@ -150,6 +255,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
         topSearches: [],
         hourlyActivity: [],
         universeBreakdown: [],
+        trafficSources: [],
+        deviceBreakdown: [],
+        scrollDepthDist: [],
+        webVitals: [],
+        visitorTypes: [],
+        cartTiming: [],
         totalSessions: 0,
         overallConversion: 0,
         _notice: "La tabla shop_events aún no existe. Ejecuta: npm run db:generate && npm run db:migrate",
@@ -213,6 +324,38 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     topSearches,
     hourlyActivity,
     universeBreakdown,
+    trafficSources: trafficSources.map((r) => ({
+      source: r.source,
+      medium: r.medium,
+      campaign: r.campaign,
+      events: Number(r.count),
+      sessions: Number(r.sessions),
+    })),
+    deviceBreakdown: deviceBreakdown.map((r) => ({
+      deviceType: r.deviceType,
+      events: Number(r.count),
+      sessions: Number(r.sessions),
+    })),
+    scrollDepthDist: scrollDepthDist.map((r) => ({
+      percent: Number(r.scrollPercent),
+      count: Number(r.count),
+    })),
+    webVitals: webVitalsData.map((r) => ({
+      name: r.metricName,
+      p75: Number(r.p75),
+      avg: Number(r.avg),
+      samples: Number(r.count),
+    })),
+    visitorTypes: visitorTypes.map((r) => ({
+      type: r.visitorType,
+      visitors: Number(r.visitors),
+      events: Number(r.events),
+    })),
+    cartTiming: cartTiming.map((r) => ({
+      segment: r.hasCart,
+      avgSeconds: Number(r.avgDuration),
+      exits: Number(r.count),
+    })),
     totalSessions: Number(sessionFunnel.shopView),
     overallConversion:
       Number(sessionFunnel.shopView) > 0

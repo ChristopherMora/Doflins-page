@@ -10,6 +10,8 @@ export const dynamic = "force-dynamic";
 
 const shopEventPayloadSchema = z.object({
   sessionId: z.string().trim().min(8).max(64),
+  visitorId: z.string().trim().max(64).optional(),
+  visitNumber: z.number().int().nonnegative().optional(),
   eventType: z.enum([
     "shop_view",
     "product_view",
@@ -27,6 +29,9 @@ const shopEventPayloadSchema = z.object({
     "quick_view_close",
     "promo_click",
     "discount_apply",
+    "scroll_depth",
+    "web_vital",
+    "page_exit",
   ]),
   productHandle: z.string().trim().max(120).optional(),
   productTitle: z.string().trim().max(200).optional(),
@@ -39,6 +44,15 @@ const shopEventPayloadSchema = z.object({
   searchQuery: z.string().trim().max(120).optional(),
   filterValue: z.string().trim().max(80).optional(),
   referrer: z.string().trim().max(200).optional(),
+  utmSource: z.string().trim().max(80).optional(),
+  utmMedium: z.string().trim().max(80).optional(),
+  utmCampaign: z.string().trim().max(120).optional(),
+  deviceType: z.enum(["mobile", "tablet", "desktop"]).optional(),
+  viewportWidth: z.number().int().nonnegative().optional(),
+  scrollPercent: z.number().int().min(0).max(100).optional(),
+  durationMs: z.number().int().nonnegative().optional(),
+  metricName: z.string().trim().max(40).optional(),
+  metricValue: z.string().trim().max(20).optional(),
 });
 
 export async function POST(request: NextRequest): Promise<NextResponse> {

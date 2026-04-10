@@ -551,6 +551,15 @@ export const shopEventTypeEnum = mysqlEnum("shop_event_type", [
   "quick_view_close",
   "promo_click",
   "discount_apply",
+  "scroll_depth",
+  "web_vital",
+  "page_exit",
+]);
+
+export const deviceTypeEnum = mysqlEnum("device_type", [
+  "mobile",
+  "tablet",
+  "desktop",
 ]);
 
 export const shopEvents = mysqlTable(
@@ -558,6 +567,8 @@ export const shopEvents = mysqlTable(
   {
     id: int("id").autoincrement().primaryKey(),
     sessionId: varchar("session_id", { length: 64 }).notNull(),
+    visitorId: varchar("visitor_id", { length: 64 }),
+    visitNumber: int("visit_number"),
     eventType: shopEventTypeEnum.notNull(),
     productHandle: varchar("product_handle", { length: 120 }),
     productTitle: varchar("product_title", { length: 200 }),
@@ -570,6 +581,15 @@ export const shopEvents = mysqlTable(
     searchQuery: varchar("search_query", { length: 120 }),
     filterValue: varchar("filter_value", { length: 80 }),
     referrer: varchar("referrer", { length: 200 }),
+    utmSource: varchar("utm_source", { length: 80 }),
+    utmMedium: varchar("utm_medium", { length: 80 }),
+    utmCampaign: varchar("utm_campaign", { length: 120 }),
+    deviceType: deviceTypeEnum,
+    viewportWidth: int("viewport_width"),
+    scrollPercent: int("scroll_percent"),
+    durationMs: int("duration_ms"),
+    metricName: varchar("metric_name", { length: 40 }),
+    metricValue: varchar("metric_value", { length: 20 }),
     ipHash: varchar("ip_hash", { length: 64 }).notNull(),
     userAgent: varchar("user_agent", { length: 255 }).notNull(),
     createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
@@ -579,5 +599,6 @@ export const shopEvents = mysqlTable(
     index("shop_events_event_type_idx").on(table.eventType),
     index("shop_events_created_at_idx").on(table.createdAt),
     index("shop_events_product_handle_idx").on(table.productHandle),
+    index("shop_events_visitor_idx").on(table.visitorId),
   ],
 );

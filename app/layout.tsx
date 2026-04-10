@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Manrope, Sora } from "next/font/google";
 
 import { GoogleTagManager, GoogleTagManagerNoScript } from "@/components/analytics/gtm";
+import { ScrollDepthTracker, WebVitalsTracker, PageExitTracker } from "@/components/analytics/shop-trackers";
 import { SiteFooter } from "@/components/nav/site-footer";
 import { SiteHeader } from "@/components/nav/site-header";
 import { GlobalCartDrawer } from "@/components/shop/global-cart-drawer";
@@ -167,6 +168,9 @@ export default function RootLayout({
         <BackToTop />
         <PwaInstallPrompt />
         <ReferralBanner />
+        <ScrollDepthTracker />
+        <WebVitalsTracker />
+        <PageExitTracker />
         <Toaster />
       </body>
     </html>

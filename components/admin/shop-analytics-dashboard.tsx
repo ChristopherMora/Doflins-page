@@ -10,6 +10,12 @@ import {
   MagnifyingGlassIcon,
   ShoppingCartIcon,
   CursorArrowRaysIcon,
+  DevicePhoneMobileIcon,
+  ComputerDesktopIcon,
+  GlobeAltIcon,
+  UserGroupIcon,
+  ClockIcon,
+  SignalIcon,
 } from "@heroicons/react/24/solid";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -50,6 +56,44 @@ interface UniverseBreakdown {
   count: number;
 }
 
+interface TrafficSource {
+  source: string;
+  medium: string;
+  campaign: string;
+  events: number;
+  sessions: number;
+}
+
+interface DeviceBreakdown {
+  deviceType: string;
+  events: number;
+  sessions: number;
+}
+
+interface ScrollDepthEntry {
+  percent: number;
+  count: number;
+}
+
+interface WebVitalEntry {
+  name: string;
+  p75: number;
+  avg: number;
+  samples: number;
+}
+
+interface VisitorType {
+  type: string;
+  visitors: number;
+  events: number;
+}
+
+interface CartTimingEntry {
+  segment: string;
+  avgSeconds: number;
+  exits: number;
+}
+
 interface AnalyticsData {
   days: number;
   funnel: FunnelStep[];
@@ -59,6 +103,12 @@ interface AnalyticsData {
   topSearches: TopSearch[];
   hourlyActivity: { hour: number; count: number }[];
   universeBreakdown: UniverseBreakdown[];
+  trafficSources: TrafficSource[];
+  deviceBreakdown: DeviceBreakdown[];
+  scrollDepthDist: ScrollDepthEntry[];
+  webVitals: WebVitalEntry[];
+  visitorTypes: VisitorType[];
+  cartTiming: CartTimingEntry[];
   totalSessions: number;
   overallConversion: number;
   _notice?: string;
@@ -586,6 +636,279 @@ export function ShopAnalyticsDashboard(): React.JSX.Element {
             </CardContent>
           </Card>
         </div>
+      </div>
+
+      {/* ─── Phase 2: Advanced analytics panels ─────────────────────────── */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Traffic sources */}
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-[var(--ink-900)]">
+              <GlobeAltIcon className="h-5 w-5 text-[var(--ink-500)]" />
+              Fuentes de tráfico
+            </h2>
+            <p className="mb-3 text-xs text-[var(--ink-500)]">
+              ¿De dónde llegan tus usuarios? UTM y tráfico directo.
+            </p>
+            {data.trafficSources.length > 0 ? (
+              <div className="space-y-2">
+                {data.trafficSources.map((s, i) => {
+                  const total = data.trafficSources.reduce((acc, x) => acc + x.sessions, 0);
+                  const pct = total > 0 ? Math.round((s.sessions / total) * 100) : 0;
+                  return (
+                    <div key={`${s.source}-${s.medium}-${i}`} className="flex items-center justify-between rounded-lg bg-[#f9f8f4] px-3 py-2">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium text-[var(--ink-800)]">{s.source}</span>
+                        <span className="text-[10px] text-[var(--ink-400)]">{s.medium}{s.campaign ? ` · ${s.campaign}` : ""}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-[var(--ink-500)]">{pct}%</span>
+                        <Badge variant="neutral" className="text-[10px]">{s.sessions} sesiones</Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--ink-500)]">Sin datos de tráfico aún.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Device breakdown */}
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-[var(--ink-900)]">
+              <DevicePhoneMobileIcon className="h-5 w-5 text-[var(--ink-500)]" />
+              Dispositivos
+            </h2>
+            <p className="mb-3 text-xs text-[var(--ink-500)]">
+              ¿Desde qué dispositivos navegan? Optimiza para el más usado.
+            </p>
+            {data.deviceBreakdown.length > 0 ? (
+              <div className="space-y-3">
+                {data.deviceBreakdown
+                  .sort((a, b) => b.sessions - a.sessions)
+                  .map((d) => {
+                    const total = data.deviceBreakdown.reduce((acc, x) => acc + x.sessions, 0);
+                    const pct = total > 0 ? Math.round((d.sessions / total) * 100) : 0;
+                    const DeviceIcon = d.deviceType === "mobile" ? DevicePhoneMobileIcon
+                      : d.deviceType === "desktop" ? ComputerDesktopIcon
+                      : DevicePhoneMobileIcon;
+                    const label = d.deviceType === "mobile" ? "Móvil"
+                      : d.deviceType === "desktop" ? "Escritorio"
+                      : d.deviceType === "tablet" ? "Tablet"
+                      : "Desconocido";
+                    return (
+                      <div key={d.deviceType} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <DeviceIcon className="h-4 w-4 text-[var(--ink-500)]" />
+                            <span className="font-medium text-[var(--ink-800)]">{label}</span>
+                          </div>
+                          <span className="text-xs font-bold text-[var(--ink-900)]">{pct}% ({d.sessions})</span>
+                        </div>
+                        <div className="h-3 w-full rounded-full bg-[#f5f4ef]">
+                          <div
+                            className="h-full rounded-full bg-indigo-400 transition-all duration-700"
+                            style={{ width: `${Math.max(4, pct)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--ink-500)]">Sin datos de dispositivos.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Visitor types (new / returning / loyal) */}
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-[var(--ink-900)]">
+              <UserGroupIcon className="h-5 w-5 text-[var(--ink-500)]" />
+              Visitantes nuevos vs recurrentes
+            </h2>
+            <p className="mb-3 text-xs text-[var(--ink-500)]">
+              ¿Regresan los usuarios? Los recurrentes tienen más probabilidad de comprar.
+            </p>
+            {data.visitorTypes.length > 0 ? (
+              <div className="space-y-3">
+                {data.visitorTypes
+                  .sort((a, b) => b.visitors - a.visitors)
+                  .map((v) => {
+                    const total = data.visitorTypes.reduce((acc, x) => acc + x.visitors, 0);
+                    const pct = total > 0 ? Math.round((v.visitors / total) * 100) : 0;
+                    const labels: Record<string, string> = { new: "Nuevos", returning: "Recurrentes", loyal: "Frecuentes (4+)" };
+                    const colors: Record<string, string> = { new: "bg-blue-400", returning: "bg-emerald-400", loyal: "bg-amber-400" };
+                    return (
+                      <div key={v.type} className="space-y-1">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-medium text-[var(--ink-800)]">{labels[v.type] ?? v.type}</span>
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-[var(--ink-500)]">{pct}%</span>
+                            <Badge variant="neutral" className="text-[10px]">{v.visitors} usuarios</Badge>
+                          </div>
+                        </div>
+                        <div className="h-3 w-full rounded-full bg-[#f5f4ef]">
+                          <div
+                            className={`h-full rounded-full transition-all duration-700 ${colors[v.type] ?? "bg-gray-400"}`}
+                            style={{ width: `${Math.max(4, pct)}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--ink-500)]">Sin datos de visitantes.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Cart abandonment timing */}
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-[var(--ink-900)]">
+              <ClockIcon className="h-5 w-5 text-[var(--ink-500)]" />
+              Tiempo en página (abandono)
+            </h2>
+            <p className="mb-3 text-xs text-[var(--ink-500)]">
+              ¿Cuánto tiempo pasan en la página antes de irse? Compara quienes agregan al carrito vs quienes no.
+            </p>
+            {data.cartTiming.length > 0 ? (
+              <div className="space-y-3">
+                {data.cartTiming.map((ct) => {
+                  const label = ct.segment === "with_cart" ? "Con carrito" : "Sin carrito";
+                  const color = ct.segment === "with_cart" ? "text-emerald-700" : "text-red-600";
+                  return (
+                    <div key={ct.segment} className="flex items-center justify-between rounded-lg bg-[#f9f8f4] px-4 py-3">
+                      <div className="flex flex-col">
+                        <span className={`text-sm font-bold ${color}`}>{label}</span>
+                        <span className="text-[10px] text-[var(--ink-400)]">{ct.exits} salidas registradas</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-xl font-bold text-[var(--ink-900)]">{ct.avgSeconds}s</span>
+                        <p className="text-[10px] text-[var(--ink-400)]">promedio</p>
+                      </div>
+                    </div>
+                  );
+                })}
+                {data.cartTiming.length >= 2 ? (
+                  <div className="rounded-xl border border-blue-200 bg-blue-50 p-3">
+                    <p className="text-xs text-blue-800">
+                      💡 Si los que NO agregan al carrito se van muy rápido, el problema puede ser pricing o UX.
+                      Si pasan tiempo pero no agregan, el problema son fotos, descripciones o confianza.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--ink-500)]">Sin datos de timing.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Scroll depth */}
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-[var(--ink-900)]">
+              <ChartBarIcon className="h-5 w-5 text-[var(--ink-500)]" />
+              Profundidad de scroll
+            </h2>
+            <p className="mb-3 text-xs text-[var(--ink-500)]">
+              ¿Hasta dónde bajan los usuarios? Si no llegan al 50%, el contenido de arriba no engancha.
+            </p>
+            {data.scrollDepthDist.length > 0 ? (
+              <div className="space-y-2">
+                {[25, 50, 75, 100].map((threshold) => {
+                  const entry = data.scrollDepthDist.find((e) => e.percent === threshold);
+                  const count = entry?.count ?? 0;
+                  const maxCount = Math.max(...data.scrollDepthDist.map((e) => e.count), 1);
+                  const pct = Math.max(6, (count / maxCount) * 100);
+                  return (
+                    <div key={threshold} className="space-y-1">
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="font-medium text-[var(--ink-800)]">{threshold}%</span>
+                        <span className="text-xs font-bold text-[var(--ink-700)]">{count.toLocaleString("es-MX")} usuarios</span>
+                      </div>
+                      <div className="h-5 w-full rounded-full bg-[#f5f4ef]">
+                        <div
+                          className="h-full rounded-full bg-teal-400 transition-all duration-700"
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--ink-500)]">Sin datos de scroll.</p>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Web vitals */}
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="mb-3 flex items-center gap-2 text-lg font-bold text-[var(--ink-900)]">
+              <SignalIcon className="h-5 w-5 text-[var(--ink-500)]" />
+              Core Web Vitals
+            </h2>
+            <p className="mb-3 text-xs text-[var(--ink-500)]">
+              Rendimiento del sitio. Una página lenta pierde ventas.
+            </p>
+            {data.webVitals.length > 0 ? (
+              <div className="space-y-3">
+                {data.webVitals.map((wv) => {
+                  const thresholds: Record<string, { good: number; poor: number; unit: string; label: string }> = {
+                    LCP: { good: 2500, poor: 4000, unit: "ms", label: "Largest Contentful Paint" },
+                    FCP: { good: 1800, poor: 3000, unit: "ms", label: "First Contentful Paint" },
+                    CLS: { good: 0.1, poor: 0.25, unit: "", label: "Cumulative Layout Shift" },
+                    TTFB: { good: 800, poor: 1800, unit: "ms", label: "Time to First Byte" },
+                    INP: { good: 200, poor: 500, unit: "ms", label: "Interaction to Next Paint" },
+                  };
+                  const t = thresholds[wv.name ?? ""];
+                  const status = t
+                    ? wv.p75 <= t.good ? "good" : wv.p75 <= t.poor ? "needs-improvement" : "poor"
+                    : "unknown";
+                  const statusColors: Record<string, string> = {
+                    good: "bg-emerald-100 text-emerald-800",
+                    "needs-improvement": "bg-yellow-100 text-yellow-800",
+                    poor: "bg-red-100 text-red-800",
+                    unknown: "bg-gray-100 text-gray-800",
+                  };
+                  const statusLabels: Record<string, string> = {
+                    good: "Bueno",
+                    "needs-improvement": "Mejorable",
+                    poor: "Malo",
+                    unknown: "—",
+                  };
+                  return (
+                    <div key={wv.name} className="flex items-center justify-between rounded-lg bg-[#f9f8f4] px-3 py-2">
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-[var(--ink-800)]">{wv.name}</span>
+                        <span className="text-[10px] text-[var(--ink-400)]">{t?.label ?? ""} ({wv.samples} muestras)</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-bold text-[var(--ink-900)]">
+                          {wv.p75}{t?.unit ?? ""}
+                        </span>
+                        <Badge className={`text-[10px] ${statusColors[status]}`}>
+                          {statusLabels[status]}
+                        </Badge>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-sm text-[var(--ink-500)]">Sin datos de Web Vitals.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
