@@ -62,6 +62,8 @@ import {
 import { ReviewsSection } from "./reviews-section";
 import { useShopExperience } from "./use-shop-experience";
 import { useShopAnalytics } from "@/lib/hooks/use-shop-analytics";
+import { AbandonedCartReminder } from "./abandoned-cart-reminder";
+import { ProductRecommendations, trackProductView } from "./product-recommendations";
 
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHUlEQVQIW2NkYGD4z8BQDwIMjIz1DEDMSNMAACb9Av9aFEHzAAAAAElFTkSuQmCC";
@@ -190,6 +192,9 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
           Cada pack incluye figuras con rareza oficial. Elige el que más te guste.
         </p>
       </div>
+
+      {/* Abandoned cart reminder */}
+      <AbandonedCartReminder />
 
       <Card
         className={`${visualTheme.shellClassName} border`}
@@ -591,11 +596,12 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
                     role="button"
                     tabIndex={0}
                     aria-label={`Ver detalle rápido de ${product.title}`}
-                    onClick={() => { setSelectedProduct(product); analytics.trackQuickViewOpen(product.handle, product.title, Math.round(Number(product.price.amount) * 100)); }}
+                    onClick={() => { setSelectedProduct(product); trackProductView(product.handle, product.universe); analytics.trackQuickViewOpen(product.handle, product.title, Math.round(Number(product.price.amount) * 100)); }}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         setSelectedProduct(product);
+                        trackProductView(product.handle, product.universe);
                         analytics.trackQuickViewOpen(product.handle, product.title, Math.round(Number(product.price.amount) * 100));
                       }
                     }}
@@ -1080,6 +1086,18 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
           ) : null}
         </DialogContent>
       </Dialog>
+
+      {/* Product recommendations */}
+      <ProductRecommendations
+        products={products}
+        currentHandle={selectedProduct?.handle}
+        onAddToCart={(product) => {
+          void addToCart(product, 1);
+          const variant = getSelectedVariant(product);
+          analytics.trackAddToCart(product.handle, product.title, variant?.id ?? '', Math.round(Number(variant?.price.amount ?? product.price.amount) * 100), 1);
+        }}
+        isMutating={isMutatingCart}
+      />
     </section>
   );
 }
