@@ -41,6 +41,7 @@ import {
 import { formatMoney, formatCurrencyAmount, parseApiResponse } from "./shop-utils";
 import { FREE_GIFT_MIN_SUBTOTAL, SUPPORT_WHATSAPP_URL } from "./shop-constants";
 import { useShopAnalytics } from "@/lib/hooks/use-shop-analytics";
+import { getShopAnalyticsContext } from "@/lib/shop/shop-analytics-client";
 
 interface CartResponse {
   status: "ok";
@@ -61,8 +62,13 @@ export function GlobalCartDrawer() {
   const [giftNote, setGiftNote] = useState("");
   const cartRef = useRef<ShopCart | null>(null);
   cartRef.current = cart;
+  const trackedCartViewForOpenRef = useRef(false);
 
-  const analytics = useShopAnalytics();
+  const {
+    trackCartView,
+    trackCheckoutStart,
+    trackDiscountApply,
+  } = useShopAnalytics();
 
   /** Recalculate cart subtotal & total from lines (used for optimistic updates). */
   const recalcCartTotals = useCallback((c: ShopCart): ShopCart => {
@@ -103,17 +109,10 @@ export function GlobalCartDrawer() {
   useEffect(() => {
     const onOpen = () => {
       setIsOpen(true);
+      trackedCartViewForOpenRef.current = false;
       // Show loading until we get fresh data so stale items don't flash
       setIsLoading(true);
       debouncedLoadCart();
-      // Track cart view
-      const c = cartRef.current;
-      if (c) {
-        analytics.trackCartView(
-          Math.round(Number(c.subtotal.amount) * 100),
-          c.lines.reduce((n, l) => n + l.quantity, 0),
-        );
-      }
     };
     window.addEventListener("doflins:open-cart", onOpen);
     return () => {
@@ -121,6 +120,16 @@ export function GlobalCartDrawer() {
       if (loadDebounceRef.current) clearTimeout(loadDebounceRef.current);
     };
   }, [debouncedLoadCart]);
+
+  useEffect(() => {
+    if (!isOpen || !cart || trackedCartViewForOpenRef.current) return;
+
+    trackCartView(
+      Math.round(Number(cart.subtotal.amount) * 100),
+      cart.lines.reduce((n, l) => n + l.quantity, 0),
+    );
+    trackedCartViewForOpenRef.current = true;
+  }, [cart, isOpen, trackCartView]);
 
   // Refrescar cuando se agrega algo al carrito
   useEffect(() => {
@@ -213,26 +222,31 @@ export function GlobalCartDrawer() {
       if (data.cart) {
         setCart(data.cart);
         toast.success("Código aplicado");
-        analytics.trackDiscountApply(code);
+        trackDiscountApply(code);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo aplicar el código");
     } finally {
       setIsMutating(false);
     }
-  }, [discountCode]);
+  }, [discountCode, trackDiscountApply]);
 
   const goToCheckout = useCallback(async () => {
     setIsMutating(true);
+    const analyticsContext = getShopAnalyticsContext();
     // Track checkout start
     if (cart) {
-      analytics.trackCheckoutStart(
+      trackCheckoutStart(
         Math.round(Number(cart.subtotal.amount) * 100),
         cart.lines.reduce((n, l) => n + l.quantity, 0),
       );
     }
     try {
-      const res = await fetch("/api/cart/checkout", { method: "POST" });
+      const res = await fetch("/api/cart/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(analyticsContext ? { analytics: analyticsContext } : {}),
+      });
       const data = await parseApiResponse<CheckoutResponse>(res);
       let url = data.checkoutUrl;
       if (giftNote.trim()) {
@@ -245,7 +259,7 @@ export function GlobalCartDrawer() {
     } finally {
       setIsMutating(false);
     }
-  }, [giftNote]);
+  }, [cart, giftNote, trackCheckoutStart]);
 
   const cartItemCount = cart?.lines.reduce((n, l) => n + l.quantity, 0) ?? 0;
   const currencyCode = cart?.subtotal.currencyCode ?? "MXN";

@@ -7,6 +7,14 @@ import { CheckCircleIcon, ShoppingCartIcon, XCircleIcon } from "@heroicons/react
 import { Button } from "@/components/ui/button";
 import type { ShopCart } from "@/lib/shopify/types";
 import { writeCartSnapshot } from "@/components/shop/shop-utils";
+import { sendShopEvent } from "@/lib/shop/shop-analytics-client";
+
+interface AddToCartAnalyticsPayload {
+  productHandle: string;
+  priceCents: number;
+  quantity?: number;
+  universe?: string | null;
+}
 
 interface AddToCartButtonProps {
   variantId: string;
@@ -15,6 +23,7 @@ interface AddToCartButtonProps {
   className?: string;
   label?: string;
   onClick?: () => void;
+  analytics?: AddToCartAnalyticsPayload;
 }
 
 export function AddToCartButton({
@@ -24,6 +33,7 @@ export function AddToCartButton({
   className,
   label,
   onClick,
+  analytics,
 }: AddToCartButtonProps): React.JSX.Element {
   const [state, setState] = useState<"idle" | "adding" | "added" | "error">("idle");
 
@@ -39,7 +49,21 @@ export function AddToCartButton({
       });
       if (!res.ok) throw new Error("cart_error");
       const data = (await res.json()) as { cart?: ShopCart };
-      if (data.cart) writeCartSnapshot(data.cart);
+      if (data.cart) {
+        writeCartSnapshot(data.cart);
+        window.dispatchEvent(new Event("doflins:cart-updated"));
+      }
+      if (analytics) {
+        sendShopEvent({
+          eventType: "add_to_cart",
+          productHandle: analytics.productHandle,
+          productTitle,
+          variantId,
+          priceCents: analytics.priceCents,
+          quantity: analytics.quantity ?? 1,
+          universe: analytics.universe ?? undefined,
+        });
+      }
       setState("added");
       setTimeout(() => setState("idle"), 3500);
       toast.success(`${productTitle} agregado al carrito 🛒`, {

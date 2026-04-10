@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BottomNav } from "@/components/nav/bottom-nav";
 import { AddToCartButton } from "@/components/shop/add-to-cart-button";
+import { ProductDetailAnalytics } from "@/components/shop/product-detail-analytics";
 import { ProductViewer3D } from "@/components/shop/product-viewer-3d";
 import { formatMoney } from "@/components/shop/shop-utils";
 import { resolveProductModelUrl } from "@/lib/shop/product-model";
@@ -190,6 +191,12 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
   return (
     <>
       <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-5 py-8 pb-28 sm:px-8 sm:pb-12">
+      <ProductDetailAnalytics
+        handle={product.handle}
+        title={product.title}
+        priceCents={Math.round(Number(recommendedVariant?.price.amount ?? product.price.amount) * 100)}
+        universe={product.universe}
+      />
       <div className="w-full space-y-5">
         <div className="flex flex-wrap items-center gap-2">
           <Button asChild variant="ghost" className="w-fit rounded-full border border-[#d9d2b1] bg-white/70">
@@ -314,6 +321,12 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
                     variantId={recommendedVariant.id}
                     productTitle={product.title}
                     isSoldOut={isSoldOut}
+                    analytics={{
+                      productHandle: product.handle,
+                      priceCents: Math.round(Number(recommendedVariant.price.amount) * 100),
+                      quantity: 1,
+                      universe: product.universe,
+                    }}
                   />
                 ) : null}
                 <Button asChild className={`h-12 w-full ${t.btnPrimary} opacity-80`}>

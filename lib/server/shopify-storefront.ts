@@ -363,6 +363,19 @@ const CART_DISCOUNT_CODES_UPDATE_MUTATION = `
   }
 `;
 
+const CART_ATTRIBUTES_UPDATE_MUTATION = `
+  mutation CartAttributesUpdate($cartId: ID!, $attributes: [AttributeInput!]!) {
+    cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
+      cart {
+        ${CART_FIELDS}
+      }
+      userErrors {
+        message
+      }
+    }
+  }
+`;
+
 export class ShopifyStorefrontError extends Error {
   statusCode: number;
 
@@ -384,6 +397,11 @@ interface CartLineInput {
 interface CartLineUpdateInput {
   id: string;
   quantity: number;
+}
+
+interface CartAttributeInput {
+  key: string;
+  value: string;
 }
 
 function getShopifyConfig(): ShopifyConfig {
@@ -781,4 +799,39 @@ export async function updateCartDiscountCodes(cartId: string, codes: string[]): 
   }
 
   return normalizeCart(data.cartDiscountCodesUpdate.cart);
+}
+
+export async function updateCartAttributes(cartId: string, attributes: CartAttributeInput[]): Promise<ShopCart> {
+  const sanitizedAttributes = attributes
+    .map((attribute) => ({
+      key: attribute.key.trim().slice(0, 255),
+      value: attribute.value.trim().slice(0, 255),
+    }))
+    .filter((attribute) => attribute.key.length > 0 && attribute.value.length > 0);
+
+  if (!sanitizedAttributes.length) {
+    const existingCart = await fetchCartById(cartId);
+    if (!existingCart) {
+      throw new ShopifyStorefrontError("Shopify no devolvió carrito al consultar atributos.", 502, "shopify_cart_missing");
+    }
+    return existingCart;
+  }
+
+  const data = await storefrontRequest<{
+    cartAttributesUpdate: {
+      cart: ShopifyCartNode | null;
+      userErrors: Array<{ message?: string }>;
+    };
+  }>(CART_ATTRIBUTES_UPDATE_MUTATION, {
+    cartId,
+    attributes: sanitizedAttributes,
+  });
+
+  assertNoUserErrors(data.cartAttributesUpdate.userErrors, "No se pudieron guardar los atributos del carrito.");
+
+  if (!data.cartAttributesUpdate.cart) {
+    throw new ShopifyStorefrontError("Shopify no devolvió carrito al guardar atributos.", 502, "shopify_cart_missing");
+  }
+
+  return normalizeCart(data.cartAttributesUpdate.cart);
 }

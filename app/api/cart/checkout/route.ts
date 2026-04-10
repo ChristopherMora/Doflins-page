@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 
 import { getCartIdFromRequest, rateLimitResponse, toApiErrorResponse } from "@/lib/server/shopify-api";
 import { hasPaidCartBase, syncFreeGiftForCart } from "@/lib/server/cart-promotions";
-import { fetchCartById } from "@/lib/server/shopify-storefront";
+import { cartCheckoutBodySchema } from "@/lib/validation/shopify";
+import { fetchCartById, updateCartAttributes } from "@/lib/server/shopify-storefront";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -23,6 +24,27 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       },
       {
         status: 404,
+      },
+    );
+  }
+
+  let rawPayload: unknown = {};
+  try {
+    rawPayload = await request.json();
+  } catch {
+    rawPayload = {};
+  }
+
+  const parsed = cartCheckoutBodySchema.safeParse(rawPayload);
+  if (!parsed.success) {
+    return NextResponse.json(
+      {
+        status: "error",
+        code: "invalid_payload",
+        message: "Payload inválido para checkout.",
+      },
+      {
+        status: 400,
       },
     );
   }
@@ -56,10 +78,34 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       );
     }
 
+    let checkoutCart = cart;
+    const analytics = parsed.data.analytics;
+
+    if (analytics) {
+      const analyticsAttributes = [
+        { key: "doflins_session_id", value: analytics.sessionId },
+        ...(analytics.visitorId ? [{ key: "doflins_visitor_id", value: analytics.visitorId }] : []),
+        ...(typeof analytics.visitNumber === "number"
+          ? [{ key: "doflins_visit_number", value: String(analytics.visitNumber) }]
+          : []),
+        ...(analytics.utmSource ? [{ key: "doflins_utm_source", value: analytics.utmSource }] : []),
+        ...(analytics.utmMedium ? [{ key: "doflins_utm_medium", value: analytics.utmMedium }] : []),
+        ...(analytics.utmCampaign ? [{ key: "doflins_utm_campaign", value: analytics.utmCampaign }] : []),
+        ...(analytics.deviceType ? [{ key: "doflins_device_type", value: analytics.deviceType }] : []),
+        ...(analytics.universe ? [{ key: "doflins_universe", value: analytics.universe }] : []),
+      ];
+
+      try {
+        checkoutCart = await updateCartAttributes(cart.id, analyticsAttributes);
+      } catch (error) {
+        console.error("cart/checkout analytics attribute sync error", error);
+      }
+    }
+
     return NextResponse.json({
       status: "ok",
-      checkoutUrl: cart.checkoutUrl,
-      cart,
+      checkoutUrl: checkoutCart.checkoutUrl,
+      cart: checkoutCart,
     });
   } catch (error) {
     console.error("cart/checkout error", error);

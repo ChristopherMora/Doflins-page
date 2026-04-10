@@ -3,9 +3,11 @@ import { and, eq, sql } from "drizzle-orm";
 import { NextRequest, NextResponse } from "next/server";
 
 import { getDb } from "@/lib/db/client";
-import { referralCodes, referralUses } from "@/lib/db/schema";
+import { referralCodes, referralUses, shopEvents } from "@/lib/db/schema";
 import { awardPurchasePoints, awardPoints } from "@/lib/server/points";
 import { sendPurchaseConfirmation } from "@/lib/server/emails";
+import { hashIp } from "@/lib/server/request";
+import { logShopEvent } from "@/lib/server/shop-analytics";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -39,7 +41,74 @@ interface ShopifyOrderPayload {
   total_discounts: string;
   total_price: string;
   financial_status: string;
+  note_attributes?: Array<{ name?: string; key?: string; value?: string }>;
   customer?: { id: number; email: string };
+}
+
+function getNoteAttribute(
+  order: ShopifyOrderPayload,
+  key: string,
+): string | undefined {
+  const value = order.note_attributes?.find((attribute) =>
+    attribute.name === key || attribute.key === key,
+  )?.value;
+
+  return value?.trim() || undefined;
+}
+
+async function logCheckoutComplete(order: ShopifyOrderPayload): Promise<void> {
+  const sessionId = getNoteAttribute(order, "doflins_session_id");
+  if (!sessionId) return;
+
+  const orderId = String(order.id);
+  const db = getDb();
+  const [existing] = await db
+    .select({ id: shopEvents.id })
+    .from(shopEvents)
+    .where(
+      and(
+        eq(shopEvents.eventType, "checkout_complete"),
+        eq(shopEvents.filterValue, orderId),
+      ),
+    )
+    .limit(1);
+
+  if (existing) return;
+
+  const visitorId = getNoteAttribute(order, "doflins_visitor_id");
+  const visitNumberRaw = getNoteAttribute(order, "doflins_visit_number");
+  const deviceTypeRaw = getNoteAttribute(order, "doflins_device_type");
+  const universe = getNoteAttribute(order, "doflins_universe");
+  const utmSource = getNoteAttribute(order, "doflins_utm_source");
+  const utmMedium = getNoteAttribute(order, "doflins_utm_medium");
+  const utmCampaign = getNoteAttribute(order, "doflins_utm_campaign");
+  const totalPrice = Number.parseFloat(order.total_price ?? "0");
+
+  await logShopEvent({
+    sessionId,
+    visitorId,
+    visitNumber:
+      typeof visitNumberRaw === "string" && /^\d+$/.test(visitNumberRaw)
+        ? Number.parseInt(visitNumberRaw, 10)
+        : undefined,
+    eventType: "checkout_complete",
+    filterValue: orderId,
+    universe,
+    cartTotalCents:
+      Number.isFinite(totalPrice) && totalPrice > 0
+        ? Math.round(totalPrice * 100)
+        : undefined,
+    utmSource,
+    utmMedium,
+    utmCampaign,
+    deviceType:
+      deviceTypeRaw === "mobile" || deviceTypeRaw === "tablet" || deviceTypeRaw === "desktop"
+        ? deviceTypeRaw
+        : undefined,
+    ipHash: hashIp(`shopify-webhook:${orderId}`),
+    userAgent: "shopify-webhook/orders-paid",
+    database: db,
+  });
 }
 
 /**
@@ -109,6 +178,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     order = JSON.parse(rawBody.toString("utf-8")) as ShopifyOrderPayload;
   } catch {
     return NextResponse.json({ error: "Payload inválido" }, { status: 400 });
+  }
+
+  try {
+    await logCheckoutComplete(order);
+  } catch (error) {
+    console.error("shopify webhook checkout_complete error", error);
   }
 
   if (!order.discount_codes?.length) {
