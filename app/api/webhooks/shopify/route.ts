@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDb } from "@/lib/db/client";
 import { referralCodes, referralUses } from "@/lib/db/schema";
 import { awardPurchasePoints, awardPoints } from "@/lib/server/points";
+import { sendPurchaseConfirmation } from "@/lib/server/emails";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -192,6 +193,23 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
   // Otorgar puntos por la compra al comprador
   await tryAwardPurchasePoints(order);
+
+  // Enviar email de confirmación de compra (fire-and-forget)
+  if (order.email) {
+    const amountMxn = parseFloat(order.total_price ?? "0");
+    const purchasePoints = !isNaN(amountMxn) && amountMxn > 0
+      ? Math.floor(amountMxn / 100) * 5
+      : 0;
+    const hasReferral = order.discount_codes?.some((d) =>
+      d.code && d.code.length >= 4
+    );
+    void sendPurchaseConfirmation({
+      to: order.email,
+      orderTotal: String(amountMxn > 0 ? amountMxn : order.total_price),
+      pointsAwarded: purchasePoints,
+      referralBonus: hasReferral ? 25 : undefined,
+    }).catch(() => { /* no bloquear webhook */ });
+  }
 
   return NextResponse.json({ ok: true });
 }

@@ -7,9 +7,11 @@ import {
   tradeListings,
   tradeOffers,
   userCollectionProgress,
+  notificationPreferences,
 } from "@/lib/db/schema";
 import { hasSupabasePublicConfig } from "@/lib/supabase/config";
 import { createSupabaseServerClientForRoute } from "@/lib/supabase/server";
+import { sendTradeOfferNotification } from "@/lib/server/emails";
 
 export const dynamic = "force-dynamic";
 
@@ -193,6 +195,62 @@ export async function POST(
     offeredDoflinId: body.offeredDoflinId,
     message: body.message ?? null,
   });
+
+  // Send email notification to listing owner (fire-and-forget)
+  void (async () => {
+    try {
+      // Check if owner has trade email notifications enabled
+      const [prefs] = await db
+        .select({ emailTradeRequest: notificationPreferences.emailTradeRequest })
+        .from(notificationPreferences)
+        .where(eq(notificationPreferences.supabaseUserId, listing.supabaseUserId))
+        .limit(1);
+
+      // Default is true if no preferences row exists
+      if (prefs && !prefs.emailTradeRequest) return;
+
+      // Get owner's email
+      const [ownerRow] = await db
+        .select({ userEmail: userCollectionProgress.userEmail })
+        .from(userCollectionProgress)
+        .where(eq(userCollectionProgress.supabaseUserId, listing.supabaseUserId))
+        .limit(1);
+      if (!ownerRow?.userEmail) return;
+
+      // Get figure names
+      const [offeredFigure] = await db
+        .select({ nombre: doflins.nombre })
+        .from(doflins)
+        .where(eq(doflins.id, body.offeredDoflinId))
+        .limit(1);
+
+      const [listingFull] = await db
+        .select({ offeringDoflinId: tradeListings.offeringDoflinId })
+        .from(tradeListings)
+        .where(eq(tradeListings.id, listingId))
+        .limit(1);
+
+      let yourFigureName = "tu figura";
+      if (listingFull) {
+        const [yourFigure] = await db
+          .select({ nombre: doflins.nombre })
+          .from(doflins)
+          .where(eq(doflins.id, listingFull.offeringDoflinId))
+          .limit(1);
+        if (yourFigure) yourFigureName = yourFigure.nombre;
+      }
+
+      await sendTradeOfferNotification({
+        to: ownerRow.userEmail,
+        offererName: user.email ?? "Un coleccionista",
+        offeredFigureName: offeredFigure?.nombre ?? "Una figura",
+        yourFigureName,
+        listingId,
+      });
+    } catch {
+      // Never block the response
+    }
+  })();
 
   return NextResponse.json({ success: true, offerId: result[0].insertId });
 }
