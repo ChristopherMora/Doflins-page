@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChartBarIcon,
+  PresentationChartLineIcon,
   QrCodeIcon,
   SparklesIcon,
   StarIcon,
@@ -16,6 +17,7 @@ const NAV_ITEMS = [
   { href: "/admin/codigos", label: "Códigos", icon: TicketIcon },
   { href: "/admin/rewards", label: "Recompensas", icon: StarIcon },
   { href: "/admin/dashboard", label: "Dashboard", icon: ChartBarIcon },
+  { href: "/admin/analytics", label: "Analytics", icon: PresentationChartLineIcon },
 ] as const;
 
 export function AdminNav(): React.JSX.Element | null {

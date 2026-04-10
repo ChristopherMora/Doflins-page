@@ -531,3 +531,53 @@ export const figureWantList = mysqlTable(
     index("want_list_public_idx").on(table.isPublic),
   ],
 );
+
+// ─── Shop Analytics (embudo de compra) ────────────────────────────────────────
+
+export const shopEventTypeEnum = mysqlEnum("shop_event_type", [
+  "shop_view",
+  "product_view",
+  "product_click",
+  "add_to_cart",
+  "remove_from_cart",
+  "cart_view",
+  "checkout_start",
+  "checkout_complete",
+  "search",
+  "filter",
+  "wishlist_add",
+  "wishlist_remove",
+  "quick_view_open",
+  "quick_view_close",
+  "promo_click",
+  "discount_apply",
+]);
+
+export const shopEvents = mysqlTable(
+  "shop_events",
+  {
+    id: int("id").autoincrement().primaryKey(),
+    sessionId: varchar("session_id", { length: 64 }).notNull(),
+    eventType: shopEventTypeEnum.notNull(),
+    productHandle: varchar("product_handle", { length: 120 }),
+    productTitle: varchar("product_title", { length: 200 }),
+    variantId: varchar("variant_id", { length: 64 }),
+    universe: varchar("universe", { length: 32 }),
+    priceCents: int("price_cents"),
+    quantity: int("quantity"),
+    cartTotalCents: int("cart_total_cents"),
+    cartItemCount: int("cart_item_count"),
+    searchQuery: varchar("search_query", { length: 120 }),
+    filterValue: varchar("filter_value", { length: 80 }),
+    referrer: varchar("referrer", { length: 200 }),
+    ipHash: varchar("ip_hash", { length: 64 }).notNull(),
+    userAgent: varchar("user_agent", { length: 255 }).notNull(),
+    createdAt: timestamp("created_at", { mode: "date" }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("shop_events_session_idx").on(table.sessionId),
+    index("shop_events_event_type_idx").on(table.eventType),
+    index("shop_events_created_at_idx").on(table.createdAt),
+    index("shop_events_product_handle_idx").on(table.productHandle),
+  ],
+);

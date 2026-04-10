@@ -40,6 +40,7 @@ import {
 } from "@/components/ui/sheet";
 import { formatMoney, formatCurrencyAmount, parseApiResponse } from "./shop-utils";
 import { FREE_GIFT_MIN_SUBTOTAL, SUPPORT_WHATSAPP_URL } from "./shop-constants";
+import { useShopAnalytics } from "@/lib/hooks/use-shop-analytics";
 
 interface CartResponse {
   status: "ok";
@@ -60,6 +61,8 @@ export function GlobalCartDrawer() {
   const [giftNote, setGiftNote] = useState("");
   const cartRef = useRef<ShopCart | null>(null);
   cartRef.current = cart;
+
+  const analytics = useShopAnalytics();
 
   /** Recalculate cart subtotal & total from lines (used for optimistic updates). */
   const recalcCartTotals = useCallback((c: ShopCart): ShopCart => {
@@ -103,6 +106,14 @@ export function GlobalCartDrawer() {
       // Show loading until we get fresh data so stale items don't flash
       setIsLoading(true);
       debouncedLoadCart();
+      // Track cart view
+      const c = cartRef.current;
+      if (c) {
+        analytics.trackCartView(
+          Math.round(Number(c.subtotal.amount) * 100),
+          c.lines.reduce((n, l) => n + l.quantity, 0),
+        );
+      }
     };
     window.addEventListener("doflins:open-cart", onOpen);
     return () => {
@@ -202,6 +213,7 @@ export function GlobalCartDrawer() {
       if (data.cart) {
         setCart(data.cart);
         toast.success("Código aplicado");
+        analytics.trackDiscountApply(code);
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "No se pudo aplicar el código");
@@ -212,6 +224,13 @@ export function GlobalCartDrawer() {
 
   const goToCheckout = useCallback(async () => {
     setIsMutating(true);
+    // Track checkout start
+    if (cart) {
+      analytics.trackCheckoutStart(
+        Math.round(Number(cart.subtotal.amount) * 100),
+        cart.lines.reduce((n, l) => n + l.quantity, 0),
+      );
+    }
     try {
       const res = await fetch("/api/cart/checkout", { method: "POST" });
       const data = await parseApiResponse<CheckoutResponse>(res);

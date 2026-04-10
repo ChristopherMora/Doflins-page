@@ -61,6 +61,7 @@ import {
 } from "./shop-utils";
 import { ReviewsSection } from "./reviews-section";
 import { useShopExperience } from "./use-shop-experience";
+import { useShopAnalytics } from "@/lib/hooks/use-shop-analytics";
 
 const BLUR_DATA_URL =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAQAAAAECAYAAACp8Z5+AAAAHUlEQVQIW2NkYGD4z8BQDwIMjIz1DEDMSNMAACb9Av9aFEHzAAAAAElFTkSuQmCC";
@@ -103,6 +104,8 @@ function LazyCard({ children, skeleton, eager }: { children: React.ReactNode; sk
 
 export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: import("@/lib/shopify/types").ShopProduct[] }): React.JSX.Element {
   const shop = useShopExperience({ initialProducts });
+
+  const analytics = useShopAnalytics(shop.activeUniverse);
 
   const {
     activeUniverse,
@@ -322,7 +325,7 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
               <Input
                 id="shop-search"
                 value={shopSearch}
-                onChange={(event) => setShopSearch(event.target.value)}
+                onChange={(event) => { setShopSearch(event.target.value); analytics.trackSearch(event.target.value); }}
                 placeholder="Buscar por nombre de pack…"
                 className="h-10 rounded-xl pl-9 transition-shadow duration-200 focus:ring-2 focus:ring-[var(--shop-primary-from)]/20"
               />
@@ -358,7 +361,7 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
                           ? "bg-[var(--shop-primary-from)] text-white shadow-sm"
                           : "text-[var(--ink-700)] hover:bg-black/[0.05]"
                       }`}
-                      onClick={() => setSortOrder(order)}
+                      onClick={() => { setSortOrder(order); analytics.trackFilter(`sort:${order}`); }}
                     >
                       {labels[order]}
                     </button>
@@ -588,11 +591,12 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
                     role="button"
                     tabIndex={0}
                     aria-label={`Ver detalle rápido de ${product.title}`}
-                    onClick={() => setSelectedProduct(product)}
+                    onClick={() => { setSelectedProduct(product); analytics.trackQuickViewOpen(product.handle, product.title, Math.round(Number(product.price.amount) * 100)); }}
                     onKeyDown={(event) => {
                       if (event.key === "Enter" || event.key === " ") {
                         event.preventDefault();
                         setSelectedProduct(product);
+                        analytics.trackQuickViewOpen(product.handle, product.title, Math.round(Number(product.price.amount) * 100));
                       }
                     }}
                     >
@@ -645,7 +649,7 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
                             <Button
                               className="ml-auto h-9 shrink-0 bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] px-4 text-sm font-bold"
                               disabled={isMutatingCart}
-                              onClick={(e) => { e.stopPropagation(); void addToCart(product, 1); }}
+                              onClick={(e) => { e.stopPropagation(); void addToCart(product, 1); analytics.trackAddToCart(product.handle, product.title, selectedVariant?.id ?? '', Math.round(Number(selectedVariant?.price.amount ?? product.price.amount) * 100), 1); }}
                             >
                               <ShoppingCartIcon className="h-4 w-4" /> Agregar
                             </Button>
@@ -757,6 +761,7 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
                               onClick={(event) => {
                                 event.stopPropagation();
                                 void addToCart(product, 1);
+                                analytics.trackAddToCart(product.handle, product.title, selectedVariant?.id ?? '', Math.round(Number(selectedVariant?.price.amount ?? product.price.amount) * 100), 1);
                               }}
                             >
                               Agregar al carrito
@@ -928,7 +933,7 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
       <Dialog
         open={Boolean(selectedProduct)}
         onOpenChange={(open) => {
-          if (!open) setSelectedProduct(null);
+          if (!open) { setSelectedProduct(null); if (selectedProduct) analytics.trackQuickViewClose(selectedProduct.handle); }
         }}
       >
         <DialogContent className="w-[min(94vw,920px)] gap-0 overflow-hidden p-0" style={universeThemeVars}>
@@ -1057,7 +1062,10 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
                     className={`w-full ${selectedModalSoldOut ? "bg-[#b9c8a3] text-white" : "bg-[linear-gradient(135deg,var(--shop-primary-from),var(--shop-primary-to))] text-white hover:opacity-90"}`}
                     disabled={isMutatingCart || selectedModalSoldOut}
                     onClick={() => {
-                      void addToCart(selectedProduct, getProductQty(selectedProduct.id));
+                      const qty = getProductQty(selectedProduct.id);
+                      const variant = getSelectedVariant(selectedProduct);
+                      void addToCart(selectedProduct, qty);
+                      analytics.trackAddToCart(selectedProduct.handle, selectedProduct.title, variant?.id ?? '', Math.round(Number(variant?.price.amount ?? selectedProduct.price.amount) * 100), qty);
                       setSelectedProduct(null);
                     }}
                   >
