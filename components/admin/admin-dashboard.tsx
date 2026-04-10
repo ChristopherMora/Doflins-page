@@ -15,6 +15,7 @@ import {
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { EmailTestingPanel } from "@/components/admin/email-testing-panel";
 
 interface RevealByDay {
   date: string;
@@ -557,6 +558,9 @@ export function AdminDashboard() {
           )}
         </CardContent>
       </Card>
+
+      {/* Herramientas — Pruebas de email */}
+      <EmailTestingPanel />
 
       {/* Herramientas — Convertir imágenes a WebP */}
       <WebPConverter />
