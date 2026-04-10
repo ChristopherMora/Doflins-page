@@ -53,6 +53,9 @@ services:
       NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID:-}
       NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID:-}
       NEXT_PUBLIC_TIKTOK_PIXEL_ID: ${NEXT_PUBLIC_TIKTOK_PIXEL_ID:-}
+      RESEND_API_KEY: ${RESEND_API_KEY:-}
+      EMAIL_FROM: ${EMAIL_FROM:-}
+      CRON_SECRET: ${CRON_SECRET:-}
     depends_on:
       mysql:
         condition: service_healthy
