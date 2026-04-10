@@ -89,53 +89,50 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     );
   }
 
-  let sent = false;
-
-  switch (payload.template) {
-    case "purchase":
-      sent = await sendPurchaseConfirmation({
-        to: payload.to,
-        orderTotal: "349.00",
-        pointsAwarded: 35,
-        referralBonus: 25,
-      });
-      break;
-    case "trade":
-      sent = await sendTradeOfferNotification({
-        to: payload.to,
-        offererName: "Coleccionista DOFLINS",
-        offeredFigureName: "Jaguar Prisma",
-        yourFigureName: "Tigre Galactico",
-        listingId: 123,
-      });
-      break;
-    case "weekly":
-      sent = await sendWeeklyDigest({
-        to: payload.to,
-        displayName: "Collector Test",
-        pointsBalance: 480,
-        collectionCount: 18,
-        totalFigures: 60,
-        newTradeOffers: 2,
-        topRarity: "Legendaria",
-      });
-      break;
-    case "reward":
-      sent = await sendRewardAvailable({
-        to: payload.to,
-        rewardName: "Cupon 15% OFF",
-        pointsCost: 300,
-        userBalance: 420,
-      });
-      break;
-  }
-
-  if (!sent) {
+  try {
+    switch (payload.template) {
+      case "purchase":
+        await sendPurchaseConfirmation({
+          to: payload.to,
+          orderTotal: "349.00",
+          pointsAwarded: 35,
+          referralBonus: 25,
+        });
+        break;
+      case "trade":
+        await sendTradeOfferNotification({
+          to: payload.to,
+          offererName: "Coleccionista DOFLINS",
+          offeredFigureName: "Jaguar Prisma",
+          yourFigureName: "Tigre Galactico",
+          listingId: 123,
+        });
+        break;
+      case "weekly":
+        await sendWeeklyDigest({
+          to: payload.to,
+          displayName: "Collector Test",
+          pointsBalance: 480,
+          collectionCount: 18,
+          totalFigures: 60,
+          newTradeOffers: 2,
+          topRarity: "Legendaria",
+        });
+        break;
+      case "reward":
+        await sendRewardAvailable({
+          to: payload.to,
+          rewardName: "Cupon 15% OFF",
+          pointsCost: 300,
+          userBalance: 420,
+        });
+        break;
+    }
+  } catch (error) {
     return NextResponse.json(
       {
         status: "error",
-        message:
-          "No se pudo enviar el correo. Revisa RESEND_API_KEY, EMAIL_FROM y la verificacion del dominio.",
+        message: error instanceof Error ? error.message : "No se pudo enviar el correo.",
       },
       { status: 502 },
     );

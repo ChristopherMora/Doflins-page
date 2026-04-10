@@ -26,7 +26,9 @@ interface SendEmailOptions {
 
 async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
   const resend = getResend();
-  if (!resend) return false;
+  if (!resend) {
+    throw new Error("RESEND_API_KEY no está configurada.");
+  }
 
   try {
     const { error } = await resend.emails.send({
@@ -37,12 +39,15 @@ async function sendEmail(opts: SendEmailOptions): Promise<boolean> {
     });
     if (error) {
       console.error("[email] Resend error:", error);
-      return false;
+      throw new Error(error.message || "Resend rechazó el envío.");
     }
     return true;
   } catch (err) {
     console.error("[email] Send failed:", err);
-    return false;
+    if (err instanceof Error && err.message.trim()) {
+      throw err;
+    }
+    throw new Error("Falló el envío del correo.");
   }
 }
 
