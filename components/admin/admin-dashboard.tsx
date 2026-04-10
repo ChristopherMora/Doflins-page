@@ -1,16 +1,23 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   ArrowPathIcon,
   ArrowDownTrayIcon,
   ChartBarIcon,
+  ClockIcon,
   ExclamationTriangleIcon,
   FireIcon,
   GiftIcon,
   PhotoIcon,
+  PresentationChartLineIcon,
+  QrCodeIcon,
   SparklesIcon,
+  StarIcon,
+  TicketIcon,
   UserGroupIcon,
+  WrenchScrewdriverIcon,
 } from "@heroicons/react/24/solid";
 
 import { Card, CardContent } from "@/components/ui/card";
@@ -84,6 +91,59 @@ const EVENT_LABELS: Record<string, string> = {
   universe_switch: "Cambios universo",
   filter_apply: "Filtros aplicados",
 };
+
+const PANEL_CLASS_NAME = "border border-[#d8d2b4] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)]";
+
+const QUICK_ACTIONS: Array<{
+  href: string;
+  label: string;
+  description: string;
+  Icon: React.ElementType;
+  accentClassName: string;
+}> = [
+  {
+    href: "/admin/doflins",
+    label: "Alta figuras",
+    description: "Crea, edita o revisa el catalogo principal de Doflins.",
+    Icon: SparklesIcon,
+    accentClassName: "from-[#eef7de] to-[#d8ebb3] text-[#35561b]",
+  },
+  {
+    href: "/admin/bolsas",
+    label: "Bolsas / QR",
+    description: "Genera bolsas, revisa inventario y valida codigos QR.",
+    Icon: QrCodeIcon,
+    accentClassName: "from-[#fff3dd] to-[#f6d59a] text-[#7a4c11]",
+  },
+  {
+    href: "/admin/codigos",
+    label: "Codigos",
+    description: "Administra lotes, codigos activos y flujo de generacion.",
+    Icon: TicketIcon,
+    accentClassName: "from-[#e9efff] to-[#cbd8ff] text-[#2745a0]",
+  },
+  {
+    href: "/admin/rewards",
+    label: "Recompensas",
+    description: "Organiza el catalogo de canje y ajusta costos de puntos.",
+    Icon: StarIcon,
+    accentClassName: "from-[#fff0f8] to-[#f6c9e8] text-[#8a1f72]",
+  },
+  {
+    href: "/admin/analytics",
+    label: "Analytics tienda",
+    description: "Abre el embudo de Shopify y el comportamiento de compra.",
+    Icon: PresentationChartLineIcon,
+    accentClassName: "from-[#edf2ff] to-[#d1dcff] text-[#334fa5]",
+  },
+  {
+    href: "#herramientas",
+    label: "Herramientas",
+    description: "Prueba correos y optimiza imagenes sin salir del dashboard.",
+    Icon: WrenchScrewdriverIcon,
+    accentClassName: "from-[#f2efe6] to-[#e2dbc7] text-[#5d563f]",
+  },
+] as const;
 
 // ─── Mapa de calor por hora ────────────────────────────────────────────────────
 
@@ -189,7 +249,8 @@ function downloadCsv(stats: StatsData): void {
 
 // ─── Bar Chart ─────────────────────────────────────────────────────────────────
 
-function BarChart({ data, maxValue, color }: { data: { label: string; value: number }[]; maxValue: number; color: string }) {  return (
+function BarChart({ data, maxValue, color }: { data: { label: string; value: number }[]; maxValue: number; color: string }) {
+  return (
     <div className="flex items-end gap-1 h-24 w-full overflow-x-auto pb-1">
       {data.map((item) => {
         const height = maxValue > 0 ? Math.max(4, (item.value / maxValue) * 96) : 4;
@@ -211,16 +272,22 @@ function BarChart({ data, maxValue, color }: { data: { label: string; value: num
 export function AdminDashboard() {
   const [stats, setStats] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
   const [universeFilter, setUniverseFilter] = useState<"all" | "Animals" | "Multiverse">("all");
 
   const fetchStats = async (filter: "all" | "Animals" | "Multiverse" = universeFilter) => {
-    setIsLoading(true);
+    const initialLoad = !stats;
+    if (initialLoad) {
+      setIsLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
     setError(null);
     try {
       const url = filter === "all" ? "/api/admin/stats" : `/api/admin/stats?serie=${filter}`;
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: "no-store" });
       if (!res.ok) {
         throw new Error("Error cargando estadísticas");
       }
@@ -231,6 +298,7 @@ export function AdminDashboard() {
       setError(e instanceof Error ? e.message : "Error desconocido");
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -264,7 +332,7 @@ export function AdminDashboard() {
 
   const maxEventCount = Math.max(...topEvents.map((e) => e.count), 1);
 
-  if (isLoading) {
+  if (isLoading && !stats) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="flex flex-col items-center gap-3">
@@ -275,7 +343,7 @@ export function AdminDashboard() {
     );
   }
 
-  if (error) {
+  if (error && !stats) {
     return (
       <div className="flex min-h-[400px] items-center justify-center">
         <div className="flex flex-col items-center gap-3 text-center">
@@ -294,276 +362,467 @@ export function AdminDashboard() {
 
   if (!stats) return null;
 
+  const topRevealedFigures = stats.revealsByDoflin.slice(0, 12);
+  const busiestHour = stats.revealsByHour.reduce<RevealByHour | null>((current, entry) => {
+    if (!current || entry.count > current.count) return entry;
+    return current;
+  }, null);
+  const leadFigure = topRevealedFigures[0] ?? null;
+  const dominantEvent = topEvents[0] ?? null;
+  const overviewKpis = [
+    {
+      label: "Reveals (30d)",
+      value: stats.totalReveals30d,
+      hint: `${stats.revealSuccessCount} exitosos`,
+      icon: <SparklesIcon className="h-5 w-5 text-[#42631f]" />,
+      accentClassName: "bg-[#edf6dd]",
+    },
+    {
+      label: "Eventos totales",
+      value: stats.totalEvents30d,
+      hint: `${topEvents.length} tipos activos`,
+      icon: <ChartBarIcon className="h-5 w-5 text-[#3e4e99]" />,
+      accentClassName: "bg-[#ececff]",
+    },
+    {
+      label: "Conversion",
+      value: `${stats.conversionRate.toFixed(1)}%`,
+      hint: `${stats.purchaseIntentCount} intentos`,
+      icon: <FireIcon className="h-5 w-5 text-[#b5472a]" />,
+      accentClassName: "bg-[#fff0e7]",
+    },
+    {
+      label: "Stock critico",
+      value: stats.lowStock.length,
+      hint: stats.lowStock.length > 0 ? "Requiere revision" : "Sin alertas",
+      icon: <ExclamationTriangleIcon className="h-5 w-5 text-[#a86604]" />,
+      accentClassName: "bg-[#fff6de]",
+    },
+    {
+      label: "Perfiles",
+      value: stats.totalProfiles,
+      hint: "Base total",
+      icon: <UserGroupIcon className="h-5 w-5 text-[#1d7a54]" />,
+      accentClassName: "bg-[#e8faef]",
+    },
+    {
+      label: "Coleccionistas",
+      value: stats.activeCollectors,
+      hint: "Usuarios activos",
+      icon: <SparklesIcon className="h-5 w-5 text-[#8a5a18]" />,
+      accentClassName: "bg-[#fff2e4]",
+    },
+    {
+      label: "Referidos activos",
+      value: stats.activeReferralCodes,
+      hint: "Codigos vigentes",
+      icon: <GiftIcon className="h-5 w-5 text-[#8c247e]" />,
+      accentClassName: "bg-[#feeaf7]",
+    },
+    {
+      label: "Usos de referido",
+      value: stats.totalReferralUses,
+      hint: "Adopcion del programa",
+      icon: <GiftIcon className="h-5 w-5 text-[#315ab8]" />,
+      accentClassName: "bg-[#ebf2ff]",
+    },
+  ] as const;
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-title text-3xl text-[var(--ink-900)]">Dashboard</h1>
-          {lastRefreshed && (
-            <p className="text-xs text-[var(--ink-600)] mt-0.5">
-              Actualizado {lastRefreshed.toLocaleTimeString("es-MX")}
-            </p>
-          )}
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Universe filter */}
-          <div className="flex items-center rounded-full border border-[#d8d2b4] bg-white p-1 text-sm font-medium shadow-sm">
+    <div className="space-y-8">
+      <Card className="overflow-hidden border border-[#d9d2b4] bg-[radial-gradient(circle_at_top_right,rgba(214,244,142,0.42),transparent_30%),linear-gradient(135deg,#fffdf6_0%,#f3f7e7_52%,#eef3e8_100%)]">
+        <CardContent className="space-y-6 p-6 sm:p-7">
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="max-w-3xl space-y-3">
+              <Badge className="bg-[#e9f4cf] text-[#233411]">Centro de control</Badge>
+              <div className="space-y-2">
+                <h1 className="font-title text-3xl leading-none text-[var(--ink-900)] sm:text-4xl">Panel admin DOFLINS</h1>
+                <p className="max-w-2xl text-sm leading-6 text-[var(--ink-700)] sm:text-[15px]">
+                  Todo lo importante del panel en una sola vista: operacion, actividad, stock, accesos directos y herramientas que si usas diario.
+                </p>
+              </div>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-medium text-[var(--ink-600)]">
+                <span className="rounded-full border border-[#d9d1b8] bg-white/70 px-3 py-1.5">
+                  Ventana: ultimos 30 dias
+                </span>
+                <span className="rounded-full border border-[#d9d1b8] bg-white/70 px-3 py-1.5">
+                  Filtro: {universeFilter === "all" ? "Todos" : universeFilter}
+                </span>
+                {lastRefreshed ? (
+                  <span className="rounded-full border border-[#d9d1b8] bg-white/70 px-3 py-1.5">
+                    Actualizado {lastRefreshed.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" })}
+                  </span>
+                ) : null}
+                {isRefreshing ? (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d3e5a9] bg-[#eff8da] px-3 py-1.5 text-[#365618]">
+                    <ArrowPathIcon className="h-3.5 w-3.5 animate-spin" />
+                    Actualizando
+                  </span>
+                ) : null}
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                onClick={() => downloadCsv(stats)}
+                className="inline-flex items-center gap-2 rounded-full border border-[#c8e0a0] bg-[#eef5df] px-4 py-2 text-sm font-semibold text-[#2f5b1f] transition hover:bg-[#ddefc7]"
+              >
+                <ArrowDownTrayIcon className="h-4 w-4" />
+                Exportar CSV
+              </button>
+              <button
+                onClick={() => void fetchStats()}
+                className="inline-flex items-center gap-2 rounded-full border border-[#d8d2b4] bg-white/85 px-4 py-2 text-sm font-semibold text-[var(--ink-800)] transition hover:bg-white"
+              >
+                <ArrowPathIcon className={`h-4 w-4 ${isRefreshing ? "animate-spin" : ""}`} />
+                Actualizar
+              </button>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2 rounded-[26px] border border-[#ddd6bf] bg-white/65 p-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.55)]">
             {(["all", "Animals", "Multiverse"] as const).map((f) => (
               <button
                 key={f}
                 onClick={() => handleFilterChange(f)}
-                className={`rounded-full px-3 py-1 transition ${
+                className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
                   universeFilter === f
-                    ? "bg-[#4e6f2a] text-white"
-                    : "text-[var(--ink-700)] hover:bg-[#f4f6e8]"
+                    ? "bg-[#243814] text-white shadow-[0_10px_26px_rgba(36,56,20,0.24)]"
+                    : "text-[var(--ink-700)] hover:bg-[#f3f6ea]"
                 }`}
               >
-                {f === "all" ? "Todos" : f}
+                {f === "all" ? "Todos los universos" : f}
               </button>
             ))}
           </div>
-          <button
-            onClick={() => downloadCsv(stats)}
-            className="flex items-center gap-2 rounded-full border border-[#c8e0a0] bg-[#eef5df] px-4 py-2 text-sm font-medium text-[#2f5b1f] hover:bg-[#ddefc7] transition"
-          >
-            <ArrowDownTrayIcon className="h-4 w-4" /> Exportar CSV
-          </button>
-          <button
-            onClick={() => void fetchStats()}
-            className="flex items-center gap-2 rounded-full border border-[#d8d2b4] bg-white px-4 py-2 text-sm font-medium text-[var(--ink-800)] hover:bg-[#f4f6e8] transition"
-          >
-            <ArrowPathIcon className="h-4 w-4" /> Actualizar
-          </button>
-        </div>
-      </div>
 
-      {/* KPI Cards — fila 1 */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          {
-            label: "Reveals (30d)",
-            value: stats.totalReveals30d,
-            icon: <SparklesIcon className="h-6 w-6 text-[#4e6f2a]" />,
-            bg: "bg-[#eef5df]",
-          },
-          {
-            label: "Eventos totales (30d)",
-            value: stats.totalEvents30d,
-            icon: <ChartBarIcon className="h-6 w-6 text-[#4a3c8c]" />,
-            bg: "bg-[#ede8ff]",
-          },
-          {
-            label: "Stock crítico (≤5)",
-            value: stats.lowStock.length,
-            icon: <ExclamationTriangleIcon className="h-6 w-6 text-amber-600" />,
-            bg: "bg-[#fff8e5]",
-          },
-          {
-            label: "Tasa de conversión",
-            value: `${stats.conversionRate.toFixed(1)}%`,
-            icon: <FireIcon className="h-6 w-6 text-red-500" />,
-            bg: "bg-[#fff0f0]",
-          },
-        ].map((kpi) => (
-          <Card key={kpi.label} className={`border border-[#d8d2b4] ${kpi.bg} shadow-sm`}>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-2xl bg-white/80 p-3 shadow-sm">{kpi.icon}</div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-600)]">{kpi.label}</p>
-                <p className="font-title text-3xl text-[var(--ink-900)]">{kpi.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* KPI Cards — fila 2: usuarios y referidos */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        {[
-          {
-            label: "Perfiles creados",
-            value: stats.totalProfiles,
-            icon: <UserGroupIcon className="h-6 w-6 text-[#1a7a4a]" />,
-            bg: "bg-[#e8faf0]",
-          },
-          {
-            label: "Coleccionistas activos",
-            value: stats.activeCollectors,
-            icon: <SparklesIcon className="h-6 w-6 text-[#b46a2d]" />,
-            bg: "bg-[#fff4e8]",
-          },
-          {
-            label: "Códigos referido activos",
-            value: stats.activeReferralCodes,
-            icon: <GiftIcon className="h-6 w-6 text-[#9b1fae]" />,
-            bg: "bg-[#fde8f5]",
-          },
-          {
-            label: "Usos de referido",
-            value: stats.totalReferralUses,
-            icon: <GiftIcon className="h-6 w-6 text-[#3b5bdb]" />,
-            bg: "bg-[#e8f0fe]",
-          },
-        ].map((kpi) => (
-          <Card key={kpi.label} className={`border border-[#d8d2b4] ${kpi.bg} shadow-sm`}>
-            <CardContent className="flex items-center gap-4 p-5">
-              <div className="rounded-2xl bg-white/80 p-3 shadow-sm">{kpi.icon}</div>
-              <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[var(--ink-600)]">{kpi.label}</p>
-                <p className="font-title text-3xl text-[var(--ink-900)]">{kpi.value}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Reveals chart */}
-      <Card className="border border-[#d8d2b4] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)]">
-        <CardContent className="p-6 space-y-3">
-          <h2 className="font-title text-xl text-[var(--ink-900)]">Reveals por día (últimos 30 días)</h2>
-          <BarChart data={revealChartData} maxValue={maxReveals} color="bg-[#6d8a3a]" />
-          <div className="flex justify-between text-[10px] text-[var(--ink-500)]">
-            <span>Hace 30 días</span>
-            <span>Hoy</span>
+          <div className="grid gap-3 lg:grid-cols-3">
+            <div className="rounded-3xl border border-[#d8d1bc] bg-white/78 p-4 shadow-sm">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Atencion requerida</p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-[var(--ink-900)]">
+                {stats.lowStock.length > 0 ? `${stats.lowStock.length} alertas de stock` : "Operacion estable"}
+              </p>
+              <p className="mt-1 text-sm text-[var(--ink-600)]">
+                {stats.lowStock.length > 0
+                  ? "Hay figuras con inventario bajo que conviene revisar hoy."
+                  : "No hay items criticos por debajo del umbral definido."}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-[#d8d1bc] bg-white/78 p-4 shadow-sm">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Figura mas movida</p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-[var(--ink-900)]">
+                {leadFigure ? leadFigure.name : "Sin reveals"}
+              </p>
+              <p className="mt-1 text-sm text-[var(--ink-600)]">
+                {leadFigure ? `${leadFigure.revealCount} reveals en la ventana actual.` : "Todavia no hay actividad suficiente para destacarla."}
+              </p>
+            </div>
+            <div className="rounded-3xl border border-[#d8d1bc] bg-white/78 p-4 shadow-sm">
+              <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Hora pico</p>
+              <p className="mt-2 text-2xl font-black tracking-tight text-[var(--ink-900)]">
+                {busiestHour ? `${String(busiestHour.hour).padStart(2, "0")}:00` : "Sin datos"}
+              </p>
+              <p className="mt-1 text-sm text-[var(--ink-600)]">
+                {busiestHour ? `${busiestHour.count} reveals acumulados en ese bloque.` : "No hay datos suficientes de actividad por hora."}
+              </p>
+            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Events by type + Low stock */}
-      <div className="grid gap-4 lg:grid-cols-2">
-        {/* Events by type */}
-        <Card className="border border-[#d8d2b4] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)]">
-          <CardContent className="p-6 space-y-3">
-            <h2 className="font-title text-xl text-[var(--ink-900)]">Eventos (30d)</h2>
-            <div className="space-y-2">
-              {topEvents.map((ev) => (
-                <div key={ev.eventType} className="flex items-center gap-3">
-                  <span className="w-36 text-xs text-[var(--ink-700)] truncate">
-                    {EVENT_LABELS[ev.eventType] ?? ev.eventType}
-                  </span>
-                  <div className="flex-1 rounded-full bg-[#e8edd8] h-3 overflow-hidden">
-                    <div
-                      className="h-full rounded-full bg-[#4a3c8c] transition-all duration-700"
-                      style={{ width: `${(ev.count / maxEventCount) * 100}%` }}
-                    />
-                  </div>
-                  <span className="w-8 text-right text-xs font-bold text-[var(--ink-900)]">{ev.count}</span>
-                </div>
-              ))}
-              {topEvents.length === 0 && (
-                <p className="text-sm text-[var(--ink-500)]">Sin eventos en los últimos 30 días.</p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <section className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Accesos directos</p>
+            <h2 className="font-title text-2xl text-[var(--ink-900)]">Trabaja mas rapido</h2>
+          </div>
+          <p className="max-w-xl text-sm text-[var(--ink-600)]">
+            Lo mas usado del panel queda a un clic para que no dependas solo del menu superior.
+          </p>
+        </div>
 
-        {/* Low stock */}
-        <Card className="border border-[#d8d2b4] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)]">
-          <CardContent className="p-6 space-y-3">
-            <h2 className="font-title text-xl text-[var(--ink-900)] flex items-center gap-2">
-              <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" /> Stock crítico
-            </h2>
-            {stats.lowStock.length === 0 ? (
-              <p className="text-sm text-[var(--ink-500)]">Todos los ítems tienen stock suficiente ✓</p>
-            ) : (
-              <div className="space-y-2 max-h-72 overflow-y-auto">
-                {stats.lowStock.map((item) => (
-                  <div
-                    key={item.doflinId}
-                    className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
-                      item.remaining <= 1
-                        ? "border-red-300 bg-red-50"
-                        : item.remaining <= 3
-                          ? "border-orange-300 bg-orange-50"
-                          : "border-amber-300 bg-amber-50"
-                    }`}
-                  >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <Badge
-                        className={`shrink-0 text-[10px] px-2 py-0.5 rounded-full ${RARITY_COLORS[item.rarity] ?? "bg-gray-100 text-gray-700"}`}
-                      >
-                        {item.rarity}
-                      </Badge>
-                      <span className="font-medium text-[var(--ink-900)] truncate">{item.name}</span>
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+          {QUICK_ACTIONS.map(({ href, label, description, Icon, accentClassName }) => (
+            <Link
+              key={href}
+              href={href}
+              className="group rounded-3xl border border-[#ddd6bf] bg-white/75 p-4 shadow-sm transition duration-200 hover:-translate-y-0.5 hover:border-[#cddcab] hover:shadow-[0_18px_36px_rgba(42,62,22,0.12)]"
+            >
+              <span className={`inline-flex rounded-2xl bg-gradient-to-br p-3 shadow-sm ${accentClassName}`}>
+                <Icon className="h-5 w-5" />
+              </span>
+              <h3 className="mt-4 text-lg font-bold tracking-tight text-[var(--ink-900)]">{label}</h3>
+              <p className="mt-1 text-sm leading-6 text-[var(--ink-600)]">{description}</p>
+              <p className="mt-4 text-xs font-bold uppercase tracking-[0.16em] text-[#4d6f29] transition-transform group-hover:translate-x-1">
+                Abrir
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {error ? (
+        <div className="flex items-start gap-3 rounded-3xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <ExclamationTriangleIcon className="mt-0.5 h-5 w-5 shrink-0" />
+          <span>{error}</span>
+        </div>
+      ) : null}
+
+      <section id="resumen" className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Resumen</p>
+            <h2 className="font-title text-2xl text-[var(--ink-900)]">Lectura rapida del negocio</h2>
+          </div>
+          <p className="max-w-xl text-sm text-[var(--ink-600)]">
+            Metricas clave compactas para detectar salud general, adopcion y carga operativa sin tener que bajar por todo el dashboard.
+          </p>
+        </div>
+
+        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+          {overviewKpis.map((kpi) => (
+            <Card key={kpi.label} className="border border-[#d8d2b4] bg-white/78 shadow-sm">
+              <CardContent className="space-y-3 p-5">
+                <div className={`inline-flex rounded-2xl p-3 ${kpi.accentClassName}`}>
+                  {kpi.icon}
+                </div>
+                <div>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-500)]">{kpi.label}</p>
+                  <p className="mt-1 font-title text-3xl text-[var(--ink-900)]">{kpi.value}</p>
+                  <p className="mt-1 text-xs text-[var(--ink-600)]">{kpi.hint}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section id="monitoreo" className="grid gap-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.9fr)]">
+        <div className="space-y-6">
+          <Card className={PANEL_CLASS_NAME}>
+            <CardContent className="space-y-4 p-6">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Actividad</p>
+                  <h2 className="font-title text-2xl text-[var(--ink-900)]">Reveals por dia</h2>
+                </div>
+                <p className="text-sm text-[var(--ink-600)]">
+                  Tendencia de los ultimos 30 dias para detectar caidas o picos.
+                </p>
+              </div>
+              <BarChart data={revealChartData} maxValue={maxReveals} color="bg-[#6d8a3a]" />
+              <div className="flex justify-between text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-500)]">
+                <span>Hace 30 dias</span>
+                <span>Hoy</span>
+              </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card className={PANEL_CLASS_NAME}>
+              <CardContent className="space-y-4 p-6">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Comportamiento</p>
+                    <h2 className="font-title text-2xl text-[var(--ink-900)]">Eventos dominantes</h2>
+                  </div>
+                  {dominantEvent ? (
+                    <span className="rounded-full border border-[#d6d1b9] bg-white/70 px-3 py-1 text-xs font-semibold text-[var(--ink-600)]">
+                      Top: {EVENT_LABELS[dominantEvent.eventType] ?? dominantEvent.eventType}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="space-y-2">
+                  {topEvents.map((ev) => (
+                    <div key={ev.eventType} className="flex items-center gap-3">
+                      <span className="w-36 text-xs text-[var(--ink-700)] truncate">
+                        {EVENT_LABELS[ev.eventType] ?? ev.eventType}
+                      </span>
+                      <div className="h-3 flex-1 overflow-hidden rounded-full bg-[#e8edd8]">
+                        <div
+                          className="h-full rounded-full bg-[#4a3c8c] transition-all duration-700"
+                          style={{ width: `${(ev.count / maxEventCount) * 100}%` }}
+                        />
+                      </div>
+                      <span className="w-8 text-right text-xs font-bold text-[var(--ink-900)]">{ev.count}</span>
                     </div>
-                    <span
-                      className={`shrink-0 ml-3 font-bold tabular-nums ${
-                        item.remaining <= 1 ? "text-red-700" : item.remaining <= 3 ? "text-orange-700" : "text-amber-700"
+                  ))}
+                  {topEvents.length === 0 ? (
+                    <p className="text-sm text-[var(--ink-500)]">Sin eventos en los ultimos 30 dias.</p>
+                  ) : null}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className={PANEL_CLASS_NAME}>
+              <CardContent className="space-y-4 p-6">
+                <div className="flex flex-wrap items-end justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Distribucion</p>
+                    <h2 className="font-title text-2xl text-[var(--ink-900)]">Figuras mas reveladas</h2>
+                  </div>
+                  <span className="rounded-full border border-[#d6d1b9] bg-white/70 px-3 py-1 text-xs font-semibold text-[var(--ink-600)]">
+                    Top {topRevealedFigures.length}
+                  </span>
+                </div>
+                {topRevealedFigures.length > 0 ? (
+                  <div className="space-y-2">
+                    {topRevealedFigures.map((item) => {
+                      const maxCount = topRevealedFigures[0]?.revealCount ?? 1;
+                      const pct = stats.totalReveals30d > 0
+                        ? Math.round((item.revealCount / stats.totalReveals30d) * 1000) / 10
+                        : 0;
+                      const barWidth = maxCount > 0 ? (item.revealCount / maxCount) * 100 : 0;
+                      return (
+                        <div key={item.doflinId} className="flex items-center gap-3">
+                          <div className="flex w-44 shrink-0 items-center gap-2 min-w-0">
+                            <Badge
+                              className={`shrink-0 rounded-full px-1.5 py-0.5 text-[9px] ${RARITY_COLORS[item.rarity] ?? "bg-gray-100 text-gray-700"}`}
+                            >
+                              {item.rarity.slice(0, 3)}
+                            </Badge>
+                            <span className="truncate text-xs text-[var(--ink-800)]">{item.name}</span>
+                          </div>
+                          <div className="h-3 flex-1 overflow-hidden rounded-full bg-[#e8edd8]">
+                            <div
+                              className="h-full rounded-full bg-[#4e6f2a] transition-all duration-700"
+                              style={{ width: `${barWidth}%` }}
+                            />
+                          </div>
+                          <span className="w-16 shrink-0 text-right text-xs font-bold tabular-nums text-[var(--ink-900)]">
+                            {item.revealCount} ({pct}%)
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-sm text-[var(--ink-500)]">Aun no hay suficientes reveals para comparar figuras.</p>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        <div className="space-y-6">
+          <Card className={PANEL_CLASS_NAME}>
+            <CardContent className="space-y-4 p-6">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Operacion</p>
+                <h2 className="font-title text-2xl text-[var(--ink-900)]">Estado rapido</h2>
+              </div>
+              <div className="grid gap-3">
+                <div className="rounded-2xl border border-[#d9d2bc] bg-white/70 p-4">
+                  <div className="flex items-center gap-2">
+                    <ExclamationTriangleIcon className="h-4 w-4 text-amber-500" />
+                    <p className="text-sm font-semibold text-[var(--ink-900)]">Stock bajo</p>
+                  </div>
+                  <p className="mt-2 text-2xl font-black text-[var(--ink-900)]">{stats.lowStock.length}</p>
+                  <p className="mt-1 text-xs text-[var(--ink-600)]">Figuras por debajo del umbral operativo.</p>
+                </div>
+                <div className="rounded-2xl border border-[#d9d2bc] bg-white/70 p-4">
+                  <div className="flex items-center gap-2">
+                    <ClockIcon className="h-4 w-4 text-[#4a6b29]" />
+                    <p className="text-sm font-semibold text-[var(--ink-900)]">Hora mas activa</p>
+                  </div>
+                  <p className="mt-2 text-2xl font-black text-[var(--ink-900)]">
+                    {busiestHour ? `${String(busiestHour.hour).padStart(2, "0")}:00` : "--:--"}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--ink-600)]">
+                    {busiestHour ? `${busiestHour.count} reveals en el bloque mas fuerte.` : "Sin datos suficientes."}
+                  </p>
+                </div>
+                <div className="rounded-2xl border border-[#d9d2bc] bg-white/70 p-4">
+                  <div className="flex items-center gap-2">
+                    <ChartBarIcon className="h-4 w-4 text-[#3b4a97]" />
+                    <p className="text-sm font-semibold text-[var(--ink-900)]">Evento dominante</p>
+                  </div>
+                  <p className="mt-2 text-lg font-black leading-tight text-[var(--ink-900)]">
+                    {dominantEvent ? EVENT_LABELS[dominantEvent.eventType] ?? dominantEvent.eventType : "Sin actividad"}
+                  </p>
+                  <p className="mt-1 text-xs text-[var(--ink-600)]">
+                    {dominantEvent ? `${dominantEvent.count} ocurrencias en la ventana actual.` : "Todavia no hay eventos registrados."}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={PANEL_CLASS_NAME}>
+            <CardContent className="space-y-4 p-6">
+              <div className="flex items-center gap-2">
+                <ExclamationTriangleIcon className="h-5 w-5 text-amber-500" />
+                <h2 className="font-title text-2xl text-[var(--ink-900)]">Stock critico</h2>
+              </div>
+              {stats.lowStock.length === 0 ? (
+                <p className="text-sm text-[var(--ink-500)]">Todos los items tienen stock suficiente.</p>
+              ) : (
+                <div className="max-h-72 space-y-2 overflow-y-auto">
+                  {stats.lowStock.map((item) => (
+                    <div
+                      key={item.doflinId}
+                      className={`flex items-center justify-between rounded-2xl border px-3 py-2 text-sm ${
+                        item.remaining <= 1
+                          ? "border-red-300 bg-red-50"
+                          : item.remaining <= 3
+                            ? "border-orange-300 bg-orange-50"
+                            : "border-amber-300 bg-amber-50"
                       }`}
                     >
-                      {item.remaining} restante{item.remaining === 1 ? "" : "s"}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Reveals por doflin (distribución) */}
-      {stats.revealsByDoflin.length > 0 && (
-        <Card className="border border-[#d8d2b4] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)]">
-          <CardContent className="p-6 space-y-4">
-            <h2 className="font-title text-xl text-[var(--ink-900)]">
-              Distribución de reveals por figura (30d)
-            </h2>
-            <p className="text-xs text-[var(--ink-500)]">
-              Top {stats.revealsByDoflin.length} figuras más reveladas. Compara la distribución real contra la rareza teórica.
-            </p>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {stats.revealsByDoflin.map((item) => {
-                const maxCount = stats.revealsByDoflin[0]?.revealCount ?? 1;
-                const pct = Math.round((item.revealCount / stats.totalReveals30d) * 1000) / 10;
-                const barWidth = maxCount > 0 ? (item.revealCount / maxCount) * 100 : 0;
-                return (
-                  <div key={item.doflinId} className="flex items-center gap-3">
-                    <div className="flex w-44 shrink-0 items-center gap-2 min-w-0">
-                      <Badge
-                        className={`shrink-0 text-[9px] px-1.5 py-0.5 rounded-full ${RARITY_COLORS[item.rarity] ?? "bg-gray-100 text-gray-700"}`}
+                      <div className="min-w-0 flex items-center gap-2">
+                        <Badge
+                          className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] ${RARITY_COLORS[item.rarity] ?? "bg-gray-100 text-gray-700"}`}
+                        >
+                          {item.rarity}
+                        </Badge>
+                        <span className="truncate font-medium text-[var(--ink-900)]">{item.name}</span>
+                      </div>
+                      <span
+                        className={`ml-3 shrink-0 font-bold tabular-nums ${
+                          item.remaining <= 1 ? "text-red-700" : item.remaining <= 3 ? "text-orange-700" : "text-amber-700"
+                        }`}
                       >
-                        {item.rarity.slice(0, 3)}
-                      </Badge>
-                      <span className="truncate text-xs text-[var(--ink-800)]">{item.name}</span>
+                        {item.remaining}
+                      </span>
                     </div>
-                    <div className="flex-1 rounded-full bg-[#e8edd8] h-3 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-[#4e6f2a] transition-all duration-700"
-                        style={{ width: `${barWidth}%` }}
-                      />
-                    </div>
-                    <span className="w-16 shrink-0 text-right text-xs font-bold tabular-nums text-[var(--ink-900)]">
-                      {item.revealCount} ({pct}%)
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Mapa de calor por hora del día */}
-      <Card className="border border-[#d8d2b4] bg-[linear-gradient(145deg,#fffaf1,#f4f7e9)]">
-        <CardContent className="p-6 space-y-3">
+          <Card className={PANEL_CLASS_NAME}>
+            <CardContent className="space-y-4 p-6">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Actividad por hora</p>
+                <h2 className="font-title text-2xl text-[var(--ink-900)]">Mapa de calor</h2>
+              </div>
+              {stats.revealsByHour.length > 0 ? (
+                <HourHeatMap data={stats.revealsByHour} />
+              ) : (
+                <p className="text-sm text-[var(--ink-500)]">Sin datos de reveals en los ultimos 30 dias.</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+      </section>
+
+      <section id="herramientas" className="space-y-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="font-title text-xl text-[var(--ink-900)]">Mapa de calor — ¿a qué hora revelan?</h2>
-            <p className="text-xs text-[var(--ink-500)]">Distribución de reveals exitosos por hora del día (últimos 30 días). Hora local del servidor.</p>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-[var(--ink-500)]">Herramientas</p>
+            <h2 className="font-title text-2xl text-[var(--ink-900)]">Operaciones manuales</h2>
           </div>
-          {stats.revealsByHour.length > 0 ? (
-            <HourHeatMap data={stats.revealsByHour} />
-          ) : (
-            <p className="text-sm text-[var(--ink-500)]">Sin datos de reveals en los últimos 30 días.</p>
-          )}
-        </CardContent>
-      </Card>
+          <p className="max-w-xl text-sm text-[var(--ink-600)]">
+            Acciones que normalmente haces de forma puntual: validar correos, revisar optimizacion de imagenes y correr utilidades internas.
+          </p>
+        </div>
 
-      {/* Herramientas — Pruebas de email */}
-      <EmailTestingPanel />
-
-      {/* Herramientas — Convertir imágenes a WebP */}
-      <WebPConverter />
+        <div className="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+          <EmailTestingPanel />
+          <WebPConverter />
+        </div>
+      </section>
     </div>
   );
 }

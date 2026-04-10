@@ -2,7 +2,8 @@ import { Resend } from "resend";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY ?? "";
 const FROM_EMAIL = process.env.EMAIL_FROM ?? "DOFLINS <noreply@doflins.dofer.mx>";
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://doflins.dofer.mx";
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL ?? "https://doflins.dofer.mx").replace(/\/$/, "");
+const LOGO_URL = `${SITE_URL}/images/branding/doflins-email-logo.png`;
 
 let resendInstance: Resend | null = null;
 
@@ -248,15 +249,21 @@ function emailLayout(opts: LayoutOptions): string {
                   <td>
                     <table role="presentation" cellpadding="0" cellspacing="0" style="margin-bottom:18px;">
                       <tr>
-                        <td style="width:54px;height:54px;border-radius:18px;background:rgba(255,255,255,0.16);border:1px solid rgba(255,255,255,0.28);box-shadow:inset 0 1px 0 rgba(255,255,255,0.22);text-align:center;font-size:15px;font-weight:900;color:#ffffff;letter-spacing:0.08em;">
-                          DF
-                        </td>
-                        <td style="padding-left:12px;">
-                          <p style="margin:0;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.76);font-weight:800;">
+                        <td>
+                          <table role="presentation" cellpadding="0" cellspacing="0" style="background:rgba(3,5,3,0.52);border:1px solid rgba(255,255,255,0.12);border-radius:22px;box-shadow:0 16px 44px rgba(3,8,2,0.22);">
+                            <tr>
+                              <td style="padding:10px 18px;">
+                                <img
+                                  src="${escapeHtml(LOGO_URL)}"
+                                  alt="DOFLINS"
+                                  width="220"
+                                  style="display:block;width:220px;max-width:100%;height:auto;border:0;outline:none;text-decoration:none;"
+                                />
+                              </td>
+                            </tr>
+                          </table>
+                          <p style="margin:10px 0 0 2px;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.78);font-weight:800;">
                             ${escapeHtml(opts.eyebrow)}
-                          </p>
-                          <p style="margin:4px 0 0;font-size:28px;line-height:1;color:#ffffff;font-weight:900;letter-spacing:-0.04em;">
-                            DOFLINS
                           </p>
                         </td>
                       </tr>
