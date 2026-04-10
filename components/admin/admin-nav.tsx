@@ -45,10 +45,10 @@ export function AdminNav(): React.JSX.Element | null {
                 className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-2 text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
                   active
                     ? "border-[#dff2aa] bg-[#f1ffd1] text-[#20310f] shadow-[0_8px_24px_rgba(197,227,121,0.22)]"
-                    : "border-transparent bg-transparent text-white/88 hover:border-white/12 hover:bg-white/10 hover:text-white"
+                    : "border-[#31471f] bg-[#243716] text-[#eef6d6] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)] hover:border-[#4f6b31] hover:bg-[#2d431c] hover:text-[#ffffff]"
                 }`}
               >
-                <Icon className={`h-4 w-4 shrink-0 ${active ? "text-[#537526]" : "text-white/72"}`} />
+                <Icon className={`h-4 w-4 shrink-0 ${active ? "text-[#537526]" : "text-[#dce8b4]"}`} />
                 {label}
               </Link>
             );
