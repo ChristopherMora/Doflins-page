@@ -114,6 +114,56 @@ interface AnalyticsData {
   _notice?: string;
 }
 
+function getFunnelStepMap(funnel: FunnelStep[]): Record<string, FunnelStep> {
+  return Object.fromEntries(funnel.map((step) => [step.key, step])) as Record<string, FunnelStep>;
+}
+
+function getWorstFunnelStep(funnel: FunnelStep[]): FunnelStep | null {
+  return funnel
+    .filter((step) => step.dropoffRate > 0)
+    .sort((a, b) => b.dropoffRate - a.dropoffRate)[0] ?? null;
+}
+
+function getPrimaryInsight(data: AnalyticsData): string | null {
+  if (data.funnel.length < 2) return null;
+
+  const steps = getFunnelStepMap(data.funnel);
+  const shopView = steps.shopView?.count ?? 0;
+  const productView = steps.productView?.count ?? 0;
+  const addToCart = steps.addToCart?.count ?? 0;
+  const checkoutStart = steps.checkoutStart?.count ?? 0;
+  const checkoutComplete = steps.checkoutComplete?.count ?? 0;
+
+  if (shopView > 0 && shopView < 10) {
+    return `La muestra es muy chica (${shopView} sesiones). Toma este insight con cautela antes de concluir que hubo un problema real.`;
+  }
+
+  if (shopView > 0 && checkoutComplete === 0) {
+    if (checkoutStart > 0) {
+      return `Hubo ${checkoutStart} inicios de checkout y 0 compras completadas. Eso sí amerita revisar pago, envío, redirección a Shopify y el webhook orders/paid.`;
+    }
+    if (addToCart > 0) {
+      return `Hubo ${addToCart} sesiones con add to cart pero nadie inició checkout. Revisa el carrito, el CTA de pagar y cualquier fricción antes de Shopify.`;
+    }
+    if (productView > 0) {
+      return `Sí hubo usuarios viendo productos (${productView}), pero nadie agregó al carrito ni compró. Revisa precio, stock, fotos y claridad del CTA.`;
+    }
+  }
+
+  const worst = getWorstFunnelStep(data.funnel);
+  if (!worst) return null;
+
+  const tips: Record<string, string> = {
+    productView: "Pocos usuarios exploran productos. Mejora la visibilidad del catálogo o agrega banners llamativos.",
+    addToCart: "Los usuarios ven productos pero no agregan al carrito. Revisa precios, imágenes y CTAs.",
+    cartView: "Agregan al carrito pero no lo abren. Haz el botón de carrito más visible.",
+    checkoutStart: "Abren el carrito pero no van a checkout. Revisa costos de envío, confianza y fricción.",
+    checkoutComplete: "Inician checkout pero no completan. Revisa métodos de pago, Shopify y el webhook de compra completada.",
+  };
+
+  return tips[worst.key] ?? `El paso "${worst.label}" tiene ${worst.dropoffRate}% de abandono.`;
+}
+
 const FUNNEL_COLORS = [
   "bg-blue-500",
   "bg-cyan-500",
@@ -413,9 +463,7 @@ export function ShopAnalyticsDashboard(): React.JSX.Element {
                     <p className="text-xs font-medium text-amber-800">
                       💡 Mayor pérdida:{" "}
                       {(() => {
-                        const worst = data.funnel
-                          .filter((s) => s.dropoffRate > 0)
-                          .sort((a, b) => b.dropoffRate - a.dropoffRate)[0];
+                        const worst = getWorstFunnelStep(data.funnel);
                         if (!worst) return "Sin datos suficientes";
                         return `"${worst.label}" pierde el ${worst.dropoffRate}% de usuarios respecto al paso anterior.`;
                       })()}
@@ -590,22 +638,13 @@ export function ShopAnalyticsDashboard(): React.JSX.Element {
                 💡 Insights automáticos
               </h2>
               <ul className="space-y-2 text-sm text-[var(--ink-700)]">
-                {data.funnel.length >= 2 && (() => {
-                  const worst = data.funnel
-                    .filter((s) => s.dropoffRate > 0)
-                    .sort((a, b) => b.dropoffRate - a.dropoffRate)[0];
-                  if (!worst) return null;
-                  const tips: Record<string, string> = {
-                    productView: "Pocos usuarios exploran productos. Mejora la visibilidad del catálogo o agrega banners llamativos.",
-                    addToCart: "Los usuarios ven productos pero no agregan al carrito. Revisa precios, imágenes y CTAs.",
-                    cartView: "Agregan al carrito pero no lo abren. Haz el botón de carrito más visible.",
-                    checkoutStart: "Abren el carrito pero no van a checkout. Revisa costos de envío, confianza y fricción.",
-                    checkoutComplete: "Inician checkout pero no completan. Revisa métodos de pago y proceso de Shopify.",
-                  };
+                {(() => {
+                  const insight = getPrimaryInsight(data);
+                  if (!insight) return null;
                   return (
                     <li className="flex gap-2">
                       <span className="text-amber-500">⚠️</span>
-                      <span>{tips[worst.key] ?? `El paso "${worst.label}" tiene ${worst.dropoffRate}% de abandono.`}</span>
+                      <span>{insight}</span>
                     </li>
                   );
                 })()}
