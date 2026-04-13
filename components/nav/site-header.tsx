@@ -40,20 +40,13 @@ export function SiteHeader(): React.JSX.Element {
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartCount, setCartCount] = useState(0);
-  const [headerHidden, setHeaderHidden] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const lastScrollY = useRef(0);
   const menuRef = useRef<HTMLDivElement>(null);
 
-  // Ocultar header al bajar, mostrar al subir + detectar scroll para glassmorphism
+  // Detectar scroll para aplicar glassmorphism, sin mover el header.
   useEffect(() => {
     const handleScroll = () => {
-      const y = window.scrollY;
-      setScrolled(y > 20);
-      const diff = y - lastScrollY.current;
-      if (Math.abs(diff) < 6) return;
-      setHeaderHidden(diff > 0 && y > 100);
-      lastScrollY.current = y;
+      setScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
@@ -209,9 +202,7 @@ export function SiteHeader(): React.JSX.Element {
 
   return (
     <header
-      className={`sticky top-0 z-40 w-full border-b transition-[transform,opacity] duration-300 ease-in-out animate-[slideDown_0.3s_ease-in-out] ${
-        headerHidden ? "-translate-y-full opacity-0" : "translate-y-0 opacity-100"
-      }`}
+      className="sticky top-0 z-40 w-full border-b transition-colors duration-300 ease-in-out"
       style={{
         background: headerBg,
         borderColor: headerBorder,

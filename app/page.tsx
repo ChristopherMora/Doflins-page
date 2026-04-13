@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { unstable_cache } from "next/cache";
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import {
@@ -30,7 +31,9 @@ const SERIES_MAP: Record<string, string> = {
 type FeaturedFigure = { id: number; imagenUrl: string; nombre: string; rareza: string };
 type FeaturedData = { animals: FeaturedFigure[]; mega: FeaturedFigure[]; multiverse: FeaturedFigure[] };
 
-async function getFeaturedFigures(): Promise<FeaturedData> {
+export const revalidate = 3600;
+
+const getFeaturedFigures = unstable_cache(async (): Promise<FeaturedData> => {
   try {
     const db = getDb();
     const rows = await db
@@ -49,7 +52,7 @@ async function getFeaturedFigures(): Promise<FeaturedData> {
   } catch {
     return { animals: [], mega: [], multiverse: [] };
   }
-}
+}, ["home-featured-figures"], { revalidate: 3600 });
 
 export const metadata: Metadata = {
   title: "DOFLINS | Figuras Coleccionables con Rareza Oficial",

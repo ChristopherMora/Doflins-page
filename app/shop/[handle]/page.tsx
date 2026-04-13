@@ -24,8 +24,8 @@ import { resolveProductModelUrl } from "@/lib/shop/product-model";
 import type { ShopProduct, ShopProductVariant, UniverseFilter } from "@/lib/shopify/types";
 import { fetchShopProductByHandle, fetchShopProducts, ShopifyStorefrontError } from "@/lib/server/shopify-storefront";
 
-export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: ShopProductDetailPageProps): Promise<Metadata> {
   const { handle } = await params;

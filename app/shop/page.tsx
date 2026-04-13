@@ -5,6 +5,8 @@ import { ShopifyBuyExperience } from "@/components/shop/shopify-buy-experience";
 import { fetchShopProducts } from "@/lib/server/shopify-storefront";
 import type { ShopProduct } from "@/lib/shopify/types";
 
+export const revalidate = 300;
+
 export const metadata: Metadata = {
   title: "Tienda | DOFLINS",
   description:

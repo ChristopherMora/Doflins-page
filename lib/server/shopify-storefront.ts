@@ -1,3 +1,4 @@
+import { unstable_cache } from "next/cache";
 import type { ShopCart, ShopCartLine, ShopProduct, ShopProductVariant, ShopifyMoney, UniverseFilter } from "@/lib/shopify/types";
 
 interface ShopifyConfig {
@@ -85,6 +86,11 @@ interface ShopifyCartNode {
 const DEFAULT_SHOPIFY_API_VERSION = "2025-01";
 const MAX_PRODUCTS_PER_QUERY = 30;
 const MAX_STOREFRONT_ATTEMPTS = 3;
+const SHOPIFY_CATALOG_REVALIDATE_SECONDS = (() => {
+  const ttlMs = Number(process.env.SHOPIFY_CATALOG_CACHE_TTL_MS ?? "45000");
+  if (!Number.isFinite(ttlMs) || ttlMs <= 0) return 45;
+  return Math.max(30, Math.ceil(ttlMs / 1000));
+})();
 
 function delay(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -636,7 +642,7 @@ function universeToCollectionHandle(universe: UniverseFilter): string | null {
   return process.env.SHOPIFY_COLLECTION_MULTIVERSE_HANDLE?.trim() || "multiverse";
 }
 
-export async function fetchShopProducts(universe: UniverseFilter): Promise<ShopProduct[]> {
+async function fetchShopProductsUncached(universe: UniverseFilter): Promise<ShopProduct[]> {
   const collectionHandle = universeToCollectionHandle(universe);
   if (collectionHandle) {
     const data = await storefrontRequest<{
@@ -674,7 +680,7 @@ export async function fetchShopProducts(universe: UniverseFilter): Promise<ShopP
   }));
 }
 
-export async function fetchShopProductByHandle(handle: string): Promise<ShopProduct | null> {
+async function fetchShopProductByHandleUncached(handle: string): Promise<ShopProduct | null> {
   const data = await storefrontRequest<{
     product: ShopifyProductNode | null;
   }>(PRODUCT_BY_HANDLE_QUERY, {
@@ -687,6 +693,24 @@ export async function fetchShopProductByHandle(handle: string): Promise<ShopProd
 
   return normalizeProduct(data.product);
 }
+
+export const fetchShopProducts = unstable_cache(
+  async (universe: UniverseFilter): Promise<ShopProduct[]> => fetchShopProductsUncached(universe),
+  ["shopify-products"],
+  {
+    revalidate: SHOPIFY_CATALOG_REVALIDATE_SECONDS,
+    tags: ["shopify-catalog"],
+  },
+);
+
+export const fetchShopProductByHandle = unstable_cache(
+  async (handle: string): Promise<ShopProduct | null> => fetchShopProductByHandleUncached(handle),
+  ["shopify-product-by-handle"],
+  {
+    revalidate: SHOPIFY_CATALOG_REVALIDATE_SECONDS,
+    tags: ["shopify-catalog"],
+  },
+);
 
 export async function fetchCartById(cartId: string): Promise<ShopCart | null> {
   const data = await storefrontRequest<{
