@@ -91,7 +91,7 @@ export const metadata: Metadata = {
     canonical: siteUrl,
   },
   verification: {
-    // google: 'tu-codigo-aqui', // Agrega después de verificar en Google Search Console
+    google: "5MLedLqzfRN_4Ladpde1LMKw2hEKL3r2H-AbHPZmkRY",
   },
   category: "toys",
 };
