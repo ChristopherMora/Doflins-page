@@ -10,6 +10,7 @@ import { BackToTop } from "@/components/ui/back-to-top";
 import { PwaInstallPrompt } from "@/components/ui/pwa-install-prompt";
 import { ReferralBanner } from "@/components/ui/referral-banner";
 import { Toaster } from "@/components/ui/sonner";
+import { buildStoreOrganizationSchema, getSiteUrl, serializeJsonLd } from "@/lib/shop/shop-structured-data";
 import "./globals.css";
 
 const titleFont = Sora({
@@ -28,7 +29,7 @@ const bodyFont = Manrope({
   preload: true,
 });
 
-const siteUrl = 'https://doflins.dofer.mx';
+const siteUrl = getSiteUrl();
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -101,19 +102,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   // Structured Data para SEO
-  const organizationSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
-    name: "DOFLINS",
-    url: siteUrl,
-    logo: `${siteUrl}/images/logo.png`,
-    description: "Colección oficial de figuras DOFLINS con rareza verificada. Creado por DOFER.",
-    sameAs: [
-      "https://www.instagram.com/doferworkshop/",
-      "https://www.facebook.com/profile.php?id=61554032801394",
-      "https://www.tiktok.com/@dofershop",
-    ],
-  };
+  const organizationSchema = buildStoreOrganizationSchema();
 
   const websiteSchema = {
     "@context": "https://schema.org",
@@ -147,14 +136,14 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(organizationSchema),
+            __html: serializeJsonLd(organizationSchema),
           }}
         />
         {/* Structured Data - Website */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{
-            __html: JSON.stringify(websiteSchema),
+            __html: serializeJsonLd(websiteSchema),
           }}
         />
       </head>

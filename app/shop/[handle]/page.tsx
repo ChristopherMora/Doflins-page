@@ -21,6 +21,12 @@ import { ProductDetailAnalytics } from "@/components/shop/product-detail-analyti
 import { ProductViewer3D } from "@/components/shop/product-viewer-3d";
 import { formatMoney } from "@/components/shop/shop-utils";
 import { resolveProductModelUrl } from "@/lib/shop/product-model";
+import {
+  buildProductBreadcrumbStructuredData,
+  buildProductStructuredData,
+  getSiteUrl,
+  serializeJsonLd,
+} from "@/lib/shop/shop-structured-data";
 import type { ShopProduct, ShopProductVariant, UniverseFilter } from "@/lib/shopify/types";
 import { fetchShopProductByHandle, fetchShopProducts, ShopifyStorefrontError } from "@/lib/server/shopify-storefront";
 
@@ -29,6 +35,8 @@ export const revalidate = 300;
 
 export async function generateMetadata({ params }: ShopProductDetailPageProps): Promise<Metadata> {
   const { handle } = await params;
+  const siteUrl = getSiteUrl();
+  const productUrl = `${siteUrl}/shop/${handle}`;
   try {
     const product = await fetchShopProductByHandle(handle);
     if (!product) {
@@ -41,7 +49,11 @@ export async function generateMetadata({ params }: ShopProductDetailPageProps): 
     return {
       title: `${product.title} | DOFLINS`,
       description,
+      alternates: {
+        canonical: productUrl,
+      },
       openGraph: {
+        url: productUrl,
         title: `${product.title} | DOFLINS`,
         description,
         ...(product.imageUrl
@@ -72,10 +84,10 @@ function pickRecommendedVariant(product: ShopProduct): ShopProductVariant | null
 }
 
 function universeLabel(product: ShopProduct): string {
-  if (product.universe === "multiverse") return "Multiverse";
-  if (product.universe === "mega") return "MEGA";
-  if (product.universe === "animals") return "Animals";
-  return "Doflins";
+  const universe = product.universe ?? "animals";
+  if (universe === "multiverse") return "Multiverse";
+  if (universe === "mega") return "MEGA";
+  return "Animals";
 }
 
 const UNIVERSE_PAGE_THEME = {
@@ -130,6 +142,12 @@ function resolveUniverse(product: ShopProduct): UniverseFilter {
   return product.universe ?? "animals";
 }
 
+function universePath(universe: UniverseFilter): string {
+  if (universe === "multiverse") return "/shop/multiverse";
+  if (universe === "mega") return "/shop/mega";
+  return "/shop/animals";
+}
+
 function isBestSellerProduct(product: ShopProduct): boolean {
   return BEST_SELLER_HANDLES.has(product.handle.toLowerCase());
 }
@@ -144,7 +162,7 @@ function ErrorState({ message }: { message: string }): React.JSX.Element {
             <h1 className="font-title text-3xl text-[var(--ink-900)]">No se pudo cargar este pack</h1>
             <p className="text-sm text-[var(--ink-700)]">{message}</p>
             <Button asChild variant="secondary" className="w-fit">
-              <Link href="/#compras">
+              <Link href="/shop">
                 <ArrowLeftIcon className="h-4 w-4" /> Volver a catálogo
               </Link>
             </Button>
@@ -179,6 +197,13 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
   const isBestSeller = isBestSellerProduct(product);
   const productUniverse = resolveUniverse(product);
   const t = UNIVERSE_PAGE_THEME[productUniverse] ?? UNIVERSE_PAGE_THEME.animals;
+  const productSchema = buildProductStructuredData(product, recommendedVariant);
+  const breadcrumbSchema = buildProductBreadcrumbStructuredData({
+    productHandle: product.handle,
+    productTitle: product.title,
+    universeName: universeLabel(product),
+    universePath: universePath(productUniverse),
+  });
 
   let relatedProducts: ShopProduct[] = [];
   try {
@@ -190,252 +215,263 @@ export default async function ShopProductDetailPage({ params }: ShopProductDetai
 
   return (
     <>
-      <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-5 py-8 pb-28 sm:px-8 sm:pb-12">
-      <ProductDetailAnalytics
-        handle={product.handle}
-        title={product.title}
-        priceCents={Math.round(Number(recommendedVariant?.price.amount ?? product.price.amount) * 100)}
-        universe={product.universe}
+      {productSchema ? (
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: serializeJsonLd(productSchema) }}
+        />
+      ) : null}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(breadcrumbSchema) }}
       />
-      <div className="w-full space-y-5">
-        <div className="flex flex-wrap items-center gap-2">
-          <Button asChild variant="ghost" className="w-fit rounded-full border border-[#d9d2b1] bg-white/70">
-            <Link href="/#compras">
-              <ArrowLeftIcon className="h-4 w-4" /> Volver a compras
-            </Link>
-          </Button>
-          <p className="hidden text-xs text-[var(--ink-600)] sm:block">
-            <Link href="/" className="hover:underline">Inicio</Link>
-            {" / "}
-            <Link href="/#compras" className="hover:underline">Tienda</Link>
-            {" / "}
-            <span className="text-[var(--ink-900)] font-semibold">{product.title}</span>
-          </p>
-        </div>
+      <main className="mx-auto flex min-h-screen w-full max-w-6xl items-center px-5 py-8 pb-28 sm:px-8 sm:pb-12">
+        <ProductDetailAnalytics
+          handle={product.handle}
+          title={product.title}
+          priceCents={Math.round(Number(recommendedVariant?.price.amount ?? product.price.amount) * 100)}
+          universe={product.universe}
+        />
+        <div className="w-full space-y-5">
+          <div className="flex flex-wrap items-center gap-2">
+            <Button asChild variant="ghost" className="w-fit rounded-full border border-[#d9d2b1] bg-white/70">
+              <Link href={universePath(productUniverse)}>
+                <ArrowLeftIcon className="h-4 w-4" /> Volver a {universeLabel(product)}
+              </Link>
+            </Button>
+            <p className="hidden text-xs text-[var(--ink-600)] sm:block">
+              <Link href="/" className="hover:underline">Inicio</Link>
+              {" / "}
+              <Link href="/shop" className="hover:underline">Tienda</Link>
+              {" / "}
+              <Link href={universePath(productUniverse)} className="hover:underline">{universeLabel(product)}</Link>
+              {" / "}
+              <span className="text-[var(--ink-900)] font-semibold">{product.title}</span>
+            </p>
+          </div>
 
-        <Card className={`ink-light overflow-hidden border ${t.card}`}>
-          <CardContent className="grid gap-0 p-0 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className={`relative flex min-h-[360px] items-center justify-center overflow-hidden ${t.imageBg} p-6`}>
-              {product.imageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={product.imageUrl}
-                  alt={product.imageAlt ?? product.title}
-                  className="h-full max-h-[460px] w-full object-contain drop-shadow-[0_20px_35px_rgba(28,34,16,0.26)] transition-transform duration-500 hover:scale-105"
-                />
-              ) : (
-                <div className="grid h-full w-full place-items-center text-sm text-[var(--ink-600)]">
-                  <PhotoIcon className="h-8 w-8" />
-                  Sin imagen disponible
-                </div>
-              )}
-              <span
-                className={`absolute right-5 top-5 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
-                  isSoldOut
-                    ? "bg-[#e6d2d2] text-[#7f3e3e] ring-1 ring-[#d6b7b7]"
-                    : "bg-[#ddf0c6] text-[#2f5b1f] ring-1 ring-[#b8d493]"
-                }`}
-              >
-                {isSoldOut ? "Agotado" : "Disponible"}
-              </span>
-            </div>
+          <Card className={`ink-light overflow-hidden border ${t.card}`}>
+            <CardContent className="grid gap-0 p-0 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className={`relative flex min-h-[360px] items-center justify-center overflow-hidden ${t.imageBg} p-6`}>
+                {product.imageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={product.imageUrl}
+                    alt={product.imageAlt ?? product.title}
+                    className="h-full max-h-[460px] w-full object-contain drop-shadow-[0_20px_35px_rgba(28,34,16,0.26)] transition-transform duration-500 hover:scale-105"
+                  />
+                ) : (
+                  <div className="grid h-full w-full place-items-center text-sm text-[var(--ink-600)]">
+                    <PhotoIcon className="h-8 w-8" />
+                    Sin imagen disponible
+                  </div>
+                )}
+                <span
+                  className={`absolute right-5 top-5 inline-flex rounded-full px-3 py-1 text-xs font-bold ${
+                    isSoldOut
+                      ? "bg-[#e6d2d2] text-[#7f3e3e] ring-1 ring-[#d6b7b7]"
+                      : "bg-[#ddf0c6] text-[#2f5b1f] ring-1 ring-[#b8d493]"
+                  }`}
+                >
+                  {isSoldOut ? "Agotado" : "Disponible"}
+                </span>
+              </div>
 
-            <div className="space-y-5 p-6 sm:p-7">
-              <div className="flex flex-wrap items-center gap-2">
-                <Badge className={t.badge}>
-                  {productUniverse === "multiverse" ? <BoltIcon className="h-4 w-4" /> : productUniverse === "mega" ? <FireIcon className="h-4 w-4" /> : <SparklesIcon className="h-4 w-4" />}
-                  {universeLabel(product)}
-                </Badge>
-                {isBestSeller ? (
-                  <Badge className="bg-[#ffe9b5] text-[#5e4300] ring-1 ring-[#e6c676]">
-                    <SparklesIcon className="h-4 w-4" /> Más vendido
+              <div className="space-y-5 p-6 sm:p-7">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className={t.badge}>
+                    {productUniverse === "multiverse" ? <BoltIcon className="h-4 w-4" /> : productUniverse === "mega" ? <FireIcon className="h-4 w-4" /> : <SparklesIcon className="h-4 w-4" />}
+                    {universeLabel(product)}
                   </Badge>
-                ) : null}
-                <Badge className="bg-white text-[var(--ink-700)] ring-1 ring-black/10">
-                  <CheckCircleIcon className="h-4 w-4" /> {availableVariants}/{product.variants.length} variantes disponibles
-                </Badge>
-              </div>
+                  {isBestSeller ? (
+                    <Badge className="bg-[#ffe9b5] text-[#5e4300] ring-1 ring-[#e6c676]">
+                      <SparklesIcon className="h-4 w-4" /> Más vendido
+                    </Badge>
+                  ) : null}
+                  <Badge className="bg-white text-[var(--ink-700)] ring-1 ring-black/10">
+                    <CheckCircleIcon className="h-4 w-4" /> {availableVariants}/{product.variants.length} variantes disponibles
+                  </Badge>
+                </div>
 
-              <div className="space-y-3">
-                <h1 className="font-title text-4xl leading-[1.05] text-[var(--ink-900)] sm:text-5xl">{product.title}</h1>
-                <p className="text-sm leading-relaxed text-[var(--ink-700)]">
-                  {product.description.trim().length > 0 ? product.description : "Pack oficial DOFLINS listo para agregar a tu colección."}
-                </p>
-              </div>
+                <div className="space-y-3">
+                  <h1 className="font-title text-4xl leading-[1.05] text-[var(--ink-900)] sm:text-5xl">{product.title}</h1>
+                  <p className="text-sm leading-relaxed text-[var(--ink-700)]">
+                    {product.description.trim().length > 0 ? product.description : "Pack oficial DOFLINS listo para agregar a tu colección."}
+                  </p>
+                </div>
 
-              <div className={`rounded-2xl border ${t.priceBorder} bg-white/88 p-4`}>
-                <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio base</p>
-                <p className="font-title text-4xl text-[var(--ink-900)]">{formatMoney(recommendedVariant?.price ?? product.price)}</p>
-              </div>
+                <div className={`rounded-2xl border ${t.priceBorder} bg-white/88 p-4`}>
+                  <p className="text-[11px] uppercase tracking-[0.12em] text-[var(--ink-600)]">Precio base</p>
+                  <p className="font-title text-4xl text-[var(--ink-900)]">{formatMoney(recommendedVariant?.price ?? product.price)}</p>
+                </div>
 
-              <div className={`rounded-2xl border ${t.trustBg} p-4 text-sm text-[var(--ink-700)]`}>
-                <p className="font-semibold text-[var(--ink-900)]">Compra segura desde DOFLINS</p>
-                <p className="mt-1">Agrega tus packs en el catálogo y paga en Shopify Checkout sin salir de tu flujo de compra.</p>
-              </div>
+                <div className={`rounded-2xl border ${t.trustBg} p-4 text-sm text-[var(--ink-700)]`}>
+                  <p className="font-semibold text-[var(--ink-900)]">Compra segura desde DOFLINS</p>
+                  <p className="mt-1">Agrega tus packs en el catálogo y paga en Shopify Checkout sin salir de tu flujo de compra.</p>
+                </div>
 
-              <div className="space-y-2">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">Variantes</p>
-                <ul className="space-y-2">
-                  {product.variants.map((variant) => {
-                    const isRecommended = recommendedVariant?.id === variant.id;
+                <div className="space-y-2">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">Variantes</p>
+                  <ul className="space-y-2">
+                    {product.variants.map((variant) => {
+                      const isRecommended = recommendedVariant?.id === variant.id;
 
-                    return (
-                      <li
-                        key={variant.id}
-                        className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
-                          variant.availableForSale
-                            ? `${t.variantAvail} text-[var(--ink-800)]`
-                            : "border-[#dfcdcd] bg-[#f9f0f0] text-[var(--ink-600)]"
-                        } ${isRecommended ? `ring-1 ${t.variantRing}` : ""}`}
-                      >
-                        <span className="flex items-center gap-2 font-medium">
-                          {variant.title && variant.title !== "Default Title" ? variant.title : null}
-                          {isRecommended ? (
-                            <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${t.variantRecBg}`}>
-                              Recomendada
-                            </span>
-                          ) : null}
-                        </span>
-                        <span className="text-right">
-                          <strong className="text-[var(--ink-900)]">{formatMoney(variant.price)}</strong>
-                          <span className="ml-2 text-xs">{variant.availableForSale ? "Disponible" : "Agotado"}</span>
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
+                      return (
+                        <li
+                          key={variant.id}
+                          className={`flex items-center justify-between rounded-xl border px-3 py-2 text-sm ${
+                            variant.availableForSale
+                              ? `${t.variantAvail} text-[var(--ink-800)]`
+                              : "border-[#dfcdcd] bg-[#f9f0f0] text-[var(--ink-600)]"
+                          } ${isRecommended ? `ring-1 ${t.variantRing}` : ""}`}
+                        >
+                          <span className="flex items-center gap-2 font-medium">
+                            {variant.title && variant.title !== "Default Title" ? variant.title : null}
+                            {isRecommended ? (
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-[0.08em] ${t.variantRecBg}`}>
+                                Recomendada
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className="text-right">
+                            <strong className="text-[var(--ink-900)]">{formatMoney(variant.price)}</strong>
+                            <span className="ml-2 text-xs">{variant.availableForSale ? "Disponible" : "Agotado"}</span>
+                          </span>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
 
-              {/* 3D Viewer — shows only when a model exists for this product */}
-              {resolveProductModelUrl(product.handle, product.tags) ? (
-                <ProductViewer3D
-                  modelUrl={resolveProductModelUrl(product.handle, product.tags)!}
-                  productTitle={product.title}
-                  posterUrl={product.imageUrl ?? undefined}
-                />
-              ) : null}
-
-              <div className="space-y-2">
-                {recommendedVariant ? (
-                  <AddToCartButton
-                    variantId={recommendedVariant.id}
+                {resolveProductModelUrl(product.handle, product.tags) ? (
+                  <ProductViewer3D
+                    modelUrl={resolveProductModelUrl(product.handle, product.tags)!}
                     productTitle={product.title}
-                    isSoldOut={isSoldOut}
-                    analytics={{
-                      productHandle: product.handle,
-                      priceCents: Math.round(Number(recommendedVariant.price.amount) * 100),
-                      quantity: 1,
-                      universe: product.universe,
-                    }}
+                    posterUrl={product.imageUrl ?? undefined}
                   />
                 ) : null}
-                <Button asChild className={`h-12 w-full ${t.btnPrimary} opacity-80`}>
-                  <Link href="/#compras">
-                    <ShoppingCartIcon className="h-5 w-5" /> Ver catálogo completo
+
+                <div className="space-y-2">
+                  {recommendedVariant ? (
+                    <AddToCartButton
+                      variantId={recommendedVariant.id}
+                      productTitle={product.title}
+                      isSoldOut={isSoldOut}
+                      analytics={{
+                        productHandle: product.handle,
+                        priceCents: Math.round(Number(recommendedVariant.price.amount) * 100),
+                        quantity: 1,
+                        universe: product.universe,
+                      }}
+                    />
+                  ) : null}
+                  <Button asChild className={`h-12 w-full ${t.btnPrimary} opacity-80`}>
+                    <Link href="/shop">
+                      <ShoppingCartIcon className="h-5 w-5" /> Ver catálogo completo
+                    </Link>
+                  </Button>
+                  <Button asChild variant="secondary" className="h-12 w-full">
+                    <Link href="/">
+                      <ArrowLeftIcon className="h-5 w-5" /> Seguir explorando universos
+                    </Link>
+                  </Button>
+                  <p className="text-center text-xs text-[var(--ink-600)]">Tu carrito se sincroniza cuando vuelves al catálogo.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className={`ink-light overflow-hidden border ${t.relatedBorder} bg-[linear-gradient(145deg,#fffaf1,#f3f7e8)] shadow-[0_14px_30px_rgba(74,79,41,0.12)]`}>
+            <CardContent className="space-y-5 p-6 sm:p-7">
+              <div className="flex flex-wrap items-end justify-between gap-3">
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">Próximo en la colección</p>
+                  <h2 className="font-title text-2xl leading-tight text-[var(--ink-900)] sm:text-3xl">
+                    Sigue completando {universeLabel(product)}
+                  </h2>
+                  <p className="text-sm text-[var(--ink-700)]">Estos packs del mismo universo amplían tu colección más rápido.</p>
+                </div>
+                <Button asChild variant="secondary" className="rounded-full">
+                  <Link href="/shop">
+                    <ShoppingCartIcon className="h-4 w-4" /> Ver catálogo completo
                   </Link>
                 </Button>
-                <Button asChild variant="secondary" className="h-12 w-full">
-                  <Link href="/">
-                    <ArrowLeftIcon className="h-5 w-5" /> Seguir explorando universos
-                  </Link>
-                </Button>
-                <p className="text-center text-xs text-[var(--ink-600)]">Tu carrito se sincroniza cuando vuelves al catálogo.</p>
               </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        <Card className={`ink-light overflow-hidden border ${t.relatedBorder} bg-[linear-gradient(145deg,#fffaf1,#f3f7e8)] shadow-[0_14px_30px_rgba(74,79,41,0.12)]`}>
-          <CardContent className="space-y-5 p-6 sm:p-7">
-            <div className="flex flex-wrap items-end justify-between gap-3">
-              <div className="space-y-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">Próximo en la colección</p>
-                <h2 className="font-title text-2xl leading-tight text-[var(--ink-900)] sm:text-3xl">
-                  Sigue completando {universeLabel(product)}
-                </h2>
-                <p className="text-sm text-[var(--ink-700)]">Estos packs del mismo universo amplían tu colección más rápido.</p>
-              </div>
-              <Button asChild variant="secondary" className="rounded-full">
-                <Link href="/#compras">
-                  <ShoppingCartIcon className="h-4 w-4" /> Ver catálogo completo
-                </Link>
-              </Button>
-            </div>
+              {relatedProducts.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-3">
+                  {relatedProducts.map((item) => {
+                    const itemVariant = pickRecommendedVariant(item);
+                    const itemSoldOut = !itemVariant?.availableForSale;
+                    const itemIsBestSeller = isBestSellerProduct(item);
 
-            {relatedProducts.length > 0 ? (
-              <div className="grid gap-4 md:grid-cols-3">
-                {relatedProducts.map((item) => {
-                  const itemVariant = pickRecommendedVariant(item);
-                  const itemSoldOut = !itemVariant?.availableForSale;
-                  const itemIsBestSeller = isBestSellerProduct(item);
-
-                  return (
-                    <article
-                      key={item.id}
-                      className={`overflow-hidden rounded-2xl border ${t.relatedBorder} bg-[linear-gradient(160deg,#ffffff,#f5f7eb)] shadow-[0_10px_20px_rgba(68,75,35,0.12)]`}
-                    >
-                      <div className={`relative aspect-[4/3] w-full overflow-hidden ${t.imageBg}`}>
-                        {item.imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img src={item.imageUrl} alt={item.imageAlt ?? item.title} className="h-full w-full object-cover" />
-                        ) : (
-                          <div className="grid h-full w-full place-items-center text-xs text-[var(--ink-600)]">
-                            <PhotoIcon className="h-6 w-6" />
-                            Sin imagen
-                          </div>
-                        )}
-                        <span
-                          className={`absolute right-3 top-3 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
-                            itemSoldOut
-                              ? "bg-[#e5d3d3] text-[#7a3a3a] ring-1 ring-[#d6b8b8]"
-                              : "bg-[#dff0c7] text-[#2f5c1f] ring-1 ring-[#b7d494]"
-                          }`}
-                        >
-                          {itemSoldOut ? "Agotado" : "Disponible"}
-                        </span>
-                      </div>
-                      <div className="space-y-3 p-4">
-                        <div className="flex items-center gap-2">
-                          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">{universeLabel(item)}</p>
-                          {itemIsBestSeller ? (
-                            <span className="inline-flex rounded-full bg-[#ffe9b5] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-[#5e4300] ring-1 ring-[#e6c676]">
-                              Más vendido
-                            </span>
-                          ) : null}
+                    return (
+                      <article
+                        key={item.id}
+                        className={`overflow-hidden rounded-2xl border ${t.relatedBorder} bg-[linear-gradient(160deg,#ffffff,#f5f7eb)] shadow-[0_10px_20px_rgba(68,75,35,0.12)]`}
+                      >
+                        <div className={`relative aspect-[4/3] w-full overflow-hidden ${t.imageBg}`}>
+                          {item.imageUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={item.imageUrl} alt={item.imageAlt ?? item.title} className="h-full w-full object-cover" />
+                          ) : (
+                            <div className="grid h-full w-full place-items-center text-xs text-[var(--ink-600)]">
+                              <PhotoIcon className="h-6 w-6" />
+                              Sin imagen
+                            </div>
+                          )}
+                          <span
+                            className={`absolute right-3 top-3 inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ${
+                              itemSoldOut
+                                ? "bg-[#e5d3d3] text-[#7a3a3a] ring-1 ring-[#d6b8b8]"
+                                : "bg-[#dff0c7] text-[#2f5c1f] ring-1 ring-[#b7d494]"
+                            }`}
+                          >
+                            {itemSoldOut ? "Agotado" : "Disponible"}
+                          </span>
                         </div>
-                        <h3 className="font-title text-2xl leading-tight text-[var(--ink-900)]">{item.title}</h3>
-                        <p className="text-sm text-[var(--ink-700)]">{formatMoney(itemVariant?.price ?? item.price)}</p>
-                        <Button asChild variant="ghost" className={`w-full rounded-full border ${t.relatedBorder} bg-white/80`}>
-                          <Link href={`/shop/${item.handle}`}>
-                            <EyeIcon className="h-4 w-4" /> Ver detalle
-                          </Link>
-                        </Button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className={`rounded-2xl border ${t.relatedBorder} bg-white/82 p-4`}>
-                <p className="text-sm text-[var(--ink-700)]">Pronto agregaremos más packs en este universo.</p>
-              </div>
-            )}
+                        <div className="space-y-3 p-4">
+                          <div className="flex items-center gap-2">
+                            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-[var(--ink-600)]">{universeLabel(item)}</p>
+                            {itemIsBestSeller ? (
+                              <span className="inline-flex rounded-full bg-[#ffe9b5] px-2 py-0.5 text-[10px] font-bold uppercase tracking-[0.06em] text-[#5e4300] ring-1 ring-[#e6c676]">
+                                Más vendido
+                              </span>
+                            ) : null}
+                          </div>
+                          <h3 className="font-title text-2xl leading-tight text-[var(--ink-900)]">{item.title}</h3>
+                          <p className="text-sm text-[var(--ink-700)]">{formatMoney(itemVariant?.price ?? item.price)}</p>
+                          <Button asChild variant="ghost" className={`w-full rounded-full border ${t.relatedBorder} bg-white/80`}>
+                            <Link href={`/shop/${item.handle}`}>
+                              <EyeIcon className="h-4 w-4" /> Ver detalle
+                            </Link>
+                          </Button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className={`rounded-2xl border ${t.relatedBorder} bg-white/82 p-4`}>
+                  <p className="text-sm text-[var(--ink-700)]">Pronto agregaremos más packs en este universo.</p>
+                </div>
+              )}
 
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Button asChild className={`h-11 ${t.btnPrimary}`}>
-                <Link href="/#compras">
-                  <ShoppingCartIcon className="h-4 w-4" /> Ir al catálogo y ver todos los productos
-                </Link>
-              </Button>
-              <Button asChild variant="secondary" className="h-11">
-                <Link href="/">
-                  <ArrowLeftIcon className="h-4 w-4" /> Volver al inicio de universos
-                </Link>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+              <div className="grid gap-2 sm:grid-cols-2">
+                <Button asChild className={`h-11 ${t.btnPrimary}`}>
+                  <Link href="/shop">
+                    <ShoppingCartIcon className="h-4 w-4" /> Ir al catálogo y ver todos los productos
+                  </Link>
+                </Button>
+                <Button asChild variant="secondary" className="h-11">
+                  <Link href="/">
+                    <ArrowLeftIcon className="h-4 w-4" /> Volver al inicio de universos
+                  </Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </main>
       <BottomNav />
     </>
