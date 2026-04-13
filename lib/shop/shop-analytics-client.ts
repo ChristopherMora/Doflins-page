@@ -1,5 +1,12 @@
 "use client";
 
+import {
+  SHOP_ANALYTICS_LAST_VISIT_KEY,
+  SHOP_ANALYTICS_SESSION_KEY,
+  SHOP_ANALYTICS_VISIT_COUNT_KEY,
+  SHOP_ANALYTICS_VISITOR_KEY,
+} from "@/lib/shop/shop-analytics-shared";
+
 export type ShopEventType =
   | "shop_view"
   | "product_view"
@@ -50,17 +57,12 @@ export interface ShopAnalyticsContext {
   viewportWidth?: number;
 }
 
-const VISITOR_KEY = "doflins_visitor_id";
-const VISIT_COUNT_KEY = "doflins_visit_count";
-const SESSION_KEY = "doflins_shop_session";
-const LAST_VISIT_KEY = "doflins_last_visit_ts";
-
 function getOrCreateVisitorId(): string {
   if (typeof window === "undefined") return "";
-  let id = localStorage.getItem(VISITOR_KEY);
+  let id = localStorage.getItem(SHOP_ANALYTICS_VISITOR_KEY);
   if (!id) {
     id = crypto.randomUUID();
-    localStorage.setItem(VISITOR_KEY, id);
+    localStorage.setItem(SHOP_ANALYTICS_VISITOR_KEY, id);
   }
   return id;
 }
@@ -69,24 +71,24 @@ function getAndIncrementVisitNumber(): number {
   if (typeof window === "undefined") return 1;
 
   const now = Date.now();
-  const lastVisit = Number(localStorage.getItem(LAST_VISIT_KEY) || "0");
-  let count = Number(localStorage.getItem(VISIT_COUNT_KEY) || "0");
+  const lastVisit = Number(localStorage.getItem(SHOP_ANALYTICS_LAST_VISIT_KEY) || "0");
+  let count = Number(localStorage.getItem(SHOP_ANALYTICS_VISIT_COUNT_KEY) || "0");
 
   if (now - lastVisit > 30 * 60 * 1000) {
     count += 1;
-    localStorage.setItem(VISIT_COUNT_KEY, String(count));
+    localStorage.setItem(SHOP_ANALYTICS_VISIT_COUNT_KEY, String(count));
   }
 
-  localStorage.setItem(LAST_VISIT_KEY, String(now));
+  localStorage.setItem(SHOP_ANALYTICS_LAST_VISIT_KEY, String(now));
   return count;
 }
 
 function getOrCreateSessionId(): string {
   if (typeof window === "undefined") return "";
-  let id = sessionStorage.getItem(SESSION_KEY);
+  let id = sessionStorage.getItem(SHOP_ANALYTICS_SESSION_KEY);
   if (!id) {
     id = crypto.randomUUID();
-    sessionStorage.setItem(SESSION_KEY, id);
+    sessionStorage.setItem(SHOP_ANALYTICS_SESSION_KEY, id);
   }
   return id;
 }

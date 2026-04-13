@@ -25,6 +25,8 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const days = Math.min(Math.max(Number(daysParam) || 30, 1), 90);
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
   const sinceWhere = gte(shopEvents.createdAt, since);
+  const analyticsTimezoneOffset = process.env.SHOP_ANALYTICS_TIMEZONE_OFFSET ?? "-06:00";
+  const localCreatedAt = sql`CONVERT_TZ(${shopEvents.createdAt}, '+00:00', ${analyticsTimezoneOffset})`;
 
   let funnelData, dailyEvents, topProducts, topSearches, hourlyActivity, sessionFunnels, universeBreakdown,
       trafficSources, deviceBreakdown, scrollDepthDist, webVitalsData, visitorTypes, cartTiming;
@@ -58,14 +60,14 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // 2. Daily event counts (for trend chart)
     db
       .select({
-        date: sql<string>`DATE(${shopEvents.createdAt})`,
+        date: sql<string>`DATE(${localCreatedAt})`,
         eventType: shopEvents.eventType,
         count: count(),
       })
       .from(shopEvents)
       .where(sinceWhere)
-      .groupBy(sql`DATE(${shopEvents.createdAt})`, shopEvents.eventType)
-      .orderBy(sql`DATE(${shopEvents.createdAt})`),
+      .groupBy(sql`DATE(${localCreatedAt})`, shopEvents.eventType)
+      .orderBy(sql`DATE(${localCreatedAt})`),
 
     // 3. Top products by views + add_to_cart (which products attract attention?)
     db
@@ -108,12 +110,12 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
     // 5. Hourly distribution
     db
       .select({
-        hour: sql<number>`HOUR(${shopEvents.createdAt})`,
+        hour: sql<number>`HOUR(${localCreatedAt})`,
         count: count(),
       })
       .from(shopEvents)
       .where(sinceWhere)
-      .groupBy(sql`HOUR(${shopEvents.createdAt})`),
+      .groupBy(sql`HOUR(${localCreatedAt})`),
 
     // 6. Session funnel analysis — count sessions that reached each step
     db

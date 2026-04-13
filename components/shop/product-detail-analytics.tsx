@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { useShopAnalytics } from "@/lib/hooks/use-shop-analytics";
 import type { UniverseFilter } from "@/lib/shopify/types";
@@ -18,7 +18,14 @@ export function ProductDetailAnalytics({
   priceCents,
   universe,
 }: ProductDetailAnalyticsProps): null {
-  const { trackProductView } = useShopAnalytics(universe ?? undefined);
+  const { trackProductView, trackShopView } = useShopAnalytics(universe ?? undefined);
+  const hasTrackedShopView = useRef(false);
+
+  useEffect(() => {
+    if (hasTrackedShopView.current) return;
+    hasTrackedShopView.current = true;
+    trackShopView();
+  }, [trackShopView]);
 
   useEffect(() => {
     trackProductView(handle, title, priceCents);

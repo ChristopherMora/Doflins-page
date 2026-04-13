@@ -33,14 +33,12 @@ function useDebouncedCallback<T extends (...args: never[]) => void>(
 // ─── Main Hook ──────────────────────────────────────────────────────────────
 
 export function useShopAnalytics(universe?: string) {
-  const hasFiredShopView = useRef(false);
-
-  // Fire shop_view once on mount
-  useEffect(() => {
-    if (hasFiredShopView.current) return;
-    hasFiredShopView.current = true;
-    sendShopEvent({ eventType: "shop_view", universe });
-  }, [universe]);
+  const trackShopView = useCallback(
+    () => {
+      sendShopEvent({ eventType: "shop_view", universe });
+    },
+    [universe],
+  );
 
   const trackProductView = useCallback(
     (handle: string, title: string, priceCents?: number) => {
@@ -154,6 +152,7 @@ export function useShopAnalytics(universe?: string) {
   );
 
   return {
+    trackShopView,
     trackProductView,
     trackProductClick,
     trackAddToCart,

@@ -108,6 +108,14 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
   const shop = useShopExperience({ initialProducts });
 
   const analytics = useShopAnalytics(shop.activeUniverse);
+  const { trackShopView } = analytics;
+  const hasTrackedShopViewRef = useRef(false);
+
+  useEffect(() => {
+    if (hasTrackedShopViewRef.current) return;
+    hasTrackedShopViewRef.current = true;
+    trackShopView();
+  }, [trackShopView]);
 
   const {
     activeUniverse,

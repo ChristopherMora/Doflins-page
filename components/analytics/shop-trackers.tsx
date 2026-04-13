@@ -1,14 +1,18 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { usePathname } from "next/navigation";
 
-const SESSION_KEY = "doflins_shop_session";
-const VISITOR_KEY = "doflins_visitor_id";
+import {
+  SHOP_ANALYTICS_SESSION_KEY,
+  SHOP_ANALYTICS_VISITOR_KEY,
+  isShopAnalyticsPathname,
+} from "@/lib/shop/shop-analytics-shared";
 
 function getIds() {
   return {
-    sessionId: sessionStorage.getItem(SESSION_KEY) ?? "",
-    visitorId: localStorage.getItem(VISITOR_KEY) ?? "",
+    sessionId: sessionStorage.getItem(SHOP_ANALYTICS_SESSION_KEY) ?? "",
+    visitorId: localStorage.getItem(SHOP_ANALYTICS_VISITOR_KEY) ?? "",
   };
 }
 
@@ -23,8 +27,13 @@ function beacon(payload: Record<string, unknown>) {
  */
 export function ScrollDepthTracker(): null {
   const reportedRef = useRef(new Set<number>());
+  const pathname = usePathname();
+  const enabled = isShopAnalyticsPathname(pathname);
 
   useEffect(() => {
+    if (!enabled) return;
+    reportedRef.current = new Set();
+
     const thresholds = [25, 50, 75, 100];
 
     const handleScroll = () => {
@@ -53,7 +62,7 @@ export function ScrollDepthTracker(): null {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [enabled, pathname]);
 
   return null;
 }
@@ -64,8 +73,13 @@ export function ScrollDepthTracker(): null {
  */
 export function WebVitalsTracker(): null {
   const reportedRef = useRef(new Set<string>());
+  const pathname = usePathname();
+  const enabled = isShopAnalyticsPathname(pathname);
 
   useEffect(() => {
+    if (!enabled) return;
+    reportedRef.current = new Set();
+
     const report = (name: string, value: number) => {
       if (reportedRef.current.has(name)) return;
       reportedRef.current.add(name);
@@ -129,7 +143,7 @@ export function WebVitalsTracker(): null {
           // PerformanceObserver not supported — skip silently
         }
       });
-  }, []);
+  }, [enabled]);
 
   return null;
 }
@@ -139,11 +153,16 @@ export function WebVitalsTracker(): null {
  * Fires on visibilitychange=hidden or beforeunload.
  */
 export function PageExitTracker(): null {
-  const entryTimeRef = useRef(Date.now());
+  const entryTimeRef = useRef(0);
   const firedRef = useRef(false);
+  const pathname = usePathname();
+  const enabled = isShopAnalyticsPathname(pathname);
 
   useEffect(() => {
+    if (!enabled) return;
+
     entryTimeRef.current = Date.now();
+    firedRef.current = false;
 
     const fire = () => {
       if (firedRef.current) return;
@@ -172,7 +191,7 @@ export function PageExitTracker(): null {
       document.removeEventListener("visibilitychange", onVisChange);
       window.removeEventListener("beforeunload", fire);
     };
-  }, []);
+  }, [enabled, pathname]);
 
   return null;
 }
