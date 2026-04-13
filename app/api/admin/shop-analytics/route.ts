@@ -27,6 +27,60 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const sinceWhere = gte(shopEvents.createdAt, since);
   const analyticsTimezoneOffset = process.env.SHOP_ANALYTICS_TIMEZONE_OFFSET ?? "-06:00";
   const localCreatedAt = sql`CONVERT_TZ(${shopEvents.createdAt}, '+00:00', ${analyticsTimezoneOffset})`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim() || "https://doflins.dofer.mx";
+  const siteHost = (() => {
+    try {
+      return new URL(siteUrl).host.toLowerCase();
+    } catch {
+      return "doflins.dofer.mx";
+    }
+  })();
+  const referrerLower = sql<string>`LOWER(COALESCE(${shopEvents.referrer}, ''))`;
+  const referrerHost = sql<string>`SUBSTRING_INDEX(SUBSTRING_INDEX(REPLACE(REPLACE(REPLACE(${referrerLower}, 'https://', ''), 'http://', ''), 'www.', ''), '/', 1), '?', 1)`;
+  const isInternalReferrer = sql<number>`CASE WHEN ${referrerHost} = '' OR ${referrerHost} = ${siteHost} OR ${referrerHost} LIKE 'localhost%' OR ${referrerHost} LIKE '127.0.0.1%' THEN 1 ELSE 0 END`;
+  const isOrganicReferrer = sql<number>`CASE WHEN ${referrerHost} LIKE '%google.%' OR ${referrerHost} LIKE '%bing.%' OR ${referrerHost} LIKE '%duckduckgo.%' OR ${referrerHost} LIKE '%yahoo.%' OR ${referrerHost} LIKE '%ecosia.%' OR ${referrerHost} LIKE '%search.brave.%' THEN 1 ELSE 0 END`;
+  const isSocialReferrer = sql<number>`CASE WHEN ${referrerHost} LIKE '%instagram.%' OR ${referrerHost} LIKE '%facebook.%' OR ${referrerHost} LIKE '%fb.%' OR ${referrerHost} LIKE '%tiktok.%' OR ${referrerHost} LIKE '%youtube.%' OR ${referrerHost} LIKE '%twitter.%' OR ${referrerHost} LIKE '%x.com%' OR ${referrerHost} LIKE '%whatsapp.%' THEN 1 ELSE 0 END`;
+  const trafficSourceExpr = sql<string>`
+    CASE
+      WHEN MAX(NULLIF(${shopEvents.utmSource}, '')) IS NOT NULL THEN MAX(NULLIF(${shopEvents.utmSource}, ''))
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%google.%' THEN 1 ELSE 0 END) = 1 THEN 'google'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%bing.%' THEN 1 ELSE 0 END) = 1 THEN 'bing'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%duckduckgo.%' THEN 1 ELSE 0 END) = 1 THEN 'duckduckgo'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%yahoo.%' THEN 1 ELSE 0 END) = 1 THEN 'yahoo'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%ecosia.%' THEN 1 ELSE 0 END) = 1 THEN 'ecosia'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%search.brave.%' THEN 1 ELSE 0 END) = 1 THEN 'brave'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%instagram.%' THEN 1 ELSE 0 END) = 1 THEN 'instagram'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%facebook.%' OR ${referrerHost} LIKE '%fb.%' THEN 1 ELSE 0 END) = 1 THEN 'facebook'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%tiktok.%' THEN 1 ELSE 0 END) = 1 THEN 'tiktok'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%youtube.%' THEN 1 ELSE 0 END) = 1 THEN 'youtube'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%twitter.%' OR ${referrerHost} LIKE '%x.com%' THEN 1 ELSE 0 END) = 1 THEN 'x'
+      WHEN MAX(CASE WHEN ${referrerHost} LIKE '%whatsapp.%' THEN 1 ELSE 0 END) = 1 THEN 'whatsapp'
+      WHEN MAX(CASE WHEN ${isInternalReferrer} = 0 THEN 1 ELSE 0 END) = 1 THEN MAX(CASE WHEN ${isInternalReferrer} = 0 THEN ${referrerHost} ELSE NULL END)
+      ELSE 'directo'
+    END
+  `;
+  const trafficMediumExpr = sql<string>`
+    CASE
+      WHEN MAX(NULLIF(${shopEvents.utmMedium}, '')) IS NOT NULL THEN MAX(NULLIF(${shopEvents.utmMedium}, ''))
+      WHEN MAX(${isOrganicReferrer}) = 1 THEN 'organic'
+      WHEN MAX(${isSocialReferrer}) = 1 THEN 'social'
+      WHEN MAX(CASE WHEN ${isInternalReferrer} = 0 THEN 1 ELSE 0 END) = 1 THEN 'referral'
+      ELSE 'direct'
+    END
+  `;
+  const trafficCampaignExpr = sql<string>`COALESCE(MAX(NULLIF(${shopEvents.utmCampaign}, '')), '')`;
+  const sessionTrafficSources = db
+    .select({
+      sessionId: shopEvents.sessionId,
+      source: trafficSourceExpr,
+      medium: trafficMediumExpr,
+      campaign: trafficCampaignExpr,
+      eventCount: count(),
+    })
+    .from(shopEvents)
+    .where(sinceWhere)
+    .groupBy(shopEvents.sessionId)
+    .as("session_traffic_sources");
 
   let funnelData, dailyEvents, topProducts, topSearches, hourlyActivity, sessionFunnels, universeBreakdown,
       trafficSources, deviceBreakdown, scrollDepthDist, webVitalsData, visitorTypes, cartTiming;
@@ -145,23 +199,22 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
       )
       .groupBy(shopEvents.universe),
 
-    // 8. Traffic sources (UTM breakdown)
+    // 8. Traffic sources (session-level classification: UTM, organic, social, direct, referral)
     db
       .select({
-        source: sql<string>`COALESCE(${shopEvents.utmSource}, 'directo')`,
-        medium: sql<string>`COALESCE(${shopEvents.utmMedium}, 'none')`,
-        campaign: sql<string>`COALESCE(${shopEvents.utmCampaign}, '')`,
-        count: count(),
-        sessions: sql<number>`COUNT(DISTINCT ${shopEvents.sessionId})`,
+        source: sessionTrafficSources.source,
+        medium: sessionTrafficSources.medium,
+        campaign: sessionTrafficSources.campaign,
+        count: sql<number>`SUM(${sessionTrafficSources.eventCount})`,
+        sessions: count(),
       })
-      .from(shopEvents)
-      .where(sinceWhere)
+      .from(sessionTrafficSources)
       .groupBy(
-        sql`COALESCE(${shopEvents.utmSource}, 'directo')`,
-        sql`COALESCE(${shopEvents.utmMedium}, 'none')`,
-        sql`COALESCE(${shopEvents.utmCampaign}, '')`,
+        sessionTrafficSources.source,
+        sessionTrafficSources.medium,
+        sessionTrafficSources.campaign,
       )
-      .orderBy(sql`count(*) DESC`)
+      .orderBy(sql`COUNT(*) DESC`)
       .limit(20),
 
     // 9. Device type distribution

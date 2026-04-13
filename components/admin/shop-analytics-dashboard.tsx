@@ -114,6 +114,17 @@ interface AnalyticsData {
   _notice?: string;
 }
 
+function formatTrafficMedium(medium: string): string {
+  const labels: Record<string, string> = {
+    organic: "orgánico",
+    social: "social",
+    referral: "referencia",
+    direct: "directo",
+    none: "sin medio",
+  };
+  return labels[medium] ?? medium;
+}
+
 function getFunnelStepMap(funnel: FunnelStep[]): Record<string, FunnelStep> {
   return Object.fromEntries(funnel.map((step) => [step.key, step])) as Record<string, FunnelStep>;
 }
@@ -136,6 +147,14 @@ function getPrimaryInsight(data: AnalyticsData): string | null {
 
   if (shopView > 0 && shopView < 10) {
     return `La muestra es muy chica (${shopView} sesiones). Toma este insight con cautela antes de concluir que hubo un problema real.`;
+  }
+
+  const organicSessions = data.trafficSources
+    .filter((source) => source.medium === "organic")
+    .reduce((total, source) => total + source.sessions, 0);
+
+  if (shopView > 0 && organicSessions === 0) {
+    return "No se detecta tráfico orgánico todavía. Si quieres captar visitas naturales, toca reforzar SEO e indexación.";
   }
 
   if (shopView > 0 && checkoutComplete === 0) {
@@ -687,7 +706,7 @@ export function ShopAnalyticsDashboard(): React.JSX.Element {
               Fuentes de tráfico
             </h2>
             <p className="mb-3 text-xs text-[var(--ink-500)]">
-              ¿De dónde llegan tus usuarios? UTM y tráfico directo.
+              ¿De dónde llegan tus usuarios? UTM, orgánico, social, referral y directo.
             </p>
             {data.trafficSources.length > 0 ? (
               <div className="space-y-2">
@@ -698,7 +717,7 @@ export function ShopAnalyticsDashboard(): React.JSX.Element {
                     <div key={`${s.source}-${s.medium}-${i}`} className="flex items-center justify-between rounded-lg bg-[#f9f8f4] px-3 py-2">
                       <div className="flex flex-col">
                         <span className="text-sm font-medium text-[var(--ink-800)]">{s.source}</span>
-                        <span className="text-[10px] text-[var(--ink-400)]">{s.medium}{s.campaign ? ` · ${s.campaign}` : ""}</span>
+                        <span className="text-[10px] text-[var(--ink-400)]">{formatTrafficMedium(s.medium)}{s.campaign ? ` · ${s.campaign}` : ""}</span>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className="text-xs text-[var(--ink-500)]">{pct}%</span>
