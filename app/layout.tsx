@@ -30,6 +30,7 @@ const bodyFont = Manrope({
 });
 
 const siteUrl = getSiteUrl();
+const GOOGLE_SITE_VERIFICATION = "5MLedLqzfRN_4Ladpde1LMKw2hEKL3r2H-AbHPZmkRY";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -90,9 +91,6 @@ export const metadata: Metadata = {
   alternates: {
     canonical: siteUrl,
   },
-  verification: {
-    google: "5MLedLqzfRN_4Ladpde1LMKw2hEKL3r2H-AbHPZmkRY",
-  },
   category: "toys",
 };
 
@@ -123,6 +121,7 @@ export default function RootLayout({
   return (
     <html lang="es" suppressHydrationWarning>
       <head>
+        <meta name="google-site-verification" content={GOOGLE_SITE_VERIFICATION} />
         {/* Early connection to Shopify CDN — saves ~100-200ms on first image */}
         <link rel="preconnect" href="https://cdn.shopify.com" />
         <link rel="dns-prefetch" href="https://cdn.shopify.com" />
