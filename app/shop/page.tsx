@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 
 import { BottomNav } from "@/components/nav/bottom-nav";
+import { ShopUniverseNav } from "@/components/shop/shop-universe-nav";
 import { ShopifyBuyExperience } from "@/components/shop/shopify-buy-experience";
+import { Button } from "@/components/ui/button";
 import { fetchShopProducts } from "@/lib/server/shopify-storefront";
 import type { ShopProduct } from "@/lib/shopify/types";
 
@@ -88,7 +91,33 @@ export default async function ShopPage(): Promise<React.JSX.Element> {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
       ) : null}
-      <main className="mx-auto w-full max-w-7xl px-4 py-4 pb-28 sm:px-8 sm:py-5 sm:pb-10">
+      <main className="mx-auto w-full max-w-7xl space-y-6 px-4 py-4 pb-28 sm:px-8 sm:py-5 sm:pb-10">
+        <section className="rounded-[2rem] border border-[#d9e3c9] bg-[linear-gradient(145deg,#fbfcf7,#eff5e4)] p-6 shadow-[0_14px_34px_rgba(78,111,42,0.10)]">
+          <div className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr] lg:items-end">
+            <div className="space-y-3">
+              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#4e6f2a]">
+                Compra por universo
+              </p>
+              <h1 className="font-title text-4xl text-[var(--ink-900)] sm:text-5xl">
+                Tienda oficial de packs DOFLINS
+              </h1>
+              <p className="max-w-3xl text-sm leading-relaxed text-[var(--ink-600)] sm:text-base">
+                Explora el catálogo completo o entra directo a landings indexables por universo para captar búsquedas con intención de compra.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="secondary" className="bg-white">
+                <Link href="/envios">Ver envíos</Link>
+              </Button>
+              <Button asChild variant="secondary" className="bg-white">
+                <Link href="/devoluciones">Ver devoluciones</Link>
+              </Button>
+            </div>
+          </div>
+          <div className="mt-5">
+            <ShopUniverseNav />
+          </div>
+        </section>
         <ShopifyBuyExperience initialProducts={initialProducts} />
       </main>
       <BottomNav />
