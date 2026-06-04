@@ -334,81 +334,85 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
             </button>
           </div>
 
-          {/* ── Search & filters ── */}
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <label htmlFor="shop-search" className="sr-only">Buscar pack</label>
-              <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-500)]" />
-              <Input
-                id="shop-search"
-                value={shopSearch}
-                onChange={(event) => { setShopSearch(event.target.value); analytics.trackSearch(event.target.value); }}
-                placeholder="Buscar por nombre de pack…"
-                className="h-10 rounded-xl pl-9 transition-shadow duration-200 focus:ring-2 focus:ring-[var(--shop-primary-from)]/20"
-              />
-            </div>
-            {wishlist.size > 0 ? (
-              <button
-                type="button"
-                aria-pressed={showWishlistOnly}
-                title={showWishlistOnly ? "Mostrar todos" : `Ver ${wishlist.size} favorito${wishlist.size === 1 ? "" : "s"}`}
-                className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
-                  showWishlistOnly
-                    ? "border-red-400 bg-red-50 text-red-500"
-                    : "border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] text-[var(--ink-500)] hover:text-red-400"
-                }`}
-                onClick={() => setShowWishlistOnly((v) => !v)}
-              >
-                <HeartIcon className="h-5 w-5" />
-              </button>
-            ) : null}
-          </div>
+          {/* ── Search & filters — solo visible con 7+ productos ── */}
+          {products.length > 6 ? (
+            <>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <label htmlFor="shop-search" className="sr-only">Buscar pack</label>
+                  <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-500)]" />
+                  <Input
+                    id="shop-search"
+                    value={shopSearch}
+                    onChange={(event) => { setShopSearch(event.target.value); analytics.trackSearch(event.target.value); }}
+                    placeholder="Buscar por nombre de pack…"
+                    className="h-10 rounded-xl pl-9 transition-shadow duration-200 focus:ring-2 focus:ring-[var(--shop-primary-from)]/20"
+                  />
+                </div>
+                {wishlist.size > 0 ? (
+                  <button
+                    type="button"
+                    aria-pressed={showWishlistOnly}
+                    title={showWishlistOnly ? "Mostrar todos" : `Ver ${wishlist.size} favorito${wishlist.size === 1 ? "" : "s"}`}
+                    className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-full border transition ${
+                      showWishlistOnly
+                        ? "border-red-400 bg-red-50 text-red-500"
+                        : "border-[var(--shop-control-border)] bg-[var(--shop-control-bg)] text-[var(--ink-500)] hover:text-red-400"
+                    }`}
+                    onClick={() => setShowWishlistOnly((v) => !v)}
+                  >
+                    <HeartIcon className="h-5 w-5" />
+                  </button>
+                ) : null}
+              </div>
 
-          <div className="flex flex-wrap items-center justify-end gap-2">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="inline-flex gap-1 rounded-full border p-1 text-xs shadow-sm" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
-                {(["default", "new", "asc", "desc"] as const).map((order) => {
-                  const labels: Record<typeof order, string> = { default: "Todos", new: "Nuevos", asc: "Menor precio", desc: "Mayor precio" };
-                  return (
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <div className="inline-flex gap-1 rounded-full border p-1 text-xs shadow-sm" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
+                    {(["default", "new", "asc", "desc"] as const).map((order) => {
+                      const labels: Record<typeof order, string> = { default: "Todos", new: "Nuevos", asc: "Menor precio", desc: "Mayor precio" };
+                      return (
+                        <button
+                          key={order}
+                          type="button"
+                          className={`rounded-full px-3 py-1 font-medium transition ${
+                            sortOrder === order
+                              ? "bg-[var(--shop-primary-from)] text-white shadow-sm"
+                              : "text-[var(--ink-700)] hover:bg-black/[0.05]"
+                          }`}
+                          onClick={() => { setSortOrder(order); analytics.trackFilter(`sort:${order}`); }}
+                        >
+                          {labels[order]}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <div className="inline-flex rounded-full border p-1" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
                     <button
-                      key={order}
                       type="button"
-                      className={`rounded-full px-3 py-1 font-medium transition ${
-                        sortOrder === order
-                          ? "bg-[var(--shop-primary-from)] text-white shadow-sm"
-                          : "text-[var(--ink-700)] hover:bg-black/[0.05]"
+                      aria-label="Vista grilla"
+                      className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
+                        gridView === "grid" ? "bg-[var(--shop-primary-from)] text-white" : "text-[var(--ink-700)] hover:bg-black/[0.05]"
                       }`}
-                      onClick={() => { setSortOrder(order); analytics.trackFilter(`sort:${order}`); }}
+                      onClick={() => setGridView("grid")}
                     >
-                      {labels[order]}
+                      <Squares2X2Icon className="h-4 w-4" />
                     </button>
-                  );
-                })}
+                    <button
+                      type="button"
+                      aria-label="Vista lista"
+                      className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
+                        gridView === "list" ? "bg-[var(--shop-primary-from)] text-white" : "text-[var(--ink-700)] hover:bg-black/[0.05]"
+                      }`}
+                      onClick={() => setGridView("list")}
+                    >
+                      <ListBulletIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
               </div>
-              <div className="inline-flex rounded-full border p-1" style={{ borderColor: "var(--shop-control-border)", background: "var(--shop-control-bg)" }}>
-                <button
-                  type="button"
-                  aria-label="Vista grilla"
-                  className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
-                    gridView === "grid" ? "bg-[var(--shop-primary-from)] text-white" : "text-[var(--ink-700)] hover:bg-black/[0.05]"
-                  }`}
-                  onClick={() => setGridView("grid")}
-                >
-                  <Squares2X2Icon className="h-4 w-4" />
-                </button>
-                <button
-                  type="button"
-                  aria-label="Vista lista"
-                  className={`flex h-7 w-7 items-center justify-center rounded-full transition ${
-                    gridView === "list" ? "bg-[var(--shop-primary-from)] text-white" : "text-[var(--ink-700)] hover:bg-black/[0.05]"
-                  }`}
-                  onClick={() => setGridView("list")}
-                >
-                  <ListBulletIcon className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-          </div>
+            </>
+          ) : null}
 
           {/* ── Feedback ── */}
           {feedbackMessage ? (

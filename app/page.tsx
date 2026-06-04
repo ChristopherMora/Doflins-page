@@ -142,14 +142,14 @@ export default async function Home(): Promise<React.JSX.Element> {
               </div>
             </section>
 
-            {/* ── Universos ── */}
-            <LazySection>
-              <UniverseCards initialFeatured={featured} />
-            </LazySection>
-
             {/* ── Tienda / Packs ── */}
             <LazySection>
               <ShopifyBuyExperienceWrapper />
+            </LazySection>
+
+            {/* ── Universos ── */}
+            <LazySection>
+              <UniverseCards initialFeatured={featured} />
             </LazySection>
 
             {/* ── TikTok ── */}
