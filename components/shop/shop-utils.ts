@@ -211,6 +211,13 @@ export function toDropTier(rarity: Rarity): DropTier {
   return "legendary";
 }
 
+/** Extracts figure count from a product handle like "explorador-5" → 5 */
+export function figureCountFromHandle(handle: string): number | null {
+  const match = handle.match(/[-_](\d+)(?:[-_]|$)/);
+  const n = match ? Number(match[1]) : null;
+  return n && n > 0 ? n : null;
+}
+
 export function formatCollectionPreviewName(item: CollectionItemDTO): string {
   const base = item.baseModel.trim().replace(/^doflin\s+/i, "");
   const variant = item.variantName.trim();

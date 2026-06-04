@@ -52,6 +52,7 @@ import {
   getPackTier,
 } from "./shop-constants";
 import {
+  figureCountFromHandle,
   formatCollectionPreviewName,
   formatCurrencyAmount,
   formatMoney,
@@ -193,11 +194,14 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
     <section id="compras" ref={comprasSectionRef} className="space-y-5 pb-28 lg:pb-6" style={universeThemeVars}>
       {/* ── Section header ── */}
       <div className="space-y-2 text-center">
+        <p className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: "var(--shop-primary-from)" }}>
+          ✦ Empieza tu colección
+        </p>
         <h2 className="font-title text-2xl font-bold tracking-tight text-[var(--ink-900)] sm:text-3xl">
           Elige tu pack
         </h2>
         <p className="text-sm text-[var(--ink-500)]">
-          Cada pack incluye figuras con rareza oficial. Elige el que más te guste.
+          Cada pack trae figuras con rareza oficial. Agrégalo y paga en 1 minuto.
         </p>
       </div>
 
@@ -593,14 +597,16 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
                     <article
                     className={`group flex h-full cursor-pointer overflow-hidden rounded-2xl border transition-all duration-300 ease-out ${
                       gridView === "list" ? "flex-row" : "flex-col hover:-translate-y-1"
-                    }`}
+                    } ${gridView !== "list" && isBestSeller ? "ring-2" : ""}`}
                     style={{
                       background: "var(--shop-card-bg)",
-                      borderColor: "var(--shop-card-border)",
-                      boxShadow: "var(--shop-card-shadow)",
+                      borderColor: isBestSeller ? "var(--shop-primary-from)" : "var(--shop-card-border)",
+                      borderWidth: isBestSeller ? "2px" : undefined,
+                      boxShadow: isBestSeller ? "var(--shop-card-hover-shadow)" : "var(--shop-card-shadow)",
+                      ...(gridView !== "list" && isBestSeller ? { ["--tw-ring-color" as string]: "var(--shop-primary-from)" } : {}),
                     }}
                     onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shop-card-hover-shadow)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = "var(--shop-card-shadow)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.boxShadow = isBestSeller ? "var(--shop-card-hover-shadow)" : "var(--shop-card-shadow)"; }}
                     role="button"
                     tabIndex={0}
                     aria-label={`Ver detalle rápido de ${product.title}`}
@@ -671,7 +677,19 @@ export function ShopifyBuyExperience({ initialProducts }: { initialProducts?: im
                         </div>
                       ) : (
                       <div className="mt-auto space-y-3">
-                        <p className="font-title text-3xl leading-none" style={{ color: "var(--shop-primary-from)" }}>{formatMoney(selectedVariant?.price ?? product.price)}</p>
+                        <div className="flex items-baseline gap-2">
+                          <p className="font-title text-3xl leading-none" style={{ color: "var(--shop-primary-from)" }}>{formatMoney(selectedVariant?.price ?? product.price)}</p>
+                          {(() => {
+                            const count = figureCountFromHandle(product.handle);
+                            const price = Number(selectedVariant?.price?.amount ?? product.price.amount);
+                            if (!count || !price) return null;
+                            return (
+                              <span className="text-xs text-[var(--ink-500)]">
+                                ${Math.round(price / count)} / figura
+                              </span>
+                            );
+                          })()}
+                        </div>
 
                         {product.variants.length > 1 ? (
                           <div

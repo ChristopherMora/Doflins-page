@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOFLINS · Bloque #compras</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --naranja:#FF5C1A;
+    --naranja-osc:#E8480A;
+    --tinta:#1A1410;
+    --tinta-suave:#5A5048;
+    --crema:#FBF6EF;
+    --tarjeta:#FFFFFF;
+    --borde:#ECE2D6;
+    --verde:#0E9F6E;
+    --estrella:#FFB020;
+    --sombra: 0 2px 4px rgba(26,20,16,.04), 0 8px 24px rgba(26,20,16,.06);
+    --sombra-pop: 0 8px 16px rgba(255,92,26,.15), 0 24px 48px rgba(255,92,26,.18);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'DM Sans',sans-serif;
+    background:var(--crema);
+    color:var(--tinta);
+    -webkit-font-smoothing:antialiased;
+    line-height:1.5;
+    padding:0 0 40px;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 18px}
+
+  /* ===== Barra envío gratis ===== */
+  .envio-bar{
+    background:var(--tinta);
+    color:#fff;
+    text-align:center;
+    font-weight:500;
+    font-size:.86rem;
+    letter-spacing:.2px;
+    padding:11px 14px;
+  }
+  .envio-bar b{color:#FFD7A8}
+
+  /* ===== Encabezado sección ===== */
+  .seccion-head{text-align:center;padding:38px 0 8px}
+  .kicker{
+    display:inline-block;
+    font-family:'Baloo 2';font-weight:700;
+    color:var(--naranja);
+    text-transform:uppercase;
+    letter-spacing:2.5px;
+    font-size:.74rem;
+    margin-bottom:8px;
+  }
+  .seccion-head h2{
+    font-family:'Baloo 2';font-weight:800;
+    font-size:2rem;line-height:1.05;
+    letter-spacing:-.5px;
+  }
+  .seccion-head p{color:var(--tinta-suave);margin-top:8px;font-size:.98rem;max-width:30ch;margin-left:auto;margin-right:auto}
+
+  /* ===== Grid de packs ===== */
+  .packs{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:16px;
+    margin-top:26px;
+    align-items:stretch;
+  }
+  @media(min-width:760px){
+    .packs{grid-template-columns:repeat(3,1fr);gap:20px;align-items:center}
+  }
+
+  .pack{
+    position:relative;
+    background:var(--tarjeta);
+    border:1px solid var(--borde);
+    border-radius:22px;
+    padding:16px 16px 18px;
+    box-shadow:var(--sombra);
+    display:flex;flex-direction:column;
+    transition:transform .25s ease, box-shadow .25s ease;
+  }
+  .pack:hover{transform:translateY(-4px);box-shadow:var(--sombra-pop)}
+
+  /* tarjeta destacada (más vendido) */
+  .pack.pop{
+    border:2px solid var(--naranja);
+    box-shadow:var(--sombra-pop);
+  }
+  @media(min-width:760px){
+    .pack.pop{transform:scale(1.05);z-index:2}
+    .pack.pop:hover{transform:scale(1.05) translateY(-4px)}
+  }
+
+  .badge{
+    position:absolute;top:14px;left:14px;
+    font-family:'Baloo 2';font-weight:700;
+    font-size:.7rem;letter-spacing:.4px;
+    padding:5px 10px;border-radius:999px;
+    background:#F3ECE2;color:var(--tinta-suave);
+    z-index:3;
+  }
+  .badge.vende{background:var(--naranja);color:#fff;box-shadow:0 4px 10px rgba(255,92,26,.4)}
+  .badge.valor{background:#E8F7F0;color:var(--verde)}
+
+  .pack-img{
+    border-radius:16px;
+    overflow:hidden;
+    background:#F4EEE6;
+    aspect-ratio:1/1;
+    margin-bottom:14px;
+  }
+  .pack-img img{width:100%;height:100%;object-fit:cover;display:block}
+
+  .pack h3{
+    font-family:'Baloo 2';font-weight:700;
+    font-size:1.22rem;line-height:1.1;
+  }
+  .piezas{color:var(--tinta-suave);font-size:.86rem;margin-top:2px}
+  .desc{color:var(--tinta-suave);font-size:.86rem;margin-top:8px;min-height:38px}
+
+  .precio-row{
+    display:flex;align-items:baseline;gap:8px;
+    margin-top:14px;
+  }
+  .precio{font-family:'Baloo 2';font-weight:800;font-size:1.7rem;letter-spacing:-.5px}
+  .por-fig{font-size:.78rem;color:var(--tinta-suave)}
+
+  .btn{
+    margin-top:14px;
+    border:none;cursor:pointer;
+    font-family:'Baloo 2';font-weight:700;
+    font-size:1rem;
+    padding:13px;border-radius:14px;
+    width:100%;
+    transition:transform .12s ease, background .2s ease;
+  }
+  .btn:active{transform:scale(.97)}
+  .btn-primario{background:var(--naranja);color:#fff;box-shadow:0 6px 14px rgba(255,92,26,.32)}
+  .btn-primario:hover{background:var(--naranja-osc)}
+  .btn-suave{background:#F3ECE2;color:var(--tinta)}
+  .btn-suave:hover{background:#EADFD0}
+
+  /* ===== Strip de confianza ===== */
+  .confianza{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:10px 22px;
+    margin-top:28px;
+    color:var(--tinta-suave);font-size:.86rem;font-weight:500;
+  }
+  .confianza span{display:inline-flex;align-items:center;gap:6px}
+
+  /* ===== Reseñas ===== */
+  .resenas{margin-top:46px;text-align:center}
+  .res-score{
+    display:inline-flex;align-items:center;gap:10px;
+    background:var(--tarjeta);border:1px solid var(--borde);
+    padding:10px 18px;border-radius:999px;box-shadow:var(--sombra);
+  }
+  .res-score .num{font-family:'Baloo 2';font-weight:800;font-size:1.5rem;line-height:1}
+  .estrellas{color:var(--estrella);letter-spacing:2px;font-size:1rem}
+  .res-score small{color:var(--tinta-suave);font-size:.82rem;text-align:left}
+
+  .res-grid{
+    display:grid;grid-template-columns:1fr;gap:14px;margin-top:22px;text-align:left;
+  }
+  @media(min-width:760px){.res-grid{grid-template-columns:repeat(3,1fr)}}
+  .res-card{
+    background:var(--tarjeta);border:1px solid var(--borde);
+    border-radius:18px;padding:18px;box-shadow:var(--sombra);
+  }
+  .res-card .estrellas{font-size:.85rem;margin-bottom:8px}
+  .res-card p{font-size:.92rem;line-height:1.45}
+  .res-autor{display:flex;align-items:center;gap:10px;margin-top:14px}
+  .avatar{
+    width:32px;height:32px;border-radius:50%;
+    background:var(--naranja);color:#fff;
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Baloo 2';font-weight:700;font-size:.9rem;
+  }
+  .res-autor b{font-size:.86rem}
+  .res-autor small{display:block;color:var(--tinta-suave);font-size:.76rem;font-weight:400}
+  .verif{color:var(--verde);font-size:.74rem;font-weight:600;margin-left:auto}
+
+  /* ===== Carrito flotante ===== */
+  .cart-fab{
+    position:fixed;left:0;right:0;bottom:0;
+    background:#fff;border-top:1px solid var(--borde);
+    box-shadow:0 -6px 20px rgba(26,20,16,.08);
+    padding:12px 18px;
+    display:flex;align-items:center;gap:14px;
+    transform:translateY(120%);
+    transition:transform .3s cubic-bezier(.2,.9,.3,1);
+    z-index:50;
+  }
+  .cart-fab.show{transform:translateY(0)}
+  .cart-info{flex:1}
+  .cart-info b{font-family:'Baloo 2';font-size:1.05rem}
+  .cart-info small{display:block;color:var(--tinta-suave);font-size:.8rem}
+  .cart-fab .btn{margin:0;width:auto;padding:13px 22px;white-space:nowrap}
+  @media(min-width:760px){
+    .cart-fab{left:auto;right:24px;bottom:24px;border-radius:18px;border:1px solid var(--borde);max-width:420px}
+  }
+
+  .nota{
+    text-align:center;color:var(--tinta-suave);
+    font-size:.78rem;margin-top:38px;font-style:italic;
+  }
+</style>
+</head>
+<body>
+
+  <div class="envio-bar">🚚 <b>Envío GRATIS</b> en compras desde $250 · Envíos a todo México</div>
+
+  <section id="compras" class="wrap">
+    <div class="seccion-head">
+      <span class="kicker">✦ Empieza tu colección</span>
+      <h2>Elige tu pack</h2>
+      <p>Cada pack trae figuras con rareza oficial. Agrégalo y paga en 1 minuto.</p>
+    </div>
+
+    <div class="packs">
+
+      <!-- Explorador -->
+      <div class="pack">
+        <span class="badge">Entrada</span>
+        <div class="pack-img">
+          <img src="https://cdn.shopify.com/s/files/1/0727/1530/5007/files/ec4673b940d34db1bef1fda92b426180_tplv-aphluv4xwc-origin-jpeg.jpg?v=1772323287&width=800" alt="Doflins Explorador 5 piezas">
+        </div>
+        <h3>Explorador</h3>
+        <div class="piezas">5 figuras sorpresa</div>
+        <div class="desc">Perfecto para empezar y ver de qué se trata.</div>
+        <div class="precio-row">
+          <span class="precio">$120</span>
+          <span class="por-fig">$24 / figura</span>
+        </div>
+        <button class="btn btn-suave" onclick="addCart('Explorador',120)">Agregar al carrito</button>
+      </div>
+
+      <!-- Safari - MÁS VENDIDO -->
+      <div class="pack pop">
+        <span class="badge vende">★ Más vendido</span>
+        <div class="pack-img">
+          <img src="https://cdn.shopify.com/s/files/1/0727/1530/5007/files/f7479c3e485a4b298952a24664d56f41_tplv-aphluv4xwc-origin-jpeg.jpg?v=1772325313&width=800" alt="Safari 15 piezas">
+        </div>
+        <h3>Safari</h3>
+        <div class="piezas">15 figuras sorpresa</div>
+        <div class="desc">El favorito. Más variedad y más chance de rarezas.</div>
+        <div class="precio-row">
+          <span class="precio">$320</span>
+          <span class="por-fig">$21 / figura</span>
+        </div>
+        <button class="btn btn-primario" onclick="addCart('Safari',320)">Agregar al carrito</button>
+      </div>
+
+      <!-- Salvaje -->
+      <div class="pack">
+        <span class="badge valor">Mejor valor</span>
+        <div class="pack-img">
+          <img src="https://cdn.shopify.com/s/files/1/0727/1530/5007/files/6f69f4d9dc474d83a2664a6a32843ef0_tplv-aphluv4xwc-origin-jpeg_fd2f1f30-ed7a-4f86-9e96-92c19f6d6c99.jpg?v=1772325440&width=800" alt="Salvaje 30 piezas">
+        </div>
+        <h3>Salvaje</h3>
+        <div class="piezas">30 figuras sorpresa</div>
+        <div class="desc">Para coleccionistas. El precio por figura más bajo.</div>
+        <div class="precio-row">
+          <span class="precio">$600</span>
+          <span class="por-fig">$20 / figura</span>
+        </div>
+        <button class="btn btn-suave" onclick="addCart('Salvaje',600)">Agregar al carrito</button>
+      </div>
+
+    </div>
+
+    <div class="confianza">
+      <span>🔒 Pago seguro</span>
+      <span>✦ Rareza oficial</span>
+      <span>🇲🇽 Hecho en México</span>
+      <span>↩️ Devoluciones fáciles</span>
+    </div>
+
+    <!-- Reseñas -->
+    <div class="resenas">
+      <div class="res-score">
+        <span class="num">5.0</span>
+        <div>
+          <div class="estrellas">★★★★★</div>
+          <small>22 reseñas verificadas</small>
+        </div>
+      </div>
+
+      <div class="res-grid">
+        <div class="res-card">
+          <div class="estrellas">★★★★★</div>
+          <p>“Excelente calidad y variedad, valen mucho la pena si te gusta coleccionar figuritas.”</p>
+          <div class="res-autor">
+            <span class="avatar">B</span>
+            <div><b>B.</b><small>Pack Explorador</small></div>
+            <span class="verif">✓ Verificada</span>
+          </div>
+        </div>
+        <div class="res-card">
+          <div class="estrellas">★★★★★</div>
+          <p>“Me encantó, están muy bonitos, los recomiendo 10/10.”</p>
+          <div class="res-autor">
+            <span class="avatar">A</span>
+            <div><b>Ana</b><small>Pack Explorador</small></div>
+            <span class="verif">✓ Verificada</span>
+          </div>
+        </div>
+        <div class="res-card">
+          <div class="estrellas">★★★★★</div>
+          <p>“Excelente detalle y calidad de materiales. Figuras muy detalladas.”</p>
+          <div class="res-autor">
+            <span class="avatar">R</span>
+            <div><b>R.</b><small>Pack Salvaje</small></div>
+            <span class="verif">✓ Verificada</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="nota">Demo del bloque #compras — los botones simulan el flujo agregar → pagar. Conéctalos a tu carrito real.</p>
+  </section>
+
+  <!-- Carrito flotante -->
+  <div class="cart-fab" id="cartFab">
+    <div class="cart-info">
+      <b id="cartTxt">1 pack · $320</b>
+      <small>Envío gratis aplicado 🎉</small>
+    </div>
+    <button class="btn btn-primario" onclick="alert('Aquí va tu checkout real ✦')">Pagar ahora →</button>
+  </div>
+
+<script>
+  let total=0, count=0;
+  function addCart(nombre,precio){
+    count++; total+=precio;
+    const fab=document.getElementById('cartFab');
+    const txt=document.getElementById('cartTxt');
+    const envio = total>=250 ? '· Envío gratis 🎉' : '· Faltan $'+(250-total)+' para envío gratis';
+    txt.textContent = count+' pack'+(count>1?'s':'')+' · $'+total;
+    fab.querySelector('small').textContent = total>=250 ? 'Envío gratis aplicado 🎉' : 'Agrega $'+(250-total)+' más y el envío es gratis';
+    fab.classList.add('show');
+  }
+</script>
+</body>
+</html>
