@@ -359,7 +359,7 @@ export function SiteHeader(): React.JSX.Element {
               style={{ color: navColor, borderColor: `${navColor}55` }}
             >
               <UserCircleIcon className="h-4 w-4" />
-              Entrar
+              Iniciar sesión
             </Link>
           ) : null}
 
